@@ -229,6 +229,9 @@
         width: 100%;
         box-sizing: border-box;
     }
+    .settings-back-button span {
+        transition: opacity 0.3s ease-in-out;
+    }
     #splash-screen, #beta-splash-screen {
       display: flex;
       justify-content: center;
@@ -491,8 +494,10 @@
 
   <script>
     (function() {
-      if (localStorage.getItem('betaUpdates') === 'enabled') {
-        window.location.replace('/BETA/index.html');
+      const isBetaEnabled = localStorage.getItem('betaUpdates') === 'enabled';
+      const isCurrentlyInBetaPath = window.location.pathname.includes('/BETA/');
+      if (isBetaEnabled && !isCurrentlyInBetaPath) {
+        window.location.replace('BETA/index.html');
       }
     })();
     const currentUpdateVersion = "2";
@@ -502,6 +507,14 @@
     let isDockTransitioning = false;
     let lastActiveDockPage = null;
     let wasDockExpandedOnNav = false;
+    let initialBetaState = '';
+
+    function getAssetPath(fileName) {
+        if (localStorage.getItem('betaUpdates') === 'enabled') {
+            return `BETA/${fileName}`;
+        }
+        return fileName;
+    }
 
     function updateShadows() {
       if (localStorage.getItem('shadows') === 'disabled') {
@@ -879,12 +892,11 @@
     <p class="about-system-footer-note" style="margin-bottom: 5px;">Бета-версии ПО предоставляют ранний доступ к новым функциям, но могут содержать ошибки и работать нестабильно.</p>
   </div>
   <div class="settings-back-button-container">
-	  <button class="button settings-back-button" onclick="animateAndGoBack('viewAboutSiteSystem')">Назад</button>
+	  <button id="beta-back-button" class="button settings-back-button" onclick="animateAndGoBack('viewAboutSiteSystem')"><span>Назад</span></button>
   </div>
 </div>`
     };
     const container = document.getElementById('container');
-
     function showMiniDock() {
         const dock = document.getElementById('mini-dock');
         const container = document.getElementById('container');
@@ -1147,7 +1159,6 @@
             }, 50);
         }
         animateButtonIn();
-        container.style.animation = 'slideInRight 1s forwards';
         if(toView === 'viewUpdate'){
           setTimeout(loadUpdateContent, 50);
         }
@@ -1159,7 +1170,7 @@
         }
         if(toView === 'viewDetails'){
             setTimeout(() => {
-                loadContentInto('#detailsContentArea', 'page3.html');
+                loadContentInto('#detailsContentArea', getAssetPath('page3.html'));
             }, 1050);
         }
       }, 1000);
@@ -1412,10 +1423,37 @@
         const container = element.closest('.selection-list-container');
         container.querySelectorAll('.selection-row').forEach(row => row.classList.remove('active'));
         element.classList.add('active');
+
+        const backButton = document.getElementById('beta-back-button');
+        const backButtonTextSpan = backButton.querySelector('span');
+        const currentState = localStorage.getItem('betaUpdates') || 'disabled';
+
+        if (currentState !== initialBetaState) {
+            if (backButton.dataset.action !== 'restart') {
+                backButtonTextSpan.style.opacity = '0';
+                setTimeout(() => {
+                    backButtonTextSpan.textContent = 'Перезапустить';
+                    backButtonTextSpan.style.opacity = '1';
+                }, 300);
+                backButton.onclick = () => location.reload();
+                backButton.dataset.action = 'restart';
+            }
+        } else {
+            if (backButton.dataset.action === 'restart') {
+                backButtonTextSpan.style.opacity = '0';
+                setTimeout(() => {
+                    backButtonTextSpan.textContent = 'Назад';
+                    backButtonTextSpan.style.opacity = '1';
+                }, 300);
+                backButton.onclick = () => animateAndGoBack('viewAboutSiteSystem');
+                delete backButton.dataset.action;
+            }
+        }
     }
 
     function loadBetaUpdatesPageData() {
-        const currentSetting = localStorage.getItem('betaUpdates') || 'disabled';
+        initialBetaState = localStorage.getItem('betaUpdates') || 'disabled';
+        const currentSetting = initialBetaState;
         const rows = document.querySelectorAll('.selection-row');
         rows.forEach(row => row.classList.remove('active'));
         if (currentSetting === 'disabled') {
@@ -1427,7 +1465,7 @@
         const label = document.getElementById('beta-version-label');
         if (!label) return;
 
-        fetch('page2.html')
+        fetch(getAssetPath('page2.html'))
             .then(r => r.ok ? r.text() : Promise.reject('Ошибка загрузки'))
             .then(text => {
                 const versionMatch = text.match(/Version:\s*\[([^\]]+)\]/);
@@ -1486,7 +1524,7 @@
         sendMessageToTelegram("Пользователь открыл страницу ДЗ");
         goForward('viewDZ');
         setTimeout(() => {
-            loadContentInto('#dzContentArea', 'page1.html');
+            loadContentInto('#dzContentArea', getAssetPath('page1.html'));
         }, 1050);
     }
     function loadAboutSiteSystemData() {
@@ -1503,7 +1541,7 @@
         if (!versionEl || !typeEl || !detailsEl) return;
         
         detailsEl.style.opacity = '0';
-        fetch('page2.html')
+        fetch(getAssetPath('page2.html'))
             .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
             .then(text => {
                 const versionMatch = text.match(/Version:\s*\[([^\]]+)\]/);
@@ -1818,7 +1856,7 @@
       if (!updateContainer) return;
       updateContainer.innerHTML = '<div id="updateInner" style="opacity:0;">Загрузка...</div>';
       setTimeout(() => {
-        fetch('PageUpdateList.html')
+        fetch(getAssetPath('page3.html'))
           .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
           .then(data => {
             const updateInner = document.getElementById('updateInner');
@@ -1860,4 +1898,3 @@
   </script>
 </body>
 </html>
-
