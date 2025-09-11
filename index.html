@@ -1,556 +1,1027 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Демо — Расписание (группа 583)</title>
-
-<!-- pdf.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.113/pdf.min.js"></script>
-<!-- tesseract.js (для сканов) -->
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
-
-<style>
-  html,body { height:100%; margin:0; }
-  body {
-    background: #000;
-    color: #fff;
-    font-family: "Segoe UI", Roboto, Arial, sans-serif;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-  .card {
-    width: 100%;
-    max-width: 960px;
-    padding: 22px;
-    box-sizing: border-box;
-    border: 1px solid rgba(255,255,255,0.06);
-    background: rgba(255,255,255,0.02);
-    border-radius: 8px;
-  }
-  h1 { margin:0 0 12px 0; font-size:20px; text-align:center; }
-  .top-row { display:flex; gap:12px; align-items:center; justify-content:center; margin-bottom:12px; flex-wrap:wrap; }
-  input[type="text"], input[type="date"], select {
-    padding:8px 10px;
-    font-size:14px;
-    border-radius:6px;
-    border: none;
-    background: rgba(255,255,255,0.06);
-    color: #fff;
-    min-width:220px;
-  }
-  button {
-    padding:8px 12px;
-    font-size:14px;
-    border-radius:6px;
-    border:none;
-    cursor:pointer;
-    background: #0b84ff;
-    color:#fff;
-  }
-  #main {
-    margin-top:12px;
-  }
-  .loading { text-align:center; font-weight:700; padding:20px; }
-  .result { white-space:pre-wrap; font-family: monospace; }
-  .lessons { margin-top:10px; }
-  .lesson { padding:6px 8px; border-bottom:1px solid rgba(255,255,255,0.04); }
-  .status { margin-top:12px; font-size:16px; font-weight:700; }
-  .small { font-size:13px; color: #ddd; margin-top:6px; }
-  .error { color: #ff8080; font-weight:700; }
-  .hint { margin-top:10px; font-size:13px; color:#bfbfbf; }
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>pasSITE - Домашка</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #007BFF;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      transition: background-color 1s;
+    }
+    .no-shadows .button {
+      box-shadow: none !important;
+    }
+    .hello {
+      font-size: 5vw;
+      color: white;
+      position: absolute;
+      z-index: 1;
+      animation: scaleAnimation 2s forwards;
+    }
+    @keyframes scaleAnimation {
+      0% { opacity: 1; transform: scale(0.3); }
+      100% { opacity: 1; transform: scale(1.5); }
+    }
+    #container {
+      background: rgba(255, 255, 255, 0.5);
+      border: none;
+      border-radius: 20px;
+      padding: 5vw;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      backdrop-filter: blur(3px);
+      width: 77vw;
+      min-height: 85vh;
+      max-width: 800px;
+      position: absolute;
+      transform: scale(0);
+      animation: grow 1s forwards;
+      display: none;
+      z-index: 2;
+    }
+    #container.border-enabled {
+      border: 1px solid white;
+    }
+    @keyframes grow { from { transform: scale(0); } to { transform: scale(1); } }
+    @keyframes slideOutRight { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(100%); opacity: 0; } }
+    @keyframes slideInLeft { 0% { transform: translateX(-100%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOutLeft { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(-100%); opacity: 0; } }
+    @keyframes slideInRight { 0% { transform: translateX(100%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOutCenterLeft { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(-100%); opacity: 0; } }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(5px); }
+      50% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
+    }
+    .shake { animation: shake 0.5s; }
+    header, footer { text-align: center; }
+    h1 { color: #333; }
+    h2, p { color: #555; margin-bottom: 4px; }
+    #content { margin-bottom: 20px; }
+    .buttons-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 10px;
+    }
+    .button {
+      padding: 15px 20px;
+      background: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      text-align: center;
+      border: 2px solid white;
+      outline: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .button:hover { background: gray; }
+    .button:focus { outline: none; box-shadow: 0 0 0 2px white; }
+    .dev-button { }
+    .content-container {
+      max-height: 42vh;
+      overflow-y: auto;
+      padding-right: 10px;
+      padding-top: 15px;
+      padding-bottom: 15px;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, black 35px, black calc(100% - 35px), transparent);
+      mask-image: linear-gradient(to bottom, transparent, black 35px, black calc(100% - 35px), transparent);
+    }
+    .content-container::-webkit-scrollbar { width: 5px; }
+    .content-container::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+    }
+    .snowflakes {
+      position: absolute;
+      top: 0; left: 0;
+      right: 0; bottom: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .snowflake {
+      position: absolute;
+      top: -10px;
+      background-color: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      animation: snow 10s linear infinite;
+    }
+    @keyframes snow { 0% { transform: translateX(0) translateY(0); opacity: 0.8; } 100% { transform: translateX(50px) translateY(100vh); opacity: 0; } }
+    input[type="text"],
+    input[type="password"] {
+      background-color: #444;
+      color: white;
+      border-radius: 10px;
+      border: 2px solid white;
+      padding: 10px;
+      margin-bottom: 20px;
+      width: 80%;
+      font-size: 1.5em;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+    }
+    #devError { text-align: center; }
+    .selection-list-container {
+      background: rgba(255, 255, 255, 0.4);
+      border-radius: 12px;
+      padding: 5px 0;
+      border: 2px solid white;
+    }
+    .selection-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 15px;
+      cursor: pointer;
+      color: #333;
+    }
+    .selection-divider {
+      height: 1px;
+      background-color: rgba(255,255,255,0.5);
+      margin: 0 15px;
+    }
+    .selection-checkmark {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #333;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+    .selection-row.active .selection-checkmark {
+      opacity: 1;
+    }
+    #beta-button-text {
+      display: inline-block;
+      transition: opacity 0.3s ease-in-out;
+    }
+  </style>
 </head>
 <body>
-  <div class="card" role="main">
-    <h1>Демо: расписание для группы <span id="groupLabel">583</span></h1>
+  <div class="hello" id="hello">Hello</div>
+  <div id="container"></div>
+  <div class="snowflakes" id="snowflakes"></div>
 
-    <div class="top-row">
-      <input id="pdfUrl" type="text" placeholder="Ссылка на PDF (Google Drive или прямая ссылка)" style="min-width:420px"
-             value="https://drive.google.com/file/d/1kJcV3QfGlvju9_NO6XkXe1_Fy6w0xHSJ/view" />
-      <input id="dateInp" type="date" />
-      <select id="groupInp" >
-        <option>583</option>
-        <option>581</option>
-        <option>582</option>
-      </select>
-      <button id="goBtn">Загрузить</button>
-    </div>
+  <script>
+    (function() {
+      if (localStorage.getItem('betaUpdates') === 'enabled') {
+        window.location.replace('/BETA/index.html');
+      }
+    })();
+    const currentUpdateVersion = "2";
+    let originalBgColor = null;
+    const devModeBgColor = "#4DA3FF";
+    let isDevMode = false;
+    let initialBetaState = null;
 
-    <div id="main">
-      <div id="stage" class="loading">Загрузка... (нажми «Загрузить» или страница попытается сама)</div>
-      <div id="out" class="result" style="display:none"></div>
-    </div>
+    function updateShadows() {
+      if (localStorage.getItem('shadows') === 'disabled') {
+        document.body.classList.add('no-shadows');
+      } else {
+        document.body.classList.remove('no-shadows');
+      }
+    }
 
-    <div class="hint">
-      Примечание: если браузер сообщает ошибку CORS при загрузке PDF — см. примечания внизу страницы. Для надёжной работы загрузи PDF на публичный хост или используй небольшой сервер-прокси.
-    </div>
+    function updateBorder() {
+      if (localStorage.getItem('border') === 'enabled') {
+        document.getElementById('container').classList.add('border-enabled');
+      } else {
+        document.getElementById('container').classList.remove('border-enabled');
+      }
+    }
+
+    function hideHello() {
+      const hello = document.getElementById('hello');
+      hello.style.opacity = '0';
+      setTimeout(() => { hello.style.display = 'none'; }, 15);
+    }
+
+    function changeBackgroundToSnow() {
+      document.body.style.transition = 'background-color 1s';
+      document.body.style.backgroundColor = '#1a1a2e';
+      setTimeout(createSnowflakes, 3000);
+    }
+
+    function createSnowflakes() {
+      const snowflakesContainer = document.getElementById('snowflakes');
+      let count = 0;
+      const interval = setInterval(() => {
+        if (count < 50) {
+          const flake = document.createElement('div');
+          flake.classList.add('snowflake');
+          const size = Math.random() * 5 + 2;
+          flake.style.width = size + 'px';
+          flake.style.height = size + 'px';
+          flake.style.left = Math.random() * 100 + '%';
+          flake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+          snowflakesContainer.appendChild(flake);
+          count++;
+        } else {
+          clearInterval(interval);
+        }
+      }, 100);
+    }
+
+    const views = {
+      view1: `<header><h1>Хм, похоже ты здесь впервые?</h1></header>
+<main>
+  <p>Здесь ты можешь ввести своё имя, и оно будет в главном меню, чтобы лично тебя приветствовать!<br><br>
+ВАЖНО: после подтверждения изменить имя будет невозможно!<br><br>
+Ещё важнее: эту функцию я делал очень долго, поэтому будет просто великолепно, если ты её будешь использовать.
+ «Продолжить».</p>
+  <div class="buttons-container"><button class="button" onclick="goForward('view2')">Продолжить</button></div>
+</main>`,
+      view2: `<header><h1>Добавьте ваше имя</h1></header>
+<main>
+  <p>Изменить имя будет нельзя, выбирай с умом!<br>
+Выберите один из вариантов:</p>
+  <div class="buttons-container">
+    <button class="button" onclick="goForward('view3')">Добавить имя</button>
+    <button class="button" onclick="goForward('view2b')">Добавить позже</button>
   </div>
-
-<script>
-// ========== Конфигурация ==========
-// Id группы по умолчанию
-const DEFAULT_GROUP = '583';
-
-// Расписание звонков (используем «основную» колонку из присланного фото).
-// Это можно расширить по дням недели — сейчас для простоты используем один набор.
-// Формат: lessonNumber -> {start:"HH:MM", end:"HH:MM"}
-const BELL_SCHEDULE = {
-  1: { start: "08:30", end: "09:15" },
-  2: { start: "09:25", end: "10:10" },
-  3: { start: "10:30", end: "11:15" },
-  4: { start: "11:25", end: "12:10" },
-  5: { start: "12:40", end: "13:25" },
-  6: { start: "13:35", end: "14:20" },
-  7: { start: "14:35", end: "15:20" },
-  8: { start: "15:30", end: "16:15" },
-  9: { start: "16:25", end: "17:10" },
-  10: { start: "17:20", end: "18:05" },
-  11: { start: "18:15", end: "19:00" },
-  12: { start: "19:10", end: "19:55" },
-  13: { start: "20:00", end: "20:45" } // если есть
-};
-// ===================================
-
-const pdfUrlInput = document.getElementById('pdfUrl');
-const dateInp = document.getElementById('dateInp');
-const groupInp = document.getElementById('groupInp');
-const goBtn = document.getElementById('goBtn');
-const stage = document.getElementById('stage');
-const out = document.getElementById('out');
-const groupLabel = document.getElementById('groupLabel');
-
-// поставим дату по умолчанию — сегодня
-(function setDefaultDate() {
-  const today = new Date();
-  const yyyy = today.getFullYear();
-  const mm = String(today.getMonth() + 1).padStart(2,'0');
-  const dd = String(today.getDate()).padStart(2,'0');
-  dateInp.value = `${yyyy}-${mm}-${dd}`;
-})();
-
-// helper
-function logStage(s){ stage.innerText = s; }
-function showResultHtml(html){ out.style.display='block'; out.innerHTML = html; stage.style.display='none'; }
-function showError(msg){ stage.innerHTML = `<div class="error">Ошибка: ${msg}</div>`; out.style.display='none'; }
-
-// Попытка получить прямую ссылку для Google Drive view->download
-function convertDriveViewToDownload(url) {
-  try {
-    if(!url) return url;
-    // формат https://drive.google.com/file/d/<ID>/view...
-    const m = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
-    if(m && m[1]) {
-      return `https://drive.google.com/uc?export=download&id=${m[1]}`;
-    }
-    // формат https://drive.google.com/open?id=<ID>
-    const m2 = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
-    if(m2 && m2[1]) {
-      return `https://drive.google.com/uc?export=download&id=${m2[1]}`;
-    }
-    // если ссылка уже uc?export=download - вернуть
-    if(url.includes('uc?export=download')) return url;
-    // иначе вернуть как есть (может быть прямая ссылка)
-    return url;
-  } catch(e){
-    return url;
-  }
-}
-
-async function fetchArrayBufferWithFallback(url) {
-  // попробуем напрямую
-  let lastErr = null;
-  try {
-    const resp = await fetch(url);
-    if(!resp.ok) throw new Error('HTTP ' + resp.status);
-    return await resp.arrayBuffer();
-  } catch (e) {
-    lastErr = e;
-  }
-  // если google drive view link, попробуем преобразовать
-  const conv = convertDriveViewToDownload(url);
-  if(conv !== url) {
-    try {
-      const resp = await fetch(conv);
-      if(!resp.ok) throw new Error('HTTP ' + resp.status);
-      return await resp.arrayBuffer();
-    } catch(e) {
-      lastErr = e;
-    }
-  }
-  // финальный отказ
-  throw new Error('Не удалось загрузить PDF напрямую. Браузер возможно блокирует CORS. ' + (lastErr? lastErr.message : ''));
-}
-
-// Извлекаем текст: сначала pdf.js.getTextContent, если пусто — рендерим страницу и OCR
-async function extractTextFromPdfBuffer(buffer, onProgress) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.10.113/pdf.worker.min.js';
-  const loadingTask = pdfjsLib.getDocument({ data: buffer });
-  const pdf = await loadingTask.promise;
-  let fullText = '';
-  for (let p = 1; p <= pdf.numPages; p++) {
-    if(onProgress) onProgress(`Парсинг страницы ${p}/${pdf.numPages}...`);
-    const page = await pdf.getPage(p);
-    // 1) пробуем текстовый слой
-    let pageText = '';
-    try {
-      const tc = await page.getTextContent();
-      pageText = tc.items.map(i => i.str).join(' ').trim();
-    } catch(e) {
-      pageText = '';
-    }
-    // 2) если текст не найден или очень короткий - делаем OCR
-    if(!pageText || pageText.length < 40) {
-      if(onProgress) onProgress(`Текст не найден на странице ${p}. Делается OCR (это может занять время)...`);
-      const viewport = page.getViewport({ scale: 2.0 });
-      const canvas = document.createElement('canvas');
-      canvas.width = Math.floor(viewport.width);
-      canvas.height = Math.floor(viewport.height);
-      const ctx = canvas.getContext('2d');
-      await page.render({ canvasContext: ctx, viewport }).promise;
-      // OCR
-      try {
-        const dataUrl = canvas.toDataURL('image/png');
-        const ocrResult = await Tesseract.recognize(dataUrl, 'rus+eng', {
-          logger: m => {
-            if(onProgress && m.status && m.progress) {
-              onProgress(`OCR: ${m.status} ${(m.progress*100).toFixed(0)}%`);
-            }
-          }
-        });
-        pageText = ocrResult.data.text || '';
-      } catch(ocrErr) {
-        // если OCR упал — всё равно собираем пустую строк
-        pageText = '';
-      }
-    }
-    fullText += '\n' + pageText;
-  }
-  return fullText;
-}
-
-// Преобразуем дату input -> ключ dd.mm
-function dateInputToKey(val) {
-  if(!val) {
-    const d = new Date();
-    return String(d.getDate()).padStart(2,'0') + '.' + String(d.getMonth()+1).padStart(2,'0');
-  }
-  const d = new Date(val);
-  const dd = String(d.getDate()).padStart(2,'0');
-  const mm = String(d.getMonth()+1).padStart(2,'0');
-  return `${dd}.${mm}`;
-}
-
-// Найти блок текста для нужной даты: ищем все вхождения dd.mm и берём ближайший блок
-function extractBlockForDate(fullText, dateKey) {
-  // нормализуем
-  const text = fullText.replace(/\r/g,'\n');
-  // ищем позиции всех дат формата d[.]m или dd.mm.yyyy
-  const dateRegex = /\b([0-3]?\d)[\.\/-]([01]?\d)(?:[\.\/-](\d{2,4}))?\b/g;
-  const matches = [];
-  let m;
-  while((m = dateRegex.exec(text)) !== null) {
-    const key = m[1].padStart(2,'0') + '.' + m[2].padStart(2,'0');
-    matches.push({ idx: m.index, key });
-  }
-  if(!matches.length) {
-    // если дат не найдено — возвращаем весь текст
-    return text;
-  }
-  // найдём match с key == dateKey
-  const found = matches.find(x => x.key === dateKey);
-  if(found) {
-    const start = found.idx;
-    // конец — индекс следующей даты или end
-    const next = matches.find(x => x.idx > start);
-    const end = next ? next.idx : text.length;
-    return text.slice(start, end);
-  }
-  // если точной даты нет — попробуем ближайшую по позиции (например только 06.08 встречается)
-  // попробуем найти any match for day/month equal ignoring year
-  const close = matches[0];
-  return text.slice(close.idx, (matches[1]? matches[1].idx: text.length));
-}
-
-// Внутри блока ищем группу (например "583"), и извлекаем соседующий по строкам текст
-function extractGroupBlock(blockText, groupStr) {
-  // разобьём по строкам
-  const lines = blockText.split(/\n/).map(l=> l.trim()).filter(l=> l.length>0);
-  // найдём индекс строки, где встречается группа
-  let idx = -1;
-  for(let i=0;i<lines.length;i++){
-    if(new RegExp('\\b' + groupStr + '\\b','i').test(lines[i])) { idx = i; break; }
-  }
-  if(idx === -1) {
-    // иногда в таблицах OCR ломает пробелы: попробуем поиск в блоке как подстроки
-    const pos = blockText.indexOf(groupStr);
-    if(pos>=0) {
-      // экстракт контекста +- 300 символов
-      const start = Math.max(0, pos-200);
-      const end = Math.min(blockText.length, pos+400);
-      return blockText.slice(start,end);
-    }
-    return '';
-  }
-  // собираем несколько строк вокруг найденной: -2..+6
-  const from = Math.max(0, idx-2);
-  const to = Math.min(lines.length, idx+6);
-  return lines.slice(from,to).join('\n');
-}
-
-// Парсинг уроков: ищем шаблон "1 урок ...", "1. ...", "1  ...", либо просто номера в колонке слева
-function parseLessonsFromGroupBlock(groupBlockText) {
-  if(!groupBlockText) return [];
-  const text = groupBlockText.replace(/\t/g,' ').replace(/\s{2,}/g,' ');
-  const lessons = [];
-
-  // Попробуем сначала шаблон: "1 урок ...", "1 урок - Математика"
-  const rx1 = /(\b[1-9]|1[0-3])\b\s*(?:урок|ур|:|-|–|—|\.)?\s*([^\n\r]+)/gi;
-  let m;
-  let foundAny = false;
-  while((m = rx1.exec(text)) !== null) {
-    const num = Number(m[1]);
-    let subj = (m[2] || '').trim();
-    if(subj) {
-      // иногда в конце есть фамилия учителя -> постараемся отделить: если есть точка после буквы (инициалы), можно убрать часть
-      // оставим всё, но позже можно разделить по двойному пробел или таб
-      lessons.push({ number: num, raw: subj });
-      foundAny = true;
-    }
-  }
-  if(foundAny) {
-    // упорядочим по номеру
-    lessons.sort((a,b)=> a.number - b.number);
-    return lessons;
-  }
-
-  // Если не нашли, попробуем найти колонку из отдельных цифр в левой части: ищем строки, содержащие только цифру (или цифру в начале)
-  const lines = text.split(/\n/).map(l=>l.trim()).filter(Boolean);
-  for(let i=0;i<lines.length;i++){
-    const L = lines[i];
-    // ищем номер урока в начале
-    const m2 = L.match(/^\s*([1-9]|1[0-3])\b[).]?\s*(.*)/);
-    if(m2) {
-      const num = Number(m2[1]);
-      let rest = (m2[2] || '').trim();
-      // если rest пустой, возможно предмет на следующей строке
-      if(!rest && lines[i+1]) rest = lines[i+1].trim();
-      lessons.push({ number: num, raw: rest });
-    } else {
-      // может быть просто строка с числом в колонке (OCR): берем все числа в строке
-      const allNums = L.match(/\b([1-9]|1[0-3])\b/g);
-      if(allNums && allNums.length) {
-        for(const n of allNums) lessons.push({number: Number(n), raw: L});
-      }
-    }
-  }
-  // удалим дубликаты по номеру, оставим первое встречное
-  const uniq = [];
-  const seen = new Set();
-  for(const it of lessons) {
-    if(!seen.has(it.number)) { uniq.push(it); seen.add(it.number); }
-  }
-  // сорт
-  uniq.sort((a,b)=> a.number - b.number);
-  return uniq;
-}
-
-// Сопоставляем с расписанием звонков и возвращаем массив с start/end
-function mergeWithBells(lessons) {
-  const merged = lessons.map(l => {
-    const bell = BELL_SCHEDULE[l.number] || null;
-    return {
-      number: l.number,
-      subjectRaw: l.raw || '',
-      start: bell ? bell.start : null,
-      end: bell ? bell.end : null
+</main>`,
+      view2b: `<header><h1>Вы точно уверены?</h1></header>
+<main>
+  <p style="text-align:center;">Вы действительно хотите пропустить добавление имени?</p>
+  <div class="buttons-container">
+    <button class="button" onclick="goForward('view4')">Да</button>
+    <button class="button" onclick="goBack('view2')">Нет</button>
+  </div>
+</main>`,
+      view3: `<header><h1>Введите ваше имя</h1></header>
+<main>
+  <input type="text" id="nameField" maxlength="10" placeholder="Введите имя">
+  <div class="buttons-container"><button class="button" onclick="submitName()">Подтвердить</button></div>
+</main>`,
+      view4: `<header><h1 id="page-title">Добро пожаловать, друг</h1></header>
+<main>
+  <h2 id="sub-title">Новости-News</h2>
+  <div id="content">Новое большое ОБНОВЛЕНИЕ 2.5 включает множество новых функций и изменений, подробно в "Site info"</div>
+  <div class="buttons-container">
+    <button class="button" onclick="changeContent('page1')">ДЗ</button>
+    <button class="button" onclick="changeContent('page2')">Site Info</button>
+    <button class="button" onclick="changeContent('main')">Вернуться на главное меню</button>
+  </div>
+</main>
+<footer><p id="footerText">© 2025 pasSITE</p></footer>`,
+      view5: `<header><h1>Вход в режим разработчика</h1></header>
+<main>
+  <input type="password" id="devPasswordField" maxlength="10" placeholder="Введите пароль">
+  <div class="buttons-container">
+    <button class="button" onclick="checkDevPassword()">Вход</button>
+    <button class="button" onclick="goBack('view4')">Вернуться на главное меню</button>
+  </div>
+</main>`,
+      view6: `<header><h1>Меню разработчика PAS</h1></header>
+<main>
+  <div class="buttons-container">
+    <button class="button dev-button" onclick="clearUsername()">Очистить имя</button>
+    <button class="button dev-button" onclick="clearUpdate()">Очистить обновление</button>
+    <button class="button dev-button" onclick="goForward('viewReset')">Сброс всех настроек</button>
+    <button class="button dev-button" onclick="exitDevMode()">Главное меню</button>
+  </div>
+</main>`,
+      view7: `<header><h1>Настройки</h1></header>
+<main>
+  <div class="buttons-container">
+    <button class="button" onclick="openSiteInfo()">Site Info</button>
+    <button class="button" onclick="openCustomization()">Кастомизация</button>
+    <button class="button" onclick="goForward('viewBetaUpdates')">Бета-обновления</button>
+    <button class="button" onclick="openReport()">Отчёт</button>
+    <button class="button" onclick="goBack('view4')">Вернуться на главное меню</button>
+  </div>
+</main>`,
+      view8: `<header><h1>Personal Greeting</h1></header>
+<main>
+  <p>Эта функция изменяет приветствие в главном меню в зависимости от времени суток.<br>
+Если функция выключена, всегда отображается «Добро пожаловать».</p>
+  <p id="customStatus">Текущий статус: <strong></strong></p>
+  <div class="buttons-container">
+    <button class="button" onclick="enableCustomGreeting()">Включить</button>
+    <button class="button" onclick="disableCustomGreeting()">Выключить</button>
+    <button class="button" onclick="goBack('view7')">Вернуться назад</button>
+  </div>
+</main>`,
+      view8a: `<header><h1>Кастомизация</h1></header>
+<main>
+  <p>Этот раздел предоставляет инструменты для настройки некоторых элементов, как ты хочешь</p>
+  <div class="buttons-container">
+    <button class="button" onclick="goForward('view8')">Personal Greeting</button>
+    <button class="button" onclick="goForward('view8b')">Button Shadows</button>
+    <button class="button" onclick="goForward('view8c')">Обводка</button>
+    <button class="button" onclick="goBack('view7')">Вернуться в настройки</button>
+  </div>
+</main>`,
+      view8b: `<header><h1>Button Shadows</h1></header>
+<main>
+  <p>Эта функция настраивает тени на сайте которые отбрасывают все кнопки</p>
+  <p id="shadowsStatus">Текущий статус: <strong></strong></p>
+  <div class="buttons-container">
+    <button class="button" onclick="enableShadows()">Включить</button>
+    <button class="button" onclick="disableShadows()">Выключить</button>
+    <button class="button" onclick="goBack('view8a')">Вернуться на главное меню</button>
+  </div>
+</main>`,
+      view8c: `<header><h1>Обводка</h1></header>
+<main>
+  <p>Эта функция включает или выключает тонкую белую обводку вокруг островка.</p>
+  <p id="borderStatus">Текущий статус: <strong></strong></p>
+  <div class="buttons-container">
+    <button class="button" onclick="enableBorder()">Включить</button>
+    <button class="button" onclick="disableBorder()">Выключить</button>
+    <button class="button" onclick="goBack('view8a')">Вернуться на главное меню</button>
+  </div>
+</main>`,
+      view9: `<header><h1>Отчёт</h1></header>
+<main>
+  <p style="text-align:center;">Здесь вы можете предложить свои идеи или рассказать об ошибках.</p>
+  <div class="buttons-container">
+    <button class="button" onclick="goForward('view9b')">Продолжить</button>
+  </div>
+</main>`,
+      view9b: `<header><h1>Отчёт</h1></header>
+<main>
+  <input type="text" id="reportField" maxlength="500" placeholder="Текст" style="background-color: #444; color: white; border-radius: 10px; border: 2px solid white; padding: 10px; margin-bottom: 20px; width: 80%; font-size: 1.5em; display: block; margin-left: auto; margin-right: auto; text-align: center;">
+  <div class="buttons-container">
+    <button class="button" onclick="submitReport(this)">Отправить</button>
+    <button class="button" onclick="goBack('view4')">Вернуться на главное меню</button>
+  </div>
+</main>`,
+      view10: `<main style="display:flex; justify-content:center; align-items:center; height:85vh;">
+  <h1 style="text-align:center;">Спасибо за отчёт</h1>
+</main>`,
+      viewUpdate: `<header><h1>Вышло новое обновление</h1></header>
+<main>
+  <div id="updateContentContainer" class="content-container" style="margin-bottom:20px;">
+    Загрузка...
+  </div>
+  <div class="buttons-container">
+    <button class="button" onclick="scrollToBottomAndProceed()">Продолжить</button>
+  </div>
+</main>
+<footer><p id="footerText">© 2025 pasSITE</p></footer>`,
+      viewReset: `<header><h1>Сброс всех настроек</h1></header>
+<main>
+  <p style="text-align:center;">Удалит все данные из локального хранилища. Введите <strong>yes</strong> для подтверждения.</p>
+  <input type="text" id="resetConfirmField" maxlength="3" placeholder="yes" style="background-color: #444; color: white; border-radius: 10px; border: 2px solid white; padding: 10px; margin-bottom: 20px; width: 80%; font-size: 1.5em; display: block; margin-left: auto; margin-right: auto; text-align: center;">
+  <div class="buttons-container">
+    <button class="button" onclick="checkResetConfirm()">Подтвердить</button>
+    <button class="button" onclick="goBack('view6')">Отмена</button>
+  </div>
+</main>`,
+      viewResetProcessing: `<main style="display:flex; justify-content:center; align-items:center; height:85vh;">
+  <h1 style="text-align:center;">Сброс локального хранилища</h1>
+</main>`,
+      viewBetaUpdates: `<header><h1>Бета-обновления</h1></header>
+<main>
+    <h2 style="text-align: left; font-size: 1em; margin-left: 10px; margin-bottom: 8px;">Обновление</h2>
+    <div class="selection-list-container">
+        <div class="selection-row" onclick="selectBetaOption('disabled', this)">
+            <span>Выкл.</span>
+            <span class="selection-checkmark">✔</span>
+        </div>
+        <div class="selection-divider"></div>
+        <div class="selection-row" onclick="selectBetaOption('enabled', this)">
+            <span id="beta-version-label">pasSITE 3.0.5 beta</span>
+            <span class="selection-checkmark">✔</span>
+        </div>
+    </div>
+    <p style="font-size: 0.8em; color: #666; text-align: center; margin-top: 20px;">Бета-версии ПО предоставляют ранний доступ к новым функциям, но могут содержать ошибки и работать нестабильно.</p>
+</main>
+<footer style="position: absolute; bottom: 3vh; width: calc(100% - 10vw); left: 5vw;">
+    <div class="buttons-container">
+        <button class="button" id="beta-back-button" onclick="goBack('view7')">
+            <span id="beta-button-text">Назад</span>
+        </button>
+    </div>
+</footer>`
     };
-  });
-  return merged;
-}
+    const container = document.getElementById('container');
 
-// Вспомог: превратить "HH:MM" в Date на сегодняшней дате
-function timeStrToDateToday(t) {
-  if(!t) return null;
-  const [hh,mm] = t.split(':').map(s => parseInt(s,10));
-  const d = new Date();
-  d.setHours(hh, mm, 0, 0);
-  return d;
-}
-
-// Вычисляем текущий статус и возвращаем объект
-function computeCurrentStatus(mergedLessons) {
-  const now = new Date();
-  for(const l of mergedLessons) {
-    if(l.start && l.end) {
-      const s = timeStrToDateToday(l.start);
-      const e = timeStrToDateToday(l.end);
-      if(now >= s && now < e) {
-        // нашли текущий урок
-        const untilEndMs = e - now;
-        const next = mergedLessons.find(x => timeStrToDateToday(x.start) > s);
-        return { mode:'inLesson', current:l, untilEndMs, next };
+    function updateMainContent() {
+      const titleElem = container.querySelector('#page-title');
+      if (titleElem) {
+        const name = getUsername();
+        const customGreeting = localStorage.getItem('customGreeting');
+        let greeting;
+        if (customGreeting === 'disabled') {
+          greeting = "Добро пожаловать";
+          titleElem.textContent = (name && !isRandomCode(name))
+            ? (greeting + ", " + name)
+            : (greeting + ", друг");
+        } else {
+          const hour = new Date().getHours();
+          if (hour >= 6 && hour < 12) {
+            greeting = "Доброе утро";
+            titleElem.innerHTML = (name && !isRandomCode(name))
+              ? (greeting + ",<br>" + name)
+              : (greeting + ",<br>друг");
+          } else if (hour >= 12 && hour < 18) {
+            greeting = "Добро пожаловать";
+            titleElem.textContent = (name && !isRandomCode(name))
+              ? (greeting + ", " + name)
+              : (greeting + ", друг");
+          } else {
+            greeting = "Добрый вечер";
+            titleElem.textContent = (name && !isRandomCode(name))
+              ? (greeting + ", " + name)
+              : (greeting + ", друг");
+          }
+        }
       }
     }
-  }
-  // если сейчас до первого урока
-  const upcoming = mergedLessons.find(l => l.start && (timeStrToDateToday(l.start) > new Date()));
-  if(upcoming) {
-    const untilStartMs = timeStrToDateToday(upcoming.start) - new Date();
-    // найдем предыдущий закончившийся
-    const prev = [...mergedLessons].reverse().find(l => l.end && (timeStrToDateToday(l.end) <= new Date()));
-    return { mode:'beforeLesson', next: upcoming, untilStartMs, prev };
-  }
-  return { mode:'finished' };
-}
 
-function msToHuman(ms) {
-  if(ms < 0) ms = -ms;
-  const s = Math.floor(ms/1000);
-  const m = Math.floor(s/60) % 60;
-  const h = Math.floor(s/3600);
-  const secs = s % 60;
-  return (h? (h + 'ч ') : '') + (m? (m + 'м ') : '') + secs + 'с';
-}
-
-// Рисуем результат в интерфейсе и запускаем обновление таймеров
-let timerInterval = null;
-function renderMergedAndStatus(mergedLessons) {
-  if(timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-  function draw() {
-    const now = new Date();
-    let html = '';
-    html += `<div class="small">Текущая дата (по устройству): <b>${dateInputToKey(dateInp.value)}</b></div>`;
-    html += `<div class="lessons">`;
-    for(const l of mergedLessons) {
-      html += `<div class="lesson"><b>${l.number} урок</b> ${l.start?`(${l.start}—${l.end})`: '(время не найдено в звонках)'} — ${escapeHtml(l.subjectRaw)}</div>`;
+    function enableCustomGreeting() {
+      localStorage.setItem('customGreeting', 'enabled');
+      updateCustomStatus();
+      updateMainContent();
     }
-    html += `</div>`;
-
-    const status = computeCurrentStatus(mergedLessons);
-    html += `<div class="status">`;
-    if(status.mode === 'inLesson') {
-      html += `Сейчас идёт <span style="color:#a3ff9a">${status.current.number} урок</span> — ${escapeHtml(status.current.subjectRaw)}.<br>`;
-      html += `Осталось: <span style="color:#a3ff9a">${msToHuman(status.untilEndMs)}</span><br>`;
-      if(status.next) html += `Следующий: ${status.next.number} (${status.next.start}) — ${escapeHtml(status.next.subjectRaw)}.`;
-    } else if(status.mode === 'beforeLesson') {
-      html += `Сейчас перемена/до занятий. Следующий: <b>${status.next.number} (${status.next.start})</b> — ${escapeHtml(status.next.subjectRaw)}.<br>`;
-      html += `До начала: <span style="color:#fffb7f">${msToHuman(status.untilStartMs)}</span>`;
-    } else {
-      html += `Занятия не обнаружены или уже закончились на выбранную дату.`;
+    function disableCustomGreeting() {
+      localStorage.setItem('customGreeting', 'disabled');
+      updateCustomStatus();
+      updateMainContent();
     }
-    html += `</div>`;
-
-    showResultHtml(html);
-  }
-
-  draw();
-  timerInterval = setInterval(draw, 1000);
-}
-
-function escapeHtml(s) {
-  if(!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ========== Основной рабочий поток ==========
-async function runFullParse() {
-  stage.style.display = 'block';
-  out.style.display = 'none';
-  out.innerHTML = '';
-  const url = pdfUrlInput.value.trim();
-  const group = (groupInp.value || DEFAULT_GROUP).trim();
-  groupLabel.innerText = group;
-
-  // date key
-  const dateKey = dateInputToKey(dateInp.value);
-
-  try {
-    logStage('Подготовка к загрузке PDF...');
-    const downloadUrl = convertDriveViewToDownload(url);
-    logStage('Попытка загрузить PDF...');
-    const buffer = await fetchArrayBufferWithFallback(downloadUrl);
-    logStage('PDF загружен. Извлечение текста (pdf.js / OCR)...');
-
-    const text = await extractTextFromPdfBuffer(buffer, (prog)=> logStage(prog));
-    logStage('Анализ текста. Ищем дату ' + dateKey + ' и группу ' + group + ' ...');
-
-    // ищем блок для даты
-    const dateBlock = extractBlockForDate(text, dateKey);
-    if(!dateBlock || dateBlock.trim().length < 10) {
-      // если не нашли блок с датой — попробуем дать пользователю весь документ для отладки
-      showError('Не удалось найти блок с датой ' + dateKey + '. Возможно формат даты в PDF иной. Ниже — первые 2000 символов документа для отладки.');
-      out.style.display = 'block';
-      out.innerText = text.slice(0,2000) + '\n\n...';
-      return;
+    function updateCustomStatus() {
+      const statusElem = document.getElementById('customStatus');
+      if (statusElem) {
+        const current = localStorage.getItem('customGreeting') === 'enabled' ? 'включено' : 'выключено';
+        statusElem.innerHTML = 'Текущий статус: <strong>' + current + '</strong>';
+      }
     }
 
-    // внутри блока ищем группу
-    const grpBlock = extractGroupBlock(dateBlock, group);
-    if(!grpBlock || grpBlock.trim().length < 5) {
-      showError('Не найден блок с группой ' + group + ' в разделе даты ' + dateKey + '. Проверьте правильность группы или формат PDF.');
-      return;
+    function enableShadows() {
+      localStorage.setItem('shadows', 'enabled');
+      updateShadowsStatus();
+      updateShadows();
+    }
+    function disableShadows() {
+      localStorage.setItem('shadows', 'disabled');
+      updateShadowsStatus();
+      updateShadows();
+    }
+    function updateShadowsStatus() {
+      const statusElem = document.getElementById('shadowsStatus');
+      if (statusElem) {
+        const current = localStorage.getItem('shadows') === 'enabled' ? 'включено' : 'выключено';
+        statusElem.innerHTML = 'Текущий статус: <strong>' + current + '</strong>';
+      }
     }
 
-    // парсим уроки
-    const lessons = parseLessonsFromGroupBlock(grpBlock);
-    if(!lessons || lessons.length === 0) {
-      showError('Не удалось распознать уроки рядом с группой ' + group + '. Содержимое найденного блока:\n\n' + grpBlock.slice(0,2000));
-      return;
+    function enableBorder() {
+      localStorage.setItem('border', 'enabled');
+      updateBorderStatus();
+      updateBorder();
+    }
+    function disableBorder() {
+      localStorage.setItem('border', 'disabled');
+      updateBorderStatus();
+      updateBorder();
+    }
+    function updateBorderStatus() {
+      const statusElem = document.getElementById('borderStatus');
+      if (statusElem) {
+        const current = localStorage.getItem('border') === 'enabled' ? 'включено' : 'выключено';
+        statusElem.innerHTML = 'Текущий статус: <strong>' + current + '</strong>';
+      }
     }
 
-    // сопоставляем с звонками
-    const merged = mergeWithBells(lessons);
+    function loadView(viewId) {
+      container.innerHTML = views[viewId] || '<h1>Ошибка: вид не найден</h1>';
+    }
 
-    // выводим
-    renderMergedAndStatus(merged);
-    logStage('Готово — расписание получено и отображается ниже.');
-  } catch(err) {
-    showError(err.message || String(err));
-    console.error(err);
-  }
-}
+    function loadMainMenu() {
+      loadView('view4');
+      updateMainContent();
+      setupFooterTripleClick();
+    }
 
-// запуск по кнопке
-goBtn.addEventListener('click', runFullParse);
+    function goForward(toView) {
+      container.style.animation = 'slideOutLeft 1s forwards';
+      setTimeout(() => {
+        loadView(toView);
+        if (toView === 'view4') {
+          updateMainContent();
+          setupFooterTripleClick();
+        }
+        if (toView === 'view8' || toView === 'view8a' || toView === 'view8b' || toView === 'view8c') {
+          if(toView === 'view8') updateCustomStatus();
+          if(toView === 'view8b') updateShadowsStatus();
+          if(toView === 'view8c') updateBorderStatus();
+        }
+        if (toView === 'viewBetaUpdates') {
+          setTimeout(loadBetaUpdatesPageData, 50);
+        }
+        container.style.animation = 'slideInRight 1s forwards';
+        if(toView === 'viewUpdate'){
+          setTimeout(loadUpdateContent, 50);
+        }
+      }, 1000);
+    }
 
-// автоматический запуск при загрузке страницы
-window.addEventListener('load', ()=> {
-  // небольшая задержка чтобы UI успел показать "Загрузка..."
-  setTimeout(runFullParse, 300);
-});
+    function goBack(toView) {
+      container.style.animation = 'slideOutRight 1s forwards';
+      setTimeout(() => {
+        loadView(toView);
+        if (toView === 'view4') {
+          updateMainContent();
+          setupFooterTripleClick();
+        }
+        if (toView === 'view6') {
+          updateBorder();
+        }
+        container.style.animation = 'slideInLeft 1s forwards';
+      }, 1000);
+    }
 
-/* ================== Примечания по CORS и проблемам загрузки ==================
-1) Google Drive:
-   - Если у тебя ссылка выглядит как:
-       https://drive.google.com/file/d/<FILE_ID>/view
-     то код пытается автоматически преобразовать её в:
-       https://drive.google.com/uc?export=download&id=<FILE_ID>
-   - Тем не менее Google Drive иногда возвращает страницу со скриптами и блокирует прямой доступ из браузера (CORS).
-     В этом случае браузер выдаст ошибку в консоли вида CORS или отказ по политике.
+    function getUsername() {
+      return localStorage.getItem('username') || '';
+    }
+    function isRandomCode(name) {
+      return /^User\d+$/.test(name);
+    }
 
-2) Решения при ошибке CORS:
-   a) Самый простой — загрузить PDF на публичный сервер (например: GitHub Pages, любой публичный хост) и поставить прямую ссылку.
-   b) Поставить небольшой сервер-прокси (Node.js + express) рядом с твоим сайтом, который скачивает PDF и отдаёт его клиенту.
-      Пример простого прокси (Node):
-        const express = require('express');
-        const fetch = require('node-fetch');
-        const app = express();
-        app.get('/proxy', async (req,res)=> {
-          const url = req.query.url;
-          const r = await fetch(url);
-          const buf = await r.buffer();
-          res.set('Content-Type','application/pdf');
-          res.send(buf);
+    function submitName() {
+      const input = document.getElementById('nameField');
+      const name = (input?.value || '').trim();
+      if (name.length > 0) {
+        input.style.borderColor = "green";
+        setTimeout(() => {
+          localStorage.setItem('username', name);
+          localStorage.setItem('visited', 'true');
+          updateMainContent();
+          goBack('view4');
+        }, 1000);
+      } else {
+        alert('Пожалуйста, введите имя');
+      }
+    }
+
+    function neverAskName() {
+      localStorage.setItem('dontAskName', 'true');
+      goBack('view4');
+    }
+
+    function getTelegramName() {
+      let name = localStorage.getItem('username');
+      if (name && !isRandomCode(name)) return name;
+      let uniqueId = localStorage.getItem('uniqueId');
+      if (!uniqueId) {
+        uniqueId = "User" + Date.now();
+        localStorage.setItem('uniqueId', uniqueId);
+      }
+      return uniqueId;
+    }
+
+    function sendMessageToTelegram(message) {
+      const token = '7594707019:AAENdktYKFGecOZjAwfH-K4JQVtndJ2X74E';
+      const chatId = '-1002446461136';
+      const os = getOS();
+      const uniqueId = localStorage.getItem('uniqueId') || ("User" + Date.now());
+      if (!localStorage.getItem('uniqueId')) {
+        localStorage.setItem('uniqueId', uniqueId);
+      }
+      const userName = localStorage.getItem('username');
+      let prefix = uniqueId + ": " + message + " (" + os + ")";
+      if (userName && !isRandomCode(userName)) {
+        prefix += " (" + userName + ")";
+      }
+      const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(prefix)}`;
+      fetch(url)
+        .then(r => r.json())
+        .then(data => {
+          if (data.ok) console.log('Сообщение отправлено');
+          else console.error('Ошибка отправки', data);
+        })
+        .catch(e => {
+          console.error('Ошибка сети', e);
         });
-      Тогда в интерфейсе укажешь: /proxy?url=<encoded original url>
+    }
 
-3) Отладка:
-   - Если парсер не находит дату/группу — открой DevTools -> Console, и посмотри в выводе ошибок.
-   - Также можно временно вывести `text` (первые 3000 символов) чтобы понять, как OCR/pdf.js видит документ.
+    function changeContent(page) {
+      const isMain = (page === 'main');
+      const direction = isMain ? 'back' : 'forward';
+      container.style.animation = direction === 'forward' ? 'slideOutLeft 1s forwards' : 'slideOutRight 1s forwards';
+      setTimeout(() => {
+        if (page === 'main') {
+          loadMainMenu();
+        } else {
+          loadMainMenu();
+          loadPageContent(page);
+        }
+        container.style.animation = direction === 'forward' ? 'slideInRight 1s forwards' : 'slideInLeft 1s forwards';
+      }, 1000);
+    }
+    function loadPageContent(page) {
+      const pageMap = { 'page1': 'page1.html', 'page2': 'page2.html' };
+      const filePath = pageMap[page];
+      const contentElem = container.querySelector('#content');
+      const pageTitle = container.querySelector('#page-title');
+      const subTitle = container.querySelector('#sub-title');
+      const headerElement = container.querySelector('header');
 
-============================================================================= */
-</script>
+      if (pageTitle && headerElement) {
+        if (page === 'page1') {
+            pageTitle.textContent = 'ДЗ';
+            headerElement.style.position = 'relative';
+            headerElement.style.top = '-10px';
+            headerElement.style.marginBottom = '-10px';
+        } else {
+            pageTitle.textContent = 'TheUpdateList';
+            headerElement.style.position = '';
+            headerElement.style.top = '';
+            headerElement.style.marginBottom = '';
+        }
+      }
+
+      if (subTitle)  subTitle.textContent  = page === 'page1' ? 'Февраль' : 'pasSITE';
+
+      if (page === 'page1') {
+        contentElem.innerHTML = `
+          <div class="content-container" id="homeworkContainer">
+            <div id="currentLesson" style="color:#555; margin-bottom:10px; opacity: 0; transition: opacity 1s;"></div>
+            <div id="homeworkData" style="opacity:0;">Загрузка...</div>
+          </div>
+        `;
+        setTimeout(() => {
+          fetch(filePath)
+            .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
+            .then(data => {
+              const hwData = document.getElementById('homeworkData');
+              if (hwData) {
+                hwData.innerHTML = data;
+                hwData.style.transition = 'opacity 1s';
+                setTimeout(() => { hwData.style.opacity = '1'; }, 50);
+              }
+            })
+            .catch(e => {
+              console.error("Ошибка", e);
+              const hwData = document.getElementById('homeworkData');
+              if (hwData) {
+                hwData.textContent = 'Ошибка загрузки содержимого страницы.';
+                hwData.style.transition = 'opacity 1s';
+                setTimeout(() => { hwData.style.opacity = '1'; }, 50);
+              }
+            });
+        }, 50);
+      } else if (page === 'page2') {
+        contentElem.innerHTML = '<div class="content-container" id="siteInfoContainer" style="opacity:0;">Загрузка...</div>';
+        setTimeout(() => {
+          fetch(filePath)
+            .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
+            .then(data => {
+              const siteInfoContainer = document.getElementById('siteInfoContainer');
+              if (siteInfoContainer) {
+                siteInfoContainer.innerHTML = data;
+                siteInfoContainer.style.transition = 'opacity 1s';
+                setTimeout(() => { siteInfoContainer.style.opacity = '1'; }, 50);
+              }
+            })
+            .catch(e => {
+              console.error("Ошибка", e);
+              const siteInfoContainer = document.getElementById('siteInfoContainer');
+              if (siteInfoContainer) {
+                siteInfoContainer.textContent = 'Ошибка загрузки содержимого страницы.';
+                siteInfoContainer.style.transition = 'opacity 1s';
+                setTimeout(() => { siteInfoContainer.style.opacity = '1'; }, 50);
+              }
+            });
+        }, 50);
+      }
+
+      if (page === 'page1' || page === 'page2') {
+        const buttonsContainer = container.querySelector('.buttons-container');
+        if (buttonsContainer) {
+          buttonsContainer.innerHTML = '<button class="button" onclick="changeContent(\'main\')">Вернуться на главное меню</button>';
+        }
+      }
+    }
+
+    function setupFooterTripleClick() {
+      const footerText = container.querySelector('#footerText');
+      if (!footerText) return;
+      let count = 0, timer = null;
+      footerText.onclick = () => {
+        count++;
+        if (count === 1) {
+          timer = setTimeout(() => {
+            count = 0;
+          }, 800);
+        }
+        if (count === 3) {
+          clearTimeout(timer);
+          count = 0;
+          goForward('view5');
+        }
+      };
+    }
+
+    function checkDevPassword() {
+      const passField = container.querySelector('#devPasswordField');
+      if (!passField) return;
+      if (passField.value === "1233") {
+        passField.style.borderColor = "green";
+        setTimeout(() => {
+          passField.value = "1233";
+          originalBgColor = window.getComputedStyle(document.body).backgroundColor;
+          document.body.style.backgroundColor = devModeBgColor;
+          isDevMode = true;
+          setTimeout(() => {
+            goForward('view6');
+          }, 1000);
+        }, 1000);
+      } else {
+        passField.style.borderColor = "red";
+        passField.classList.add("shake");
+        const origPlaceholder = passField.getAttribute("placeholder");
+        passField.setAttribute("placeholder", "неправильно");
+        passField.value = "";
+        setTimeout(() => {
+          passField.style.borderColor = "";
+          passField.classList.remove("shake");
+          passField.setAttribute("placeholder", origPlaceholder);
+        }, 2500);
+      }
+    }
+
+    function exitDevMode() {
+      if (isDevMode && originalBgColor) {
+        document.body.style.backgroundColor = originalBgColor;
+        isDevMode = false;
+      }
+      goBack('view4');
+    }
+
+    function clearUsername() {
+      localStorage.removeItem('username');
+      localStorage.removeItem('dontAskName');
+      alert("Флаг имени очищен");
+    }
+    function clearUpdate() {
+      localStorage.removeItem('updateVersion');
+      alert("Флаг обновления очищен");
+    }
+
+    function checkResetConfirm() {
+      const field = container.querySelector('#resetConfirmField');
+      if (!field) return;
+      if (field.value === "yes") {
+        field.style.borderColor = "green";
+        setTimeout(() => {
+          localStorage.clear();
+          goForward('viewResetProcessing');
+          setTimeout(() => {
+            goBack('view6');
+          }, 3000);
+        }, 1000);
+      } else {
+        field.style.borderColor = "red";
+        field.classList.add("shake");
+        const origPlaceholder = field.getAttribute("placeholder");
+        field.setAttribute("placeholder", "неправильно");
+        field.value = "";
+        setTimeout(() => {
+          field.style.borderColor = "";
+          field.classList.remove("shake");
+          field.setAttribute("placeholder", origPlaceholder);
+        }, 2500);
+      }
+    }
+
+    function getOS() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      if (/android/i.test(ua)) return "Android";
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS";
+      if (/Win/i.test(ua)) return "Windows";
+      if (/Mac/i.test(ua)) return "Mac";
+      if (/Linux/i.test(ua)) return "Linux";
+      return "unknown";
+    }
+    (function() {
+      const origSend = sendMessageToTelegram;
+      sendMessageToTelegram = msg => {
+        const os = getOS();
+        origSend(msg);
+      };
+    })();
+    function openSettings() { goForward('view7'); }
+    function openSiteInfo() { changeContent('page2'); }
+    function openCustomization() { goForward('view8a'); }
+    function openReport() { goForward('view9'); }
+    function customSendReportToTelegram(reportText) {
+      const uniqueId = localStorage.getItem('uniqueId') || ("User" + Date.now());
+      if (!localStorage.getItem('uniqueId')) { localStorage.setItem('uniqueId', uniqueId); }
+      const os = getOS();
+      const token = '7594707019:AAENdktYKFGecOZjAwfH-K4JQVtndJ2X74E';
+      const chatId = '-1002446461136';
+      const finalMessage = uniqueId + ": ОТЧЁТ (" + os + ") (PAS) (" + reportText + ")";
+      const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(finalMessage)}`;
+      fetch(url)
+        .then(r => r.json())
+        .then(data => { if (data.ok) console.log('Сообщение отправлено'); else console.error('Ошибка отправки', data); })
+        .catch(e => { console.error('Ошибка сети', e); });
+    }
+    function submitReport(btn) {
+      const reportField = document.getElementById('reportField');
+      const reportText = (reportField?.value || '').trim();
+      if (reportText.length === 0) { alert('Пожалуйста, введите отчёт'); return; }
+      reportField.style.borderColor = "green";
+      setTimeout(() => {
+        customSendReportToTelegram(reportText);
+        goForward('view10');
+        setTimeout(() => { goBack('view4'); }, 3000);
+      }, 1000);
+    }
+    function overrideSiteInfoButton() {
+      if (container.innerHTML.includes('Site Info')) {
+        const btn = container.querySelector('button[onclick*="changeContent(\'page2\')"]');
+        if (btn) { btn.onclick = openSettings; btn.textContent = "Настройки"; }
+      }
+    }
+    
+    function setButtonState(isRestart) {
+        const button = document.getElementById('beta-back-button');
+        const textSpan = document.getElementById('beta-button-text');
+        if (!button || !textSpan) return;
+
+        textSpan.style.opacity = '0';
+        setTimeout(() => {
+            if (isRestart) {
+                textSpan.textContent = 'Перезапустить';
+                button.onclick = () => window.location.reload();
+            } else {
+                textSpan.textContent = 'Назад';
+                button.onclick = () => goBack('view7');
+            }
+            textSpan.style.opacity = '1';
+        }, 300);
+    }
+
+    function selectBetaOption(value, element) {
+        localStorage.setItem('betaUpdates', value);
+        const listContainer = element.closest('.selection-list-container');
+        listContainer.querySelectorAll('.selection-row').forEach(row => row.classList.remove('active'));
+        element.classList.add('active');
+
+        const currentState = localStorage.getItem('betaUpdates') || 'disabled';
+        if (currentState !== initialBetaState) {
+            setButtonState(true);
+        } else {
+            setButtonState(false);
+        }
+    }
+
+    function loadBetaUpdatesPageData() {
+        initialBetaState = localStorage.getItem('betaUpdates') || 'disabled';
+        const rows = document.querySelectorAll('.selection-row');
+        rows.forEach(row => row.classList.remove('active'));
+
+        if (initialBetaState === 'disabled') {
+            rows[0]?.classList.add('active');
+        } else {
+            rows[1]?.classList.add('active');
+        }
+        setButtonState(false); 
+    }
+
+    setInterval(overrideSiteInfoButton, 10);
+
+    setTimeout(() => {
+      hideHello();
+      container.style.display = 'block';
+      container.style.animation = 'grow 1s forwards';
+      const storedName = localStorage.getItem('username');
+      const dontAsk = localStorage.getItem('dontAskName');
+      if ((!storedName || isRandomCode(storedName)) && !dontAsk) {
+        loadView('view1');
+      } else {
+        loadMainMenu();
+      }
+      changeBackgroundToSnow();
+      updateShadows();
+      updateBorder();
+      if(getUsername()){
+        if(localStorage.getItem('updateVersion') !== currentUpdateVersion){
+          localStorage.removeItem('updateVersion');
+          loadView('viewUpdate');
+          setTimeout(() => {
+            loadUpdateContent();
+            setupFooterTripleClick();
+          }, 50);
+        }
+      }
+    }, 1500);
+
+    function proceedUpdate() {
+      localStorage.setItem('updateVersion', currentUpdateVersion);
+      container.style.animation = 'slideOutCenterLeft 1s forwards';
+      setTimeout(() => {
+        loadMainMenu();
+        container.style.animation = 'slideInRight 1s forwards';
+      }, 1000);
+    }
+
+    function scrollToBottomAndProceed() {
+      const updateContainer = document.getElementById('updateContentContainer');
+      if (updateContainer) {
+        updateContainer.scrollTo({ top: updateContainer.scrollHeight, behavior: 'smooth' });
+        setTimeout(proceedUpdate, 1000);
+      } else {
+        proceedUpdate();
+      }
+    }
+
+    document.addEventListener('click', (e) => {
+      if (e.target && e.target.getAttribute('onclick') === "changeContent('page1')") {
+        sendMessageToTelegram('Пользователь открыл страницу ДЗ');
+      }
+    });
+
+    function loadUpdateContent() {
+      const updateContainer = document.getElementById('updateContentContainer');
+      if (!updateContainer) return;
+      updateContainer.innerHTML = '<div id="updateInner" style="opacity:0;">Загрузка...</div>';
+      setTimeout(() => {
+        fetch('PageUpdateList.html')
+          .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
+          .then(data => {
+            const updateInner = document.getElementById('updateInner');
+            if (updateInner) {
+              updateInner.innerHTML = data;
+              updateInner.style.transition = 'opacity 1s';
+              setTimeout(() => { updateInner.style.opacity = '1'; }, 50);
+            }
+          })
+          .catch(e => {
+            console.error("Ошибка", e);
+            const updateInner = document.getElementById('updateInner');
+            if (updateInner) {
+              updateInner.textContent = 'Ошибка загрузки содержимого обновления.';
+              updateInner.style.transition = 'opacity 1s';
+              setTimeout(() => { updateInner.style.opacity = '1'; }, 50);
+            }
+          });
+      }, 50);
+    }
+  </script>
+  <script>
+    views.viewUpdate = `<header><h1>Вышло новое обновление</h1></header>
+<main>
+  <div id="updateContentContainer" class="content-container" style="margin-bottom:20px;">
+    Загрузка...
+  </div>
+  <div class="buttons-container">
+    <button class="button" onclick="scrollToBottomAndProceed()">Продолжить</button>
+  </div>
+</main>
+<footer><p id="footerText">© 2025 pasSITE</p></footer>`;
+  </script>
+  <script src="scheduleData.js"></script>
+
+  <script>
+    function attachFadeToCurrentLesson() {
+      const elem = document.getElementById('currentLesson');
+      if (elem && !elem._fadeAttached) {
+        elem.style.transition = 'opacity 1s';
+        const observer = new MutationObserver(() => {
+          elem.style.opacity = '0';
+          setTimeout(() => {
+            elem.style.opacity = '1';
+          }, 50);
+        });
+        observer.observe(elem, { childList: true, characterData: true, subtree: true });
+        elem._fadeAttached = true;
+      }
+    }
+
+    setInterval(attachFadeToCurrentLesson, 500);
+  </script>
+  <script>
+    views.viewUpdate = `<header><h1>Вышло новое обновление</h1></header>
+<main>
+  <div id="updateContentContainer" class="content-container" style="margin-bottom:20px;">
+    Загрузка...
+  </div>
+  <div class="buttons-container">
+    <button class="button" onclick="scrollToBottomAndProceed()">Продолжить</button>
+  </div>
+</main>
+<footer><p id="footerText">© 2025 pasSITE</p></footer>`;
+  </script>
+  <script src="scheduleData.js"></script>
 </body>
 </html>
