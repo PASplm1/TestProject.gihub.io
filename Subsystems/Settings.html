@@ -1,1 +1,466 @@
-lol
+<template id="view7">
+<header><h1>Настройки</h1></header>
+<div class="settings-container">
+  <div class="settings-scroll-container">
+    <div class="settings-group-title">Система</div>
+    <div class="button settings-button" onclick="animateAndGoForward('viewAboutSiteSystem')">
+      <div class="settings-icon">1</div>
+      <span>О системе сайта</span>
+    </div>
+    <div class="settings-group-title">Кастомизация</div>
+    <div class="button settings-button" onclick="animateAndGoForward('view8')">
+      <div class="settings-icon">2</div>
+      <span>Personal Greeting</span>
+    </div>
+    <div class="button settings-button" onclick="animateAndGoForward('view8b')">
+      <div class="settings-icon">3</div>
+      <span>Button Shadows</span>
+    </div>
+    <div class="button settings-button" onclick="shakeButton(this)">
+      <div class="settings-icon">4</div>
+      <span>Анимации</span>
+    </div>
+    <div class="button settings-button" onclick="shakeButton(this)">
+      <div class="settings-icon">5</div>
+      <span>Скорость анимаций</span>
+    </div>
+    <div class="button settings-button" onclick="animateAndGoForward('view8c')">
+      <div class="settings-icon">6</div>
+      <span>Обводка</span>
+    </div>
+    <div class="settings-group-title">Другое</div>
+    <div class="button settings-button" onclick="animateAndGoForward('view9')">
+      <div class="settings-icon">7</div>
+      <span>Отчёт и предложения</span>
+    </div>
+  </div>
+  <div class="settings-back-button-container">
+      <button class="button settings-back-button" onclick="animateAndGoBack('view4')">Назад</button>
+  </div>
+</div>
+</template>
+
+<template id="view8">
+<header><h1>Personal Greeting</h1></header>
+<div class="settings-container">
+  <div class="settings-scroll-container">
+    <div class="settings-group-title" style="margin-top: 11px;">Режим</div>
+    <div class="button settings-button settings-toggle-base" onclick="toggleSetting('customGreeting')">
+      <span class="settings-toggle-label"></span>
+      <div class="toggle-switch" data-setting="customGreeting">
+        <div class="toggle-switch-background"></div>
+        <div class="toggle-switch-handle"></div>
+      </div>
+    </div>
+    <div class="settings-group-title">Описание</div>
+    <div class="button settings-button description-block">
+        <p>Эта функция изменяет приветствие в главном меню в зависимости от времени суток.</p>
+    </div>
+    <p class="about-system-footer-note" style="margin-bottom: 5px;">Данный параметр включен по умолчанию. Его можно выключить, в таком случае интерфейс сайта тоже изменится.</p>
+  </div>
+  <div class="settings-back-button-container">
+	  <button class="button settings-back-button" onclick="animateAndGoBack('view7')">Назад</button>
+  </div>
+</div>
+</template>
+
+<template id="view8a">
+<header><h1>Кастомизация</h1></header>
+<main>
+  <p>Этот раздел предоставляет инструменты для настройки некоторых элементов, как ты хочешь</p>
+  <div class="buttons-container">
+    <button class="button" onclick="goForward('view8')">Personal Greeting</button>
+    <button class="button" onclick="goForward('view8b')">Button Shadows</button>
+    <button class="button" onclick="goForward('view8c')">Обводка</button>
+    <button class="button" onclick="goBack('view7')">Вернуться в настройки</button>
+  </div>
+</main>
+</template>
+
+<template id="view8b">
+<header><h1>Button Shadows</h1></header>
+<div class="settings-container">
+  <div class="settings-scroll-container">
+    <div class="settings-group-title" style="margin-top: 11px;">Режим</div>
+    <div class="button settings-button settings-toggle-base" onclick="toggleSetting('shadows')">
+      <span class="settings-toggle-label"></span>
+      <div class="toggle-switch" data-setting="shadows">
+        <div class="toggle-switch-background"></div>
+        <div class="toggle-switch-handle"></div>
+      </div>
+    </div>
+    <div class="settings-group-title">Описание</div>
+    <div class="button settings-button description-block">
+        <p>Эта функция настраивает тени, которые отбрасывают все кнопки на сайте.</p>
+    </div>
+    <p class="about-system-footer-note" style="margin-bottom: 5px;">Данный параметр включен по умолчанию. Его можно выключить, в таком случае интерфейс сайта тоже изменится.</p>
+  </div>
+  <div class="settings-back-button-container">
+	  <button class="button settings-back-button" onclick="animateAndGoBack('view7')">Назад</button>
+  </div>
+</div>
+</template>
+
+<template id="view8c">
+<header><h1>Обводка</h1></header>
+<div class="settings-container">
+  <div class="settings-scroll-container">
+    <div class="settings-group-title" style="margin-top: 11px;">Режим</div>
+    <div class="button settings-button settings-toggle-base" onclick="toggleSetting('border')">
+      <span class="settings-toggle-label"></span>
+      <div class="toggle-switch" data-setting="border">
+        <div class="toggle-switch-background"></div>
+        <div class="toggle-switch-handle"></div>
+      </div>
+    </div>
+    <div class="settings-group-title">Описание</div>
+    <div class="button settings-button description-block">
+        <p>Эта функция включает или выключает тонкую белую обводку вокруг основного блока.</p>
+    </div>
+    <p class="about-system-footer-note" style="margin-bottom: 5px;">Данный параметр включен по умолчанию. Его можно выключить, в таком случае интерфейс сайта тоже изменится.</p>
+  </div>
+  <div class="settings-back-button-container">
+	  <button class="button settings-back-button" onclick="animateAndGoBack('view7')">Назад</button>
+  </div>
+</div>
+</template>
+
+<template id="view9">
+<div class="settings-container">
+  <header><h1>Отчёт</h1></header>
+  <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 5px 15px 5px; gap: 15px;">
+    <div>
+      <div class="settings-group-title" style="text-align: center; padding-left: 0; margin-top: 170; margin-bottom: 8px;">Описание</div>
+      <div class="button settings-button description-block">
+          <p>Здесь вы можете предложить свои идеи или рассказать об ошибках.</p>
+      </div>
+    </div>
+    <div class="button settings-button selection-list-container">
+        <div class="selection-row" onclick="goForward('view9b')" style="justify-content: center;">
+            <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">Продолжить</span>
+        </div>
+        <div class="selection-divider"></div>
+        <div class="selection-row" onclick="goBack('view7')" style="justify-content: center;">
+            <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">Назад</span>
+        </div>
+    </div>
+  </div>
+</div>
+</template>
+
+<template id="view9b">
+<div class="settings-container">
+  <header><h1>Отчёт</h1></header>
+  <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+      <div style="position: relative; width: calc(87% + 3px); max-width: 400px; margin-top: 35px;">
+          <input type="text" id="reportField" maxlength="3000" placeholder="Текст" 
+                 style="background-color: #444; color: white; border-radius: 14px; border: 2px solid #888; padding: 13.5px 50px 13.5px 15px; width: 100%; box-sizing: border-box; font-size: 1.3em; text-align: left; margin: 0; outline: none; transition: border-color 0.3s;">
+          <div id="submitArrow" onclick="submitReport(this)" 
+               style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; background: #cccccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+      </div>
+  </div>
+  <div style="padding: 0 5px 15px 5px; display: flex; flex-direction: column; gap: 15px; margin-top: 85px;">
+    <div class="settings-back-button-container" style="padding: 0;">
+       <button class="button settings-back-button" onclick="goBack('view4')">Назад</button>
+    </div>
+  </div>
+</div>
+</template>
+
+<template id="view10">
+<main style="display:flex; justify-content:center; align-items:center; height:85vh;">
+  <h1 style="text-align:center;">Спасибо за отчет</h1>
+</main>
+</template>
+
+<template id="viewAboutSiteSystem">
+<header><h1>О системе сайта</h1></header>
+<div class="settings-container">
+  <div class="settings-scroll-container">
+    <div class="settings-group-title" style="margin-top: 11px;">Обновление</div>
+    <div class="button settings-button" onclick="animateAndGoForward('viewBetaUpdates')">
+      <span>Бета-обновления</span>
+      <span class="settings-button-value" id="beta-status-value">Выкл.</span>
+    </div>
+    <div class="settings-group-title">Система</div>
+    <div class="button settings-button about-system-foundation">
+        <div class="about-system-top-section">
+            <div class="settings-icon about-system-icon">3</div>
+            <div class="about-system-version-info">
+                <h3 style="font-size: 1.1em; font-weight: bold; margin: 0;">pasSITE</h3>
+                <span id="system-version" style="font-size: 0.9em; font-weight: bold; color: #333; line-height: 1.2;"></span>
+                <span id="system-type" style="font-size: 0.9em; color: gray; line-height: 1.2;"></span>
+            </div>
+        </div>
+        <div class="about-system-details-container" id="aboutSystemDetailsContainer"></div>
+        <button class="button about-system-whats-new-button" onclick="goForward('viewDetails')">ЧТО НОВОГО?</button>
+    </div>
+    <p class="about-system-footer-note" style="margin-bottom: 5px;">Вы можете включить бета-обновление и в таком случае будете получать доступ к тестированию новых функций.</p>
+  </div>
+  <div class="settings-back-button-container">
+	  <button class="button settings-back-button" onclick="animateAndGoBack('view7')">Назад</button>
+  </div>
+</div>
+</template>
+
+<template id="viewDetails">
+<header><h1>Что нового?</h1></header>
+<div class="settings-container">
+  <div class="settings-scroll-container show-scrollbar">
+    <div id="detailsContentArea" style="padding: 0 10px;"></div>
+  </div>
+  <div class="settings-back-button-container">
+    <button class="button settings-back-button" onclick="animateAndGoBack('viewAboutSiteSystem')">Назад</button>
+  </div>
+</div>
+</template>
+
+<template id="viewBetaUpdates">
+<header><h1>Бета-обновления</h1></header>
+<div class="settings-container">
+  <div class="settings-scroll-container">
+    <div class="settings-group-title" style="margin-top: 11px;">Обновление</div>
+    <div class="button settings-button selection-list-container">
+        <div class="selection-row" onclick="selectBetaOption('disabled', this)">
+            <span class="selection-row-label">Выкл.</span>
+            <span class="selection-checkmark">✔</span>
+        </div>
+        <div class="selection-divider"></div>
+        <div class="selection-row" onclick="selectBetaOption('enabled', this)">
+            <span class="selection-row-label" id="beta-version-label">Загрузка...</span>
+            <span class="selection-checkmark">✔</span>
+        </div>
+    </div>
+    <div class="settings-group-title" style="visibility: hidden;">Placeholder</div>
+    <div class="button settings-button" style="background: transparent !important; box-shadow: none; border: none !important; cursor: default !important;"></div>
+    <p class="about-system-footer-note" style="margin-bottom: 5px;">Бета-версии ПО предоставляют ранний доступ к новым функций, но могут содержать ошибки и работать нестабильно.</p>
+  </div>
+  <div class="settings-back-button-container">
+	  <button class="button settings-back-button" id="beta-back-button" onclick="handleBetaBackOrRestart()">Назад</button>
+  </div>
+</div>
+</template>
+
+<script>
+  window.toggleSetting = function(settingKey) {
+      const currentState = localStorage.getItem(settingKey);
+      let isCurrentlyEnabled;
+
+      if (settingKey === 'border') {
+          isCurrentlyEnabled = currentState === 'enabled';
+      } else {
+          isCurrentlyEnabled = currentState !== 'disabled';
+      }
+
+      const newState = isCurrentlyEnabled ? 'disabled' : 'enabled';
+      localStorage.setItem(settingKey, newState);
+      
+      if (settingKey === 'customGreeting') {
+          if(window.updateMainContent) window.updateMainContent();
+      } else if (settingKey === 'shadows') {
+          if(window.updateShadows) window.updateShadows();
+      } else if (settingKey === 'border') {
+          if(window.updateBorder) window.updateBorder();
+      }
+      
+      if(window.updateToggleUI) window.updateToggleUI(settingKey);
+  };
+
+  window.updateToggleUI = function(settingKey) {
+      const toggle = document.querySelector(`.toggle-switch[data-setting="${settingKey}"]`);
+      if (!toggle) return;
+
+      const label = toggle.closest('.settings-toggle-base').querySelector('.settings-toggle-label');
+      const currentState = localStorage.getItem(settingKey);
+      let isActive;
+
+      if (settingKey === 'border') {
+          isActive = currentState === 'enabled';
+      } else {
+          isActive = currentState !== 'disabled';
+      }
+
+      if(isActive) {
+          toggle.classList.add('active');
+          if(label) label.textContent = 'Включено';
+      } else {
+          toggle.classList.remove('active');
+          if(label) label.textContent = 'Выключено';
+      }
+  };
+
+  window.updateBetaButtonState = function(targetText) {
+      const button = document.getElementById('beta-back-button');
+      if (!button) return;
+
+      const currentText = button.textContent;
+      if (currentText === targetText) return;
+
+      button.style.transition = 'opacity 0.3s ease-out';
+      button.style.opacity = '0';
+
+      setTimeout(() => {
+          button.textContent = targetText;
+          button.style.transition = 'opacity 0.3s ease-in';
+          button.style.opacity = '1';
+      }, 300);
+  };
+
+  window.handleBetaBackOrRestart = function() {
+      const button = document.getElementById('beta-back-button');
+      if (!button) return;
+      
+      button.style.transition = 'transform 0.6s ease-out, opacity 0.4s ease-out';
+      button.style.transform = 'translateY(80px) scale(0.2)';
+      button.style.opacity = '0';
+      
+      if (window.betaStateChanged) {
+          setTimeout(() => {
+              window.location.reload();
+          }, 600);
+      } else {
+           setTimeout(() => goBack('viewAboutSiteSystem'), 600);
+      }
+  };
+
+  window.selectBetaOption = function(value, element) {
+      localStorage.setItem('betaUpdates', value);
+      const container = element.closest('.selection-list-container');
+      container.querySelectorAll('.selection-row').forEach(row => row.classList.remove('active'));
+      element.classList.add('active');
+      
+      if (value !== window.initialBetaState) {
+          window.betaStateChanged = true;
+          window.updateBetaButtonState('Перезапустить');
+      } else {
+          window.betaStateChanged = false;
+          window.updateBetaButtonState('Назад');
+      }
+  };
+
+  window.loadBetaUpdatesPageData = function() {
+      const currentSetting = localStorage.getItem('betaUpdates') || 'disabled';
+      window.initialBetaState = currentSetting;
+
+      const rows = document.querySelectorAll('.selection-row');
+      rows.forEach(row => row.classList.remove('active'));
+      if (currentSetting === 'disabled') {
+          rows[0]?.classList.add('active');
+      } else {
+          rows[1]?.classList.add('active');
+      }
+
+      const button = document.getElementById('beta-back-button');
+      if (button) {
+          button.textContent = 'Назад';
+          button.style.opacity = '1';
+      }
+
+      const label = document.getElementById('beta-version-label');
+      if (!label) return;
+
+      fetch('page2.html')
+          .then(r => r.ok ? r.text() : Promise.reject('Ошибка загрузки'))
+          .then(text => {
+              const versionMatch = text.match(/Version:\s*\[([^\]]+)\]/);
+              const typeMatch = text.match(/Type:\s*\[([^\]]+)\]/);
+              const version = versionMatch ? versionMatch[1].trim() : '';
+              const type = typeMatch ? typeMatch[1].trim() : '';
+              label.textContent = `pasSITE ${version} ${type}`;
+          })
+          .catch(e => {
+              console.error("Ошибка:", e);
+              label.textContent = 'Не удалось загрузить';
+          });
+  };
+
+  window.loadAboutSiteSystemData = function() {
+      const versionEl = document.getElementById('system-version');
+      const typeEl = document.getElementById('system-type');
+      const detailsEl = document.getElementById('aboutSystemDetailsContainer');
+      const betaStatusEl = document.querySelector('#beta-status-value');
+
+      if (betaStatusEl) {
+          const betaEnabled = localStorage.getItem('betaUpdates') === 'enabled';
+          betaStatusEl.textContent = betaEnabled ? 'Вкл.' : 'Выкл.';
+      }
+
+      if (!versionEl || !typeEl || !detailsEl) return;
+      
+      detailsEl.style.opacity = '0';
+      fetch('page2.html')
+          .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
+          .then(text => {
+              const versionMatch = text.match(/Version:\s*\[([^\]]+)\]/);
+              const typeMatch = text.match(/Type:\s*\[([^\]]+)\]/);
+              const version = versionMatch ? versionMatch[1].trim() : '';
+              const type = typeMatch ? typeMatch[1].trim() : '';
+              
+              versionEl.textContent = version;
+              typeEl.textContent = type;
+
+              let detailsText = text.replace(/Version:\s*\[([^\]]+)\]\s*\r?\n?/i, "");
+              detailsText = detailsText.replace(/Type:\s*\[([^\]]+)\]\s*\r?\n?/i, "");
+
+              setTimeout(() => {
+                  detailsEl.innerHTML = detailsText.trim();
+                  detailsEl.style.transition = 'opacity 1s';
+                  detailsEl.style.opacity = '1';
+              }, 50);
+          })
+          .catch(e => {
+              console.error("Ошибка", e);
+              if (detailsEl) {
+                  detailsEl.textContent = 'Ошибка загрузки содержимого.';
+                  detailsEl.style.opacity = '1';
+              }
+          });
+  };
+
+  window.customSendReportToTelegram = function(reportText) {
+    const uniqueId = localStorage.getItem('uniqueId') || ("User" + Date.now());
+    if (!localStorage.getItem('uniqueId')) { localStorage.setItem('uniqueId', uniqueId); }
+    const os = window.getOS();
+    const token = '7594707019:AAENdktYKFGecOZjAwfH-K4JQVtndJ2X74E';
+    const chatId = '-1002446461136';
+    const finalMessage = uniqueId + ": ОТЧЁТ (" + os + ") (PAS) (" + reportText + ")";
+    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(finalMessage)}`;
+    fetch(url)
+      .then(r => r.json())
+      .then(data => { if (data.ok) console.log('Сообщение отправлено'); else console.error('Ошибка отправки', data); })
+      .catch(e => { console.error('Ошибка сети', e); });
+  };
+
+  window.submitReport = function(btn) {
+    const reportField = document.getElementById('reportField');
+    const reportText = (reportField?.value || '').trim();
+    
+    if(btn) {
+        btn.style.transition = 'transform 0.15s ease-out';
+        btn.style.transform = 'translateY(-50%) scale(0.8)';
+    }
+    
+    setTimeout(() => {
+        if(btn) btn.style.transform = 'translateY(-50%) scale(1)';
+    }, 150);
+
+    if (reportText.length === 0) {
+       reportField.style.borderColor = "red";
+       reportField.classList.add("shake");
+       setTimeout(() => {
+          reportField.style.borderColor = "#888";
+          reportField.classList.remove("shake");
+       }, 2000);
+       return;
+    }
+    
+    reportField.style.borderColor = "green";
+    setTimeout(() => {
+      window.customSendReportToTelegram(reportText);
+      goForward('view10');
+      setTimeout(() => { goBack('view4'); }, 3000);
+    }, 1000);
+  };
+</script>
