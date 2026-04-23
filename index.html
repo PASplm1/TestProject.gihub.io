@@ -1,10 +1,10 @@
-<!DOCTYPE html>
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>pasSITE - Домашка</title>
   <style>
+    * { -webkit-tap-highlight-color: transparent !important; }
     body {
       font-family: Arial, sans-serif;
       margin: 0;
@@ -17,7 +17,10 @@
       overflow: hidden;
       transition: background-color 1s;
     }
-    .no-shadows .button {
+    .no-shadows .button,
+    .no-shadows .settings-icon,
+    .no-shadows .settings-back-button,
+    .no-shadows #mini-dock {
       box-shadow: none !important;
     }
     .hello {
@@ -50,6 +53,14 @@
     #container.border-enabled {
       border: 1px solid white;
     }
+    #container.border-enabled .settings-icon,
+    #container.border-enabled .settings-back-button,
+    #container.border-enabled ~ #mini-dock {
+        border-color: white;
+    }
+    #container.border-enabled .settings-button {
+        border: 2px solid white !important;
+    }
     @keyframes grow { from { transform: scale(0); } to { transform: scale(1); } }
     @keyframes slideOutRight { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(100%); opacity: 0; } }
     @keyframes slideInLeft { 0% { transform: translateX(-100%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
@@ -64,6 +75,13 @@
       100% { transform: translateX(0); }
     }
     .shake { animation: shake 0.5s; }
+    @keyframes dockShake {
+      0% { transform: translateX(-50%) translateX(0); }
+      33% { transform: translateX(-50%) translateX(10px); }
+      66% { transform: translateX(-50%) translateX(-10px); }
+      100% { transform: translateX(-50%) translateX(0); }
+    }
+    #mini-dock.shake { animation: dockShake 0.4s ease-in-out; }
     header, footer { text-align: center; }
     h1 { color: #333; }
     h2, p { color: #555; margin-bottom: 4px; }
@@ -89,7 +107,6 @@
     }
     .button:hover { background: gray; }
     .button:focus { outline: none; box-shadow: 0 0 0 2px white; }
-    .dev-button { }
     .content-container {
       max-height: 42vh;
       overflow-y: auto;
@@ -99,28 +116,13 @@
       -webkit-mask-image: linear-gradient(to bottom, transparent, black 35px, black calc(100% - 35px), transparent);
       mask-image: linear-gradient(to bottom, transparent, black 35px, black calc(100% - 35px), transparent);
     }
-    .content-container::-webkit-scrollbar { width: 5px; }
+    .content-container::-webkit-scrollbar {
+      width: 5px;
+    }
     .content-container::-webkit-scrollbar-thumb {
       background: rgba(0,0,0,0.2);
       border-radius: 10px;
     }
-    .snowflakes {
-      position: absolute;
-      top: 0; left: 0;
-      right: 0; bottom: 0;
-      pointer-events: none;
-      z-index: 1;
-      overflow: hidden;
-    }
-    .snowflake {
-      position: absolute;
-      top: -10px;
-      background-color: white;
-      border-radius: 50%;
-      opacity: 0.8;
-      animation: snow 10s linear infinite;
-    }
-    @keyframes snow { 0% { transform: translateX(0) translateY(0); opacity: 0.8; } 100% { transform: translateX(50px) translateY(100vh); opacity: 0; } }
     input[type="text"],
     input[type="password"] {
       background-color: #444;
@@ -129,7 +131,8 @@
       border: 2px solid white;
       padding: 10px;
       margin-bottom: 20px;
-      width: 80%;
+      width: 87%;
+      box-sizing: border-box;
       font-size: 1.5em;
       display: block;
       margin-left: auto;
@@ -137,57 +140,425 @@
       text-align: center;
     }
     #devError { text-align: center; }
-    .selection-list-container {
-      background: rgba(255, 255, 255, 0.4);
-      border-radius: 12px;
-      padding: 5px 0;
-      border: 2px solid white;
+
+    .settings-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-height: 70vh;
+        justify-content: space-between;
     }
-    .selection-row {
+    .settings-scroll-container {
+        overflow-y: auto;
+        padding: 0 5px;
+        -webkit-mask-image: linear-gradient(to bottom, transparent, black 35px, black calc(100% - 35px), transparent);
+        mask-image: linear-gradient(to bottom, transparent, black 35px, black calc(100% - 35px), transparent);
+        margin: 6px 0 18px 0;
+        flex-grow: 1;
+    }
+    .settings-scroll-container::-webkit-scrollbar {
+        display: none;
+    }
+    .settings-scroll-container.show-scrollbar::-webkit-scrollbar {
+        display: block;
+        width: 5px;
+    }
+    .settings-scroll-container.show-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+    }
+    .settings-group-title {
+        color: #333;
+        font-size: 1em;
+        margin-top: 15px;
+        margin-bottom: 8px;
+        padding-left: 10px;
+        font-weight: bold;
+    }
+    .settings-button {
+        background: rgba(255, 255, 255, 0.4) !important;
+        border-radius: 12px !important;
+        padding: 12px 15px !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: left;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+        border: 2px solid transparent !important;
+        min-height: 62px;
+    }
+    .settings-button > span {
+        margin-left: 15px;
+        font-size: 1.1em;
+    }
+    .settings-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        color: white;
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        transition: box-shadow 0.3s;
+        flex-shrink: 0;
+        border: 1px solid transparent;
+    }
+    .settings-back-button-container {
+        padding: 0 5px;
+    }
+    .settings-back-button {
+        background: rgba(255, 255, 255, 0.3) !important;
+        border-radius: 12px !important;
+        border: 1px solid transparent;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    #splash-screen, #beta-splash-screen {
       display: flex;
+      justify-content: center;
       align-items: center;
-      justify-content: space-between;
-      padding: 12px 15px;
-      cursor: pointer;
-      color: #333;
-    }
-    .selection-divider {
-      height: 1px;
-      background-color: rgba(255,255,255,0.5);
-      margin: 0 15px;
-    }
-    .selection-checkmark {
-      font-size: 1.2em;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      font-size: 7vw;
       font-weight: bold;
       color: #333;
-      opacity: 0;
-      transition: opacity 0.2s;
+      transition: opacity 0.5s ease-out;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+    }
+    #beta-splash-screen {
+        display: none;
+        opacity: 0;
+    }
+    #main-content {
+      transition: opacity 0.5s ease-in;
+    }
+    
+    #mini-dock {
+        position: fixed;
+        bottom: -80px;
+        left: 50%;
+        transform: translateX(-50%) scale(0.2);
+        width: 170px;
+        padding: 12px 0;
+        background: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(3px);
+        border-radius: 17px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        border: 1px solid transparent;
+        z-index: 5;
+        opacity: 0;
+        transition: bottom 0.6s ease-out, transform 0.6s ease-out, opacity 0.4s ease-out, width 0.3s ease-in-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        touch-action: pan-y;
+    }
+    #dock-scroll-container {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+        padding: 0 35px;
+        transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+        position: relative;
+    }
+    .dock-item {
+        color: white;
+        font-size: 1.1em;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        transition: all 0.3s ease-in-out;
+        transform: scale(0.8);
+        white-space: nowrap;
+    }
+    .dock-item.active {
+        transform: scale(1.1);
+        color: yellow;
+    }
+    .settings-button-value {
+        margin-left: auto;
+        font-weight: bold;
+        color: #555;
+    }
+    .about-system-foundation {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        height: auto;
+        padding-bottom: 60px !important;
+        position: relative;
+        padding-top: 15px !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+    .about-system-top-section {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .about-system-icon {
+        width: 70px !important;
+        height: 70px !important;
+        font-size: 3em !important;
+        font-weight: bold !important;
+        margin-right: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+        flex-shrink: 0;
+        border-radius: 13.2px !important;
+    }
+    .about-system-version-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        color: #333;
+    }
+    .about-system-version-info h3 {
+        margin: 0;
+        font-size: 0.8em;
+        font-weight: bold;
+    }
+    .about-system-details-container {
+        height: 157px;
+        overflow-y: auto;
+        padding: 0 0 35px 0;
+        border-top: 1px solid rgba(0,0,0,0.1);
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        -webkit-mask-image: linear-gradient(to bottom, transparent, black 5px, black calc(100% - 15px), transparent);
+        mask-image: linear-gradient(to bottom, transparent, black 5px, black calc(100% - 15px), transparent);
+        color: #555;
+        font-size: 0.9em;
+    }
+    .about-system-details-container::-webkit-scrollbar { display: none; }
+    .about-system-whats-new-button {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 30px);
+        background: rgba(100, 180, 255, 0.45) !important;
+        backdrop-filter: blur(5px);
+        border-radius: 10px !important;
+        font-weight: bold;
+        color: white;
+        padding: 12px 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.7) !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .about-system-footer-note {
+        font-size: 0.8em;
+        color: #666;
+        text-align: center;
+        padding: 0 30px;
+        margin-top: 15px;
+    }
+    .settings-toggle-base {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        cursor: pointer;
+    }
+    .settings-toggle-label {
+        font-weight: bold;
+        font-size: 0.9em;
+        color: #333;
+        margin-left: 0 !important;
+    }
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 51px;
+        height: 31px;
+        flex-shrink: 0;
+    }
+    .toggle-switch-background {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    .toggle-switch-handle {
+        position: absolute;
+        height: 27px;
+        width: 27px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-switch.active .toggle-switch-background {
+        background-color: #4CAF50;
+    }
+    .toggle-switch.active .toggle-switch-handle {
+        transform: translateX(20px);
+    }
+    .description-block {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        height: auto !important;
+        min-height: 80px;
+        padding: 15px !important;
+        cursor: default !important;
+        margin-bottom: 0 !important;
+    }
+    .description-block p {
+        margin: 0;
+        font-size: 0.9em;
+        color: #555;
+    }
+    .selection-list-container {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    .selection-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 15px;
+        cursor: pointer;
+    }
+    .selection-row:hover {
+        background: rgba(0,0,0,0.05);
+    }
+    .selection-row-label {
+        font-weight: bold;
+        font-size: 0.9em;
+        color: #333;
+    }
+    .selection-divider {
+        height: 1px;
+        background-color: rgba(0,0,0,0.1);
+        margin: 0 15px;
+    }
+    .selection-checkmark {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #8e8e93;
+        opacity: 0;
+        transition: opacity 0.2s;
     }
     .selection-row.active .selection-checkmark {
-      opacity: 1;
-    }
-    #beta-button-text {
-      display: inline-block;
-      transition: opacity 0.3s ease-in-out;
+        opacity: 1;
     }
   </style>
 </head>
 <body>
   <div class="hello" id="hello">Hello</div>
   <div id="container"></div>
-  <div class="snowflakes" id="snowflakes"></div>
+  
+  <div id="mini-dock">
+    <div id="dock-scroll-container">
+        <div id="dock-item-dz" class="dock-item" data-page="dz">ДЗ</div>
+        <div id="dock-item-main" class="dock-item active" data-page="main">Главное</div>
+        <div id="dock-item-settings" class="dock-item" data-page="settings">Настройки</div>
+    </div>
+  </div>
 
   <script>
     (function() {
-      if (localStorage.getItem('betaUpdates') === 'enabled') {
-        window.location.replace('/BETA/index.html');
-      }
+        const betaFlag = localStorage.getItem('betaUpdates');
+        const isBetaEnabled = betaFlag === 'enabled';
+        const currentPath = window.location.pathname;
+        
+        const amInBetaFolder = currentPath.includes('/BETA/');
+        
+        if (isBetaEnabled && !amInBetaFolder) {
+            window.betaCheckInProgress = true;
+            fetch('BETA/index.html', { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = 'BETA/index.html';
+                    } else {
+                        console.error('BETA/index.html not found. Disabling beta mode.');
+                        localStorage.setItem('betaUpdates', 'disabled');
+                        window.betaCheckInProgress = false;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error checking for BETA/index.html:', error);
+                    localStorage.setItem('betaUpdates', 'disabled');
+                    window.betaCheckInProgress = false;
+                });
+        } 
+        else if (!isBetaEnabled && amInBetaFolder) {
+            window.location.href = '../index.html';
+            window.betaCheckInProgress = true;
+        } 
+        else {
+            window.betaCheckInProgress = false;
+        }
     })();
-    const currentUpdateVersion = "2";
-    let originalBgColor = null;
-    const devModeBgColor = "#4DA3FF";
-    let isDevMode = false;
-    let initialBetaState = null;
+
+    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ОС ---
+    window.currentUpdateVersion = "2";
+    window.originalBgColor = null;
+    window.devModeBgColor = "#133526";
+    window.isDevMode = false;
+    window.isDockTransitioning = false;
+    window.lastActiveDockPage = null;
+    window.wasDockExpandedOnNav = false;
+    window.betaStateChanged = false;
+    window.initialBetaState = null;
+    window.loadedSubsystems = {};
+
+    // --- ЗАГРУЗЧИК ПОДСИСТЕМ ---
+    window.loadSubsystem = async function(url) {
+        if (window.loadedSubsystems[url]) return true;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const html = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const templates = doc.querySelectorAll('template');
+            templates.forEach(t => { window.views[t.id] = t.innerHTML; });
+
+            const styles = doc.querySelectorAll('style');
+            styles.forEach(s => document.head.appendChild(s.cloneNode(true)));
+
+            const content = doc.querySelector('#subsystem-content');
+            if (content) document.body.insertAdjacentHTML('beforeend', content.innerHTML);
+
+            const scripts = doc.querySelectorAll('script');
+            scripts.forEach(s => {
+                const newScript = document.createElement('script');
+                if (s.src) newScript.src = s.src;
+                else newScript.textContent = s.textContent;
+                document.body.appendChild(newScript);
+            });
+
+            window.loadedSubsystems[url] = true;
+            return true;
+        } catch (e) {
+            console.error('Ошибка подгрузки ' + url + ':', e);
+            return false;
+        }
+    };
 
     function updateShadows() {
       if (localStorage.getItem('shadows') === 'disabled') {
@@ -198,10 +569,11 @@
     }
 
     function updateBorder() {
+      const container = document.getElementById('container');
       if (localStorage.getItem('border') === 'enabled') {
-        document.getElementById('container').classList.add('border-enabled');
+        container.classList.add('border-enabled');
       } else {
-        document.getElementById('container').classList.remove('border-enabled');
+        container.classList.remove('border-enabled');
       }
     }
 
@@ -211,207 +583,219 @@
       setTimeout(() => { hello.style.display = 'none'; }, 15);
     }
 
-    function changeBackgroundToSnow() {
-      document.body.style.transition = 'background-color 1s';
-      document.body.style.backgroundColor = '#1a1a2e';
-      setTimeout(createSnowflakes, 3000);
-    }
-
-    function createSnowflakes() {
-      const snowflakesContainer = document.getElementById('snowflakes');
-      let count = 0;
-      const interval = setInterval(() => {
-        if (count < 50) {
-          const flake = document.createElement('div');
-          flake.classList.add('snowflake');
-          const size = Math.random() * 5 + 2;
-          flake.style.width = size + 'px';
-          flake.style.height = size + 'px';
-          flake.style.left = Math.random() * 100 + '%';
-          flake.style.animationDuration = (Math.random() * 5 + 5) + 's';
-          snowflakesContainer.appendChild(flake);
-          count++;
-        } else {
-          clearInterval(interval);
-        }
-      }, 100);
-    }
-
-    const views = {
-      view1: `<header><h1>Хм, похоже ты здесь впервые?</h1></header>
-<main>
-  <p>Здесь ты можешь ввести своё имя, и оно будет в главном меню, чтобы лично тебя приветствовать!<br><br>
-ВАЖНО: после подтверждения изменить имя будет невозможно!<br><br>
-Ещё важнее: эту функцию я делал очень долго, поэтому будет просто великолепно, если ты её будешь использовать.
- «Продолжить».</p>
-  <div class="buttons-container"><button class="button" onclick="goForward('view2')">Продолжить</button></div>
-</main>`,
-      view2: `<header><h1>Добавьте ваше имя</h1></header>
-<main>
-  <p>Изменить имя будет нельзя, выбирай с умом!<br>
-Выберите один из вариантов:</p>
-  <div class="buttons-container">
-    <button class="button" onclick="goForward('view3')">Добавить имя</button>
-    <button class="button" onclick="goForward('view2b')">Добавить позже</button>
+    // --- ОСТАВШИЕСЯ БАЗОВЫЕ VIEWS ---
+    window.views = {
+      view1: `<div class="settings-container">
+        <header><h1>Хм, похоже ты здесь впервые?</h1></header>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 5px 15px 5px; gap: 15px;">
+          <div>
+            <div class="settings-group-title" style="text-align: center; padding-left: 0; margin-top: 110; margin-bottom: 8px;">Описание</div>
+            <div class="button settings-button description-block">
+                <p>Здесь ты можешь ввести своё имя, и оно будет в главном меню, чтобы лично тебя приветствовать! Эту функцию я делал очень долго, поэтому будет просто великолепно, если ты её будешь использовать.</p>
+            </div>
+          </div>
+          <div class="settings-back-button-container" style="padding: 0;">
+              <button class="button settings-back-button" onclick="goForward('view2')">Продолжить</button>
+          </div>
+        </div>
+      </div>`,
+      view2: `<div class="settings-container">
+        <header><h1>Добавьте имя</h1></header>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 5px 15px 5px; gap: 15px;">
+          <div>
+            <div class="settings-group-title" style="text-align: center; padding-left: 0; margin-top: 125; margin-bottom: 8px;">Описание</div>
+            <div class="button settings-button description-block">
+                <p>Изменить имя будет нельзя, поэтому выбирайте с умом. Впрочем, вы всегда сможете добавить имя позже, при следующем входе на сайт.</p>
+            </div>
+          </div>
+          <div class="button settings-button selection-list-container">
+              <div class="selection-row" onclick="goForward('view3')" style="justify-content: center;">
+                  <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">сейчас</span>
+              </div>
+              <div class="selection-divider"></div>
+              <div class="selection-row" onclick="goForward('view2b')" style="justify-content: center;">
+                  <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">позже</span>
+              </div>
+          </div>
+        </div>
+      </div>`,
+      view2b: `<div class="settings-container">
+        <header><h1>Вы точно уверены?</h1></header>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 10 5px 15px 5px; gap: 15px;">
+          <div>
+            <div class="settings-group-title" style="text-align: center; padding-left: 0; margin-top: 125; margin-bottom: 8px;">Описание</div>
+            <div class="button settings-button description-block">
+                <p>Вы действительно хотите пропустить добавление имени?</p>
+            </div>
+          </div>
+          <div class="button settings-button selection-list-container">
+              <div class="selection-row" onclick="confirmSkipAndProceed()" style="justify-content: center;">
+                  <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">Да</span>
+              </div>
+              <div class="selection-divider"></div>
+              <div class="selection-row" onclick="goBack('view2')" style="justify-content: center;">
+                  <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">Нет</span>
+              </div>
+          </div>
+        </div>
+      </div>`,
+      view3: `<div class="settings-container">
+  <header><h1>Введите ваше имя</h1></header>
+  <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+      <div style="position: relative; width: calc(87% + 3px); max-width: 400px; margin-top: 35px;">
+          <input type="text" id="nameField" maxlength="10" placeholder="Введите имя" 
+                 style="background-color: #444; color: white; border-radius: 14px; border: 2px solid #888; padding: 13.5px 50px 13.5px 15px; width: 100%; box-sizing: border-box; font-size: 1.3em; text-align: left; margin: 0; outline: none; transition: border-color 0.3s;">
+          <div id="submitArrow" onclick="submitName()" 
+               style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; background: #cccccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+      </div>
   </div>
-</main>`,
-      view2b: `<header><h1>Вы точно уверены?</h1></header>
-<main>
-  <p style="text-align:center;">Вы действительно хотите пропустить добавление имени?</p>
-  <div class="buttons-container">
-    <button class="button" onclick="goForward('view4')">Да</button>
-    <button class="button" onclick="goBack('view2')">Нет</button>
+  <div style="padding: 0 5px 15px 5px; display: flex; flex-direction: column; gap: 15px; margin-top: 85px;">
+    <div>
+       <div class="settings-group-title" style="margin-top: 0; padding-left: 0; margin-bottom: 8px; text-align: center;">Важно</div>
+       <div class="button settings-button description-block" style="cursor: default;">
+           <p>После добавления имени его нельзя будет сменить.</p>
+       </div>
+    </div>
+    <div class="settings-back-button-container" style="padding: 0;">
+       <button class="button settings-back-button" onclick="goBack('view2')">Назад</button>
+    </div>
   </div>
-</main>`,
-      view3: `<header><h1>Введите ваше имя</h1></header>
-<main>
-  <input type="text" id="nameField" maxlength="10" placeholder="Введите имя">
-  <div class="buttons-container"><button class="button" onclick="submitName()">Подтвердить</button></div>
-</main>`,
-      view4: `<header><h1 id="page-title">Добро пожаловать, друг</h1></header>
-<main>
-  <h2 id="sub-title">Новости-News</h2>
-  <div id="content">Новое большое ОБНОВЛЕНИЕ 2.5 включает множество новых функций и изменений, подробно в "Site info"</div>
-  <div class="buttons-container">
-    <button class="button" onclick="changeContent('page1')">ДЗ</button>
-    <button class="button" onclick="changeContent('page2')">Site Info</button>
-    <button class="button" onclick="changeContent('main')">Вернуться на главное меню</button>
+</div>`,
+      view4: `<div id="splash-screen">pasSITE</div>
+<div id="beta-splash-screen">Beta</div>
+<div id="main-content" style="opacity: 0;">
+  <header><h1 id="page-title">Добро пожаловать, друг</h1></header>
+  <main>
+    <h2 id="sub-title">Новости-News</h2>
+    <div id="content" style="margin-bottom: 0;">Новое большое ОБНОВЛЕНИЕ 2.5 включает множество новых функций и изменений, подробно в "О системе сайта"</div>
+  </main>
+  <footer><p id="footerText">© 2025 pasSITE</p></footer>
+</div>`,
+      viewDZ: `<header><h1>ДЗ</h1></header>
+<div class="settings-container">
+  <div class="settings-scroll-container show-scrollbar">
+    <div id="currentLesson" style="color:#555; margin-bottom:10px; opacity: 0; transition: opacity 1s;"></div>
+    <div id="dzContentArea">Загрузка...</div>
   </div>
-</main>
-<footer><p id="footerText">© 2025 pasSITE</p></footer>`,
-      view5: `<header><h1>Вход в режим разработчика</h1></header>
-<main>
-  <input type="password" id="devPasswordField" maxlength="10" placeholder="Введите пароль">
-  <div class="buttons-container">
-    <button class="button" onclick="checkDevPassword()">Вход</button>
-    <button class="button" onclick="goBack('view4')">Вернуться на главное меню</button>
+  <div class="settings-back-button-container">
+    <button class="button settings-back-button" onclick="animateAndChangeContent('main')">Назад</button>
   </div>
-</main>`,
-      view6: `<header><h1>Меню разработчика PAS</h1></header>
-<main>
-  <div class="buttons-container">
-    <button class="button dev-button" onclick="clearUsername()">Очистить имя</button>
-    <button class="button dev-button" onclick="clearUpdate()">Очистить обновление</button>
-    <button class="button dev-button" onclick="goForward('viewReset')">Сброс всех настроек</button>
-    <button class="button dev-button" onclick="exitDevMode()">Главное меню</button>
-  </div>
-</main>`,
-      view7: `<header><h1>Настройки</h1></header>
-<main>
-  <div class="buttons-container">
-    <button class="button" onclick="openSiteInfo()">Site Info</button>
-    <button class="button" onclick="openCustomization()">Кастомизация</button>
-    <button class="button" onclick="goForward('viewBetaUpdates')">Бета-обновления</button>
-    <button class="button" onclick="openReport()">Отчёт</button>
-    <button class="button" onclick="goBack('view4')">Вернуться на главное меню</button>
-  </div>
-</main>`,
-      view8: `<header><h1>Personal Greeting</h1></header>
-<main>
-  <p>Эта функция изменяет приветствие в главном меню в зависимости от времени суток.<br>
-Если функция выключена, всегда отображается «Добро пожаловать».</p>
-  <p id="customStatus">Текущий статус: <strong></strong></p>
-  <div class="buttons-container">
-    <button class="button" onclick="enableCustomGreeting()">Включить</button>
-    <button class="button" onclick="disableCustomGreeting()">Выключить</button>
-    <button class="button" onclick="goBack('view7')">Вернуться назад</button>
-  </div>
-</main>`,
-      view8a: `<header><h1>Кастомизация</h1></header>
-<main>
-  <p>Этот раздел предоставляет инструменты для настройки некоторых элементов, как ты хочешь</p>
-  <div class="buttons-container">
-    <button class="button" onclick="goForward('view8')">Personal Greeting</button>
-    <button class="button" onclick="goForward('view8b')">Button Shadows</button>
-    <button class="button" onclick="goForward('view8c')">Обводка</button>
-    <button class="button" onclick="goBack('view7')">Вернуться в настройки</button>
-  </div>
-</main>`,
-      view8b: `<header><h1>Button Shadows</h1></header>
-<main>
-  <p>Эта функция настраивает тени на сайте которые отбрасывают все кнопки</p>
-  <p id="shadowsStatus">Текущий статус: <strong></strong></p>
-  <div class="buttons-container">
-    <button class="button" onclick="enableShadows()">Включить</button>
-    <button class="button" onclick="disableShadows()">Выключить</button>
-    <button class="button" onclick="goBack('view8a')">Вернуться на главное меню</button>
-  </div>
-</main>`,
-      view8c: `<header><h1>Обводка</h1></header>
-<main>
-  <p>Эта функция включает или выключает тонкую белую обводку вокруг островка.</p>
-  <p id="borderStatus">Текущий статус: <strong></strong></p>
-  <div class="buttons-container">
-    <button class="button" onclick="enableBorder()">Включить</button>
-    <button class="button" onclick="disableBorder()">Выключить</button>
-    <button class="button" onclick="goBack('view8a')">Вернуться на главное меню</button>
-  </div>
-</main>`,
-      view9: `<header><h1>Отчёт</h1></header>
-<main>
-  <p style="text-align:center;">Здесь вы можете предложить свои идеи или рассказать об ошибках.</p>
-  <div class="buttons-container">
-    <button class="button" onclick="goForward('view9b')">Продолжить</button>
-  </div>
-</main>`,
-      view9b: `<header><h1>Отчёт</h1></header>
-<main>
-  <input type="text" id="reportField" maxlength="500" placeholder="Текст" style="background-color: #444; color: white; border-radius: 10px; border: 2px solid white; padding: 10px; margin-bottom: 20px; width: 80%; font-size: 1.5em; display: block; margin-left: auto; margin-right: auto; text-align: center;">
-  <div class="buttons-container">
-    <button class="button" onclick="submitReport(this)">Отправить</button>
-    <button class="button" onclick="goBack('view4')">Вернуться на главное меню</button>
-  </div>
-</main>`,
-      view10: `<main style="display:flex; justify-content:center; align-items:center; height:85vh;">
-  <h1 style="text-align:center;">Спасибо за отчёт</h1>
-</main>`,
+</div>`,
       viewUpdate: `<header><h1>Вышло новое обновление</h1></header>
-<main>
-  <div id="updateContentContainer" class="content-container" style="margin-bottom:20px;">
-    Загрузка...
+<div class="settings-container">
+  <div class="settings-scroll-container show-scrollbar" id="updateContentContainer"></div>
+  <div class="settings-back-button-container">
+    <button class="button settings-back-button" onclick="scrollToBottomAndProceed()">Продолжить</button>
   </div>
-  <div class="buttons-container">
-    <button class="button" onclick="scrollToBottomAndProceed()">Продолжить</button>
-  </div>
-</main>
-<footer><p id="footerText">© 2025 pasSITE</p></footer>`,
-      viewReset: `<header><h1>Сброс всех настроек</h1></header>
-<main>
-  <p style="text-align:center;">Удалит все данные из локального хранилища. Введите <strong>yes</strong> для подтверждения.</p>
-  <input type="text" id="resetConfirmField" maxlength="3" placeholder="yes" style="background-color: #444; color: white; border-radius: 10px; border: 2px solid white; padding: 10px; margin-bottom: 20px; width: 80%; font-size: 1.5em; display: block; margin-left: auto; margin-right: auto; text-align: center;">
-  <div class="buttons-container">
-    <button class="button" onclick="checkResetConfirm()">Подтвердить</button>
-    <button class="button" onclick="goBack('view6')">Отмена</button>
-  </div>
-</main>`,
-      viewResetProcessing: `<main style="display:flex; justify-content:center; align-items:center; height:85vh;">
-  <h1 style="text-align:center;">Сброс локального хранилища</h1>
-</main>`,
-      viewBetaUpdates: `<header><h1>Бета-обновления</h1></header>
-<main>
-    <h2 style="text-align: left; font-size: 1em; margin-left: 10px; margin-bottom: 8px;">Обновление</h2>
-    <div class="selection-list-container">
-        <div class="selection-row" onclick="selectBetaOption('disabled', this)">
-            <span>Выкл.</span>
-            <span class="selection-checkmark">✔</span>
-        </div>
-        <div class="selection-divider"></div>
-        <div class="selection-row" onclick="selectBetaOption('enabled', this)">
-            <span id="beta-version-label">pasSITE 3.0.5 beta</span>
-            <span class="selection-checkmark">✔</span>
-        </div>
-    </div>
-    <p style="font-size: 0.8em; color: #666; text-align: center; margin-top: 20px;">Бета-версии ПО предоставляют ранний доступ к новым функциям, но могут содержать ошибки и работать нестабильно.</p>
-</main>
-<footer style="position: absolute; bottom: 3vh; width: calc(100% - 10vw); left: 5vw;">
-    <div class="buttons-container">
-        <button class="button" id="beta-back-button" onclick="goBack('view7')">
-            <span id="beta-button-text">Назад</span>
-        </button>
-    </div>
-</footer>`
+</div>`
     };
     const container = document.getElementById('container');
+
+    function showMiniDock() {
+        const dock = document.getElementById('mini-dock');
+        const container = document.getElementById('container');
+        if (!dock || !container) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const finalBottom = (window.innerHeight - containerRect.bottom) + 27; 
+
+        dock.style.opacity = '1';
+        dock.style.bottom = `${finalBottom}px`;
+        dock.style.transform = 'translateX(-50%) scale(1)';
+        
+        setTimeout(initDock, 700);
+    }
+    
+    function cleanupDock() {
+        const dock = document.getElementById('mini-dock');
+        if (!dock || !dock.init) return;
+        
+        clearTimeout(collapseTimeout);
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        dock.removeEventListener('pointerdown', onPointerDown);
+        dock.init = false;
+        isExpanded = false;
+    }
+
+    function hideMiniDock(callback) {
+        const dock = document.getElementById('mini-dock');
+        if (!dock) {
+          if (callback) callback();
+          return;
+        }
+        
+        cleanupDock();
+
+        dock.style.bottom = '-80px';
+        dock.style.transform = 'translateX(-50%) scale(0.2)'; 
+        dock.style.opacity = '0';
+
+        setTimeout(() => {
+            if (callback) callback();
+        }, 600); 
+    }
+    
+    function animateButtonIn() {
+        const backButton = container.querySelector('.settings-back-button');
+        if (backButton) {
+            backButton.style.opacity = '0';
+            backButton.style.transform = 'translateY(80px) scale(0.2)';
+            backButton.style.transition = 'none';
+
+            setTimeout(() => {
+                backButton.style.transition = 'transform 0.6s ease-out, opacity 0.4s ease-out';
+                backButton.style.opacity = '1';
+                backButton.style.transform = 'translateY(0) scale(1)';
+            }, 50);
+        }
+    }
+
+    function animateAndGoBack(toView) {
+        const backButton = container.querySelector('.settings-back-button');
+        if (backButton && backButton.id !== 'beta-back-button') {
+            backButton.style.transform = 'translateY(80px) scale(0.2)';
+            backButton.style.opacity = '0';
+            setTimeout(() => goBack(toView), 600);
+        } else {
+            goBack(toView);
+        }
+    }
+
+    function animateAndExitDevMode() {
+        const backButton = container.querySelector('.settings-back-button');
+        if (backButton) {
+            backButton.style.transform = 'translateY(80px) scale(0.2)';
+            backButton.style.opacity = '0';
+            if(window.exitDevMode) setTimeout(window.exitDevMode, 600);
+        } else {
+            if(window.exitDevMode) window.exitDevMode();
+        }
+    }
+
+    function animateAndGoForward(toView) {
+        const backButton = container.querySelector('.settings-back-button');
+        if (backButton) {
+            backButton.style.transform = 'translateY(80px) scale(0.2)';
+            backButton.style.opacity = '0';
+            setTimeout(() => goForward(toView), 600);
+        } else {
+            goForward(toView);
+        }
+    }
+
+    function animateAndChangeContent(page) {
+        const backButton = container.querySelector('.settings-back-button');
+        if (backButton) {
+            backButton.style.transform = 'translateY(80px) scale(0.2)';
+            backButton.style.opacity = '0';
+            setTimeout(() => changeContent(page), 600);
+        } else {
+            changeContent(page);
+        }
+    }
 
     function updateMainContent() {
       const titleElem = container.querySelector('#page-title');
@@ -446,68 +830,61 @@
       }
     }
 
-    function enableCustomGreeting() {
-      localStorage.setItem('customGreeting', 'enabled');
-      updateCustomStatus();
-      updateMainContent();
-    }
-    function disableCustomGreeting() {
-      localStorage.setItem('customGreeting', 'disabled');
-      updateCustomStatus();
-      updateMainContent();
-    }
-    function updateCustomStatus() {
-      const statusElem = document.getElementById('customStatus');
-      if (statusElem) {
-        const current = localStorage.getItem('customGreeting') === 'enabled' ? 'включено' : 'выключено';
-        statusElem.innerHTML = 'Текущий статус: <strong>' + current + '</strong>';
-      }
-    }
-
-    function enableShadows() {
-      localStorage.setItem('shadows', 'enabled');
-      updateShadowsStatus();
-      updateShadows();
-    }
-    function disableShadows() {
-      localStorage.setItem('shadows', 'disabled');
-      updateShadowsStatus();
-      updateShadows();
-    }
-    function updateShadowsStatus() {
-      const statusElem = document.getElementById('shadowsStatus');
-      if (statusElem) {
-        const current = localStorage.getItem('shadows') === 'enabled' ? 'включено' : 'выключено';
-        statusElem.innerHTML = 'Текущий статус: <strong>' + current + '</strong>';
-      }
-    }
-
-    function enableBorder() {
-      localStorage.setItem('border', 'enabled');
-      updateBorderStatus();
-      updateBorder();
-    }
-    function disableBorder() {
-      localStorage.setItem('border', 'disabled');
-      updateBorderStatus();
-      updateBorder();
-    }
-    function updateBorderStatus() {
-      const statusElem = document.getElementById('borderStatus');
-      if (statusElem) {
-        const current = localStorage.getItem('border') === 'enabled' ? 'включено' : 'выключено';
-        statusElem.innerHTML = 'Текущий статус: <strong>' + current + '</strong>';
-      }
-    }
-
     function loadView(viewId) {
-      container.innerHTML = views[viewId] || '<h1>Ошибка: вид не найден</h1>';
+      container.innerHTML = window.views[viewId] || '<h1>Ошибка: вид не найден</h1>';
     }
 
-    function loadMainMenu() {
-      loadView('view4');
-      updateMainContent();
-      setupFooterTripleClick();
+    function loadMainMenu(withSplash = false) {
+        loadView('view4');
+
+        if (withSplash) {
+            setTimeout(() => { 
+                const splash = container.querySelector('#splash-screen');
+                const betaSplash = container.querySelector('#beta-splash-screen');
+                const content = container.querySelector('#main-content');
+                
+                if (!splash || !content) return;
+
+                const betaEnabled = localStorage.getItem('betaUpdates') === 'enabled';
+
+                const showContent = () => {
+                    updateMainContent();
+                    setupFooterTripleClick();
+                    content.style.opacity = '1';
+                    setTimeout(showMiniDock, 50);
+                };
+
+                splash.style.opacity = '0';
+                
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                    
+                    if (betaEnabled && betaSplash) {
+                        betaSplash.style.display = 'flex';
+                        setTimeout(() => {
+                            betaSplash.style.opacity = '1';
+                            setTimeout(() => {
+                                betaSplash.style.opacity = '0';
+                                setTimeout(() => {
+                                    betaSplash.style.display = 'none';
+                                    showContent();
+                                }, 500);
+                            }, 800);
+                        }, 20);
+                    } else {
+                        showContent();
+                    }
+                }, 500);
+            }, 1300);
+        } else {
+            const splash = container.querySelector('#splash-screen');
+            const content = container.querySelector('#main-content');
+            if (splash) splash.style.display = 'none';
+            if (content) content.style.opacity = '1';
+            updateMainContent();
+            setupFooterTripleClick();
+            showMiniDock();
+        }
     }
 
     function goForward(toView) {
@@ -515,20 +892,31 @@
       setTimeout(() => {
         loadView(toView);
         if (toView === 'view4') {
-          updateMainContent();
-          setupFooterTripleClick();
+          loadMainMenu();
         }
         if (toView === 'view8' || toView === 'view8a' || toView === 'view8b' || toView === 'view8c') {
-          if(toView === 'view8') updateCustomStatus();
-          if(toView === 'view8b') updateShadowsStatus();
-          if(toView === 'view8c') updateBorderStatus();
+            setTimeout(() => {
+                if(toView === 'view8' && window.updateToggleUI) window.updateToggleUI('customGreeting');
+                if(toView === 'view8b' && window.updateToggleUI) window.updateToggleUI('shadows');
+                if(toView === 'view8c' && window.updateToggleUI) window.updateToggleUI('border');
+            }, 50);
         }
-        if (toView === 'viewBetaUpdates') {
-          setTimeout(loadBetaUpdatesPageData, 50);
-        }
+        animateButtonIn();
         container.style.animation = 'slideInRight 1s forwards';
         if(toView === 'viewUpdate'){
           setTimeout(loadUpdateContent, 50);
+        }
+        if (toView === 'viewAboutSiteSystem' && window.loadAboutSiteSystemData) {
+            setTimeout(window.loadAboutSiteSystemData, 50);
+        }
+        if (toView === 'viewBetaUpdates' && window.loadBetaUpdatesPageData) {
+            window.betaStateChanged = false;
+            setTimeout(window.loadBetaUpdatesPageData, 50);
+        }
+        if(toView === 'viewDetails'){
+            setTimeout(() => {
+                loadContentInto('#detailsContentArea', 'page3.html');
+            }, 1050);
         }
       }, 1000);
     }
@@ -538,12 +926,19 @@
       setTimeout(() => {
         loadView(toView);
         if (toView === 'view4') {
-          updateMainContent();
-          setupFooterTripleClick();
+          loadMainMenu();
         }
         if (toView === 'view6') {
           updateBorder();
         }
+        if (toView === 'view7') {
+            updateShadows();
+            updateBorder();
+        }
+        if (toView === 'viewAboutSiteSystem' && window.loadAboutSiteSystemData) {
+            setTimeout(window.loadAboutSiteSystemData, 50);
+        }
+        animateButtonIn();
         container.style.animation = 'slideInLeft 1s forwards';
       }, 1000);
     }
@@ -557,18 +952,42 @@
 
     function submitName() {
       const input = document.getElementById('nameField');
+      const arrow = document.getElementById('submitArrow');
       const name = (input?.value || '').trim();
-      if (name.length > 0) {
-        input.style.borderColor = "green";
-        setTimeout(() => {
-          localStorage.setItem('username', name);
-          localStorage.setItem('visited', 'true');
-          updateMainContent();
-          goBack('view4');
-        }, 1000);
-      } else {
-        alert('Пожалуйста, введите имя');
+      
+      if(arrow) {
+          arrow.style.transition = 'transform 0.15s ease-out';
+          arrow.style.transform = 'translateY(-50%) scale(0.8)';
       }
+      
+      setTimeout(() => {
+          if(arrow) arrow.style.transform = 'translateY(-50%) scale(1)';
+          
+          if (name.length > 0) {
+              setTimeout(() => {
+                  input.style.borderColor = "#4CAF50";
+                  
+                  setTimeout(() => {
+                     localStorage.setItem('username', name);
+                     localStorage.setItem('visited', 'true');
+                     goBack('view4');
+                  }, 500); 
+              }, 150);
+          }
+      }, 150);
+      
+      if (name.length === 0) {
+         input.style.borderColor = "red";
+         input.classList.add("shake");
+         setTimeout(() => {
+            input.style.borderColor = "#888";
+            input.classList.remove("shake");
+         }, 2000);
+      }
+    }
+
+    function confirmSkipAndProceed() {
+      goForward('view4');
     }
 
     function neverAskName() {
@@ -588,126 +1007,42 @@
     }
 
     function sendMessageToTelegram(message) {
-      const token = '7594707019:AAENdktYKFGecOZjAwfH-K4JQVtndJ2X74E';
-      const chatId = '-1002446461136';
-      const os = getOS();
-      const uniqueId = localStorage.getItem('uniqueId') || ("User" + Date.now());
-      if (!localStorage.getItem('uniqueId')) {
-        localStorage.setItem('uniqueId', uniqueId);
-      }
-      const userName = localStorage.getItem('username');
-      let prefix = uniqueId + ": " + message + " (" + os + ")";
-      if (userName && !isRandomCode(userName)) {
-        prefix += " (" + userName + ")";
-      }
-      const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(prefix)}`;
-      fetch(url)
-        .then(r => r.json())
-        .then(data => {
-          if (data.ok) console.log('Сообщение отправлено');
-          else console.error('Ошибка отправки', data);
-        })
-        .catch(e => {
-          console.error('Ошибка сети', e);
-        });
-    }
+        const token = '7594707019:AAENdktYKFGecOZjAwfH-K4JQVtndJ2X74E';
+        const chatId = '-1002446461136';
+        const os = getOS();
+        let uniqueId = localStorage.getItem('uniqueId');
+        if (!uniqueId) {
+            uniqueId = "User" + Date.now();
+            localStorage.setItem('uniqueId', uniqueId);
+        }
+        const userName = localStorage.getItem('username');
 
+        let finalMessage = `${uniqueId}: ${message} (${os})`;
+
+        if (userName && !isRandomCode(userName)) {
+            finalMessage += ` (${userName})`;
+        }
+
+        const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(finalMessage)}`;
+
+        fetch(url)
+            .then(r => r.json())
+            .then(data => {
+                if (data.ok) console.log('Сообщение отправлено');
+                else console.error('Ошибка отправки', data);
+            })
+            .catch(e => {
+                console.error('Ошибка сети', e);
+            });
+    }
+    
     function changeContent(page) {
-      const isMain = (page === 'main');
-      const direction = isMain ? 'back' : 'forward';
-      container.style.animation = direction === 'forward' ? 'slideOutLeft 1s forwards' : 'slideOutRight 1s forwards';
-      setTimeout(() => {
-        if (page === 'main') {
-          loadMainMenu();
-        } else {
-          loadMainMenu();
-          loadPageContent(page);
-        }
-        container.style.animation = direction === 'forward' ? 'slideInRight 1s forwards' : 'slideInLeft 1s forwards';
-      }, 1000);
-    }
-    function loadPageContent(page) {
-      const pageMap = { 'page1': 'page1.html', 'page2': 'page2.html' };
-      const filePath = pageMap[page];
-      const contentElem = container.querySelector('#content');
-      const pageTitle = container.querySelector('#page-title');
-      const subTitle = container.querySelector('#sub-title');
-      const headerElement = container.querySelector('header');
-
-      if (pageTitle && headerElement) {
-        if (page === 'page1') {
-            pageTitle.textContent = 'ДЗ';
-            headerElement.style.position = 'relative';
-            headerElement.style.top = '-10px';
-            headerElement.style.marginBottom = '-10px';
-        } else {
-            pageTitle.textContent = 'TheUpdateList';
-            headerElement.style.position = '';
-            headerElement.style.top = '';
-            headerElement.style.marginBottom = '';
-        }
-      }
-
-      if (subTitle)  subTitle.textContent  = page === 'page1' ? 'Февраль' : 'pasSITE';
-
-      if (page === 'page1') {
-        contentElem.innerHTML = `
-          <div class="content-container" id="homeworkContainer">
-            <div id="currentLesson" style="color:#555; margin-bottom:10px; opacity: 0; transition: opacity 1s;"></div>
-            <div id="homeworkData" style="opacity:0;">Загрузка...</div>
-          </div>
-        `;
-        setTimeout(() => {
-          fetch(filePath)
-            .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
-            .then(data => {
-              const hwData = document.getElementById('homeworkData');
-              if (hwData) {
-                hwData.innerHTML = data;
-                hwData.style.transition = 'opacity 1s';
-                setTimeout(() => { hwData.style.opacity = '1'; }, 50);
-              }
-            })
-            .catch(e => {
-              console.error("Ошибка", e);
-              const hwData = document.getElementById('homeworkData');
-              if (hwData) {
-                hwData.textContent = 'Ошибка загрузки содержимого страницы.';
-                hwData.style.transition = 'opacity 1s';
-                setTimeout(() => { hwData.style.opacity = '1'; }, 50);
-              }
-            });
-        }, 50);
-      } else if (page === 'page2') {
-        contentElem.innerHTML = '<div class="content-container" id="siteInfoContainer" style="opacity:0;">Загрузка...</div>';
-        setTimeout(() => {
-          fetch(filePath)
-            .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
-            .then(data => {
-              const siteInfoContainer = document.getElementById('siteInfoContainer');
-              if (siteInfoContainer) {
-                siteInfoContainer.innerHTML = data;
-                siteInfoContainer.style.transition = 'opacity 1s';
-                setTimeout(() => { siteInfoContainer.style.opacity = '1'; }, 50);
-              }
-            })
-            .catch(e => {
-              console.error("Ошибка", e);
-              const siteInfoContainer = document.getElementById('siteInfoContainer');
-              if (siteInfoContainer) {
-                siteInfoContainer.textContent = 'Ошибка загрузки содержимого страницы.';
-                siteInfoContainer.style.transition = 'opacity 1s';
-                setTimeout(() => { siteInfoContainer.style.opacity = '1'; }, 50);
-              }
-            });
-        }, 50);
-      }
-
-      if (page === 'page1' || page === 'page2') {
-        const buttonsContainer = container.querySelector('.buttons-container');
-        if (buttonsContainer) {
-          buttonsContainer.innerHTML = '<button class="button" onclick="changeContent(\'main\')">Вернуться на главное меню</button>';
-        }
+      if (page === 'main') {
+          container.style.animation = 'slideOutRight 1s forwards';
+          setTimeout(() => {
+              loadMainMenu();
+              container.style.animation = 'slideInLeft 1s forwards';
+          }, 1000);
       }
     }
 
@@ -725,81 +1060,12 @@
         if (count === 3) {
           clearTimeout(timer);
           count = 0;
-          goForward('view5');
+          hideMiniDock(async () => {
+              const loaded = await window.loadSubsystem('Subsystems/Dev-mode.html');
+              if(loaded) goForward('view5');
+          });
         }
       };
-    }
-
-    function checkDevPassword() {
-      const passField = container.querySelector('#devPasswordField');
-      if (!passField) return;
-      if (passField.value === "1233") {
-        passField.style.borderColor = "green";
-        setTimeout(() => {
-          passField.value = "1233";
-          originalBgColor = window.getComputedStyle(document.body).backgroundColor;
-          document.body.style.backgroundColor = devModeBgColor;
-          isDevMode = true;
-          setTimeout(() => {
-            goForward('view6');
-          }, 1000);
-        }, 1000);
-      } else {
-        passField.style.borderColor = "red";
-        passField.classList.add("shake");
-        const origPlaceholder = passField.getAttribute("placeholder");
-        passField.setAttribute("placeholder", "неправильно");
-        passField.value = "";
-        setTimeout(() => {
-          passField.style.borderColor = "";
-          passField.classList.remove("shake");
-          passField.setAttribute("placeholder", origPlaceholder);
-        }, 2500);
-      }
-    }
-
-    function exitDevMode() {
-      if (isDevMode && originalBgColor) {
-        document.body.style.backgroundColor = originalBgColor;
-        isDevMode = false;
-      }
-      goBack('view4');
-    }
-
-    function clearUsername() {
-      localStorage.removeItem('username');
-      localStorage.removeItem('dontAskName');
-      alert("Флаг имени очищен");
-    }
-    function clearUpdate() {
-      localStorage.removeItem('updateVersion');
-      alert("Флаг обновления очищен");
-    }
-
-    function checkResetConfirm() {
-      const field = container.querySelector('#resetConfirmField');
-      if (!field) return;
-      if (field.value === "yes") {
-        field.style.borderColor = "green";
-        setTimeout(() => {
-          localStorage.clear();
-          goForward('viewResetProcessing');
-          setTimeout(() => {
-            goBack('view6');
-          }, 3000);
-        }, 1000);
-      } else {
-        field.style.borderColor = "red";
-        field.classList.add("shake");
-        const origPlaceholder = field.getAttribute("placeholder");
-        field.setAttribute("placeholder", "неправильно");
-        field.value = "";
-        setTimeout(() => {
-          field.style.borderColor = "";
-          field.classList.remove("shake");
-          field.setAttribute("placeholder", origPlaceholder);
-        }, 2500);
-      }
     }
 
     function getOS() {
@@ -818,116 +1084,300 @@
         origSend(msg);
       };
     })();
-    function openSettings() { goForward('view7'); }
-    function openSiteInfo() { changeContent('page2'); }
-    function openCustomization() { goForward('view8a'); }
-    function openReport() { goForward('view9'); }
-    function customSendReportToTelegram(reportText) {
-      const uniqueId = localStorage.getItem('uniqueId') || ("User" + Date.now());
-      if (!localStorage.getItem('uniqueId')) { localStorage.setItem('uniqueId', uniqueId); }
-      const os = getOS();
-      const token = '7594707019:AAENdktYKFGecOZjAwfH-K4JQVtndJ2X74E';
-      const chatId = '-1002446461136';
-      const finalMessage = uniqueId + ": ОТЧЁТ (" + os + ") (PAS) (" + reportText + ")";
-      const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(finalMessage)}`;
-      fetch(url)
-        .then(r => r.json())
-        .then(data => { if (data.ok) console.log('Сообщение отправлено'); else console.error('Ошибка отправки', data); })
-        .catch(e => { console.error('Ошибка сети', e); });
+
+    function shakeButton(element) {
+        element.classList.add('shake');
+        setTimeout(() => {
+            element.classList.remove('shake');
+        }, 500);
     }
-    function submitReport(btn) {
-      const reportField = document.getElementById('reportField');
-      const reportText = (reportField?.value || '').trim();
-      if (reportText.length === 0) { alert('Пожалуйста, введите отчёт'); return; }
-      reportField.style.borderColor = "green";
-      setTimeout(() => {
-        customSendReportToTelegram(reportText);
-        goForward('view10');
-        setTimeout(() => { goBack('view4'); }, 3000);
-      }, 1000);
+    function loadContentInto(targetSelector, url) {
+        const target = document.querySelector(targetSelector);
+        if (!target) return;
+        fetch(url)
+            .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
+            .then(data => {
+                target.style.opacity = '0';
+                setTimeout(() => {
+                    target.innerHTML = data;
+                    target.style.transition = 'opacity 1s';
+                    target.style.opacity = '1';
+                }, 50);
+            })
+            .catch(e => {
+                console.error("Ошибка", e);
+                target.textContent = 'Ошибка загрузки содержимого страницы.';
+            });
     }
-    function overrideSiteInfoButton() {
-      if (container.innerHTML.includes('Site Info')) {
-        const btn = container.querySelector('button[onclick*="changeContent(\'page2\')"]');
-        if (btn) { btn.onclick = openSettings; btn.textContent = "Настройки"; }
-      }
+
+    function openDZPage() {
+        sendMessageToTelegram("Пользователь открыл страницу ДЗ");
+        goForward('viewDZ');
+        setTimeout(() => {
+            loadContentInto('#dzContentArea', 'page1.html');
+        }, 1050);
     }
     
-    function setButtonState(isRestart) {
-        const button = document.getElementById('beta-back-button');
-        const textSpan = document.getElementById('beta-button-text');
-        if (!button || !textSpan) return;
+    async function openSettings() { 
+        const loaded = await window.loadSubsystem('Subsystems/Settings.html');
+        if(loaded) goForward('view7');
+    }
 
-        textSpan.style.opacity = '0';
-        setTimeout(() => {
-            if (isRestart) {
-                textSpan.textContent = 'Перезапустить';
-                button.onclick = () => window.location.reload();
-            } else {
-                textSpan.textContent = 'Назад';
-                button.onclick = () => goBack('view7');
+    // --- DOCK LOGIC ---
+    let isExpanded = false;
+    let isPointerDown = false;
+    let startX = 0;
+    let scrollLeft = 0;
+    let collapseTimeout;
+
+    const getTranslateX = () => {
+        const scrollContainer = document.getElementById('dock-scroll-container');
+        const style = window.getComputedStyle(scrollContainer);
+        const matrix = new DOMMatrix(style.transform);
+        return matrix.m41;
+    };
+
+    const setActiveItem = (activeItem) => {
+        const items = Array.from(document.querySelectorAll('.dock-item'));
+        items.forEach(item => item.classList.remove('active'));
+        if (activeItem) {
+            activeItem.classList.add('active');
+        }
+    };
+
+    const snapToItem = (targetItem) => {
+        const dock = document.getElementById('mini-dock');
+        const scrollContainer = document.getElementById('dock-scroll-container');
+        if (!targetItem || !dock || !scrollContainer) return;
+    
+        const dockRect = dock.getBoundingClientRect();
+        let alignmentPoint;
+    
+        if (isExpanded) {
+            alignmentPoint = dockRect.left + dockRect.width / 2;
+        } else {
+            const dockCenter = (dockRect.left + dockRect.right) / 2;
+            const miniDockWidth = 170;
+            alignmentPoint = dockCenter - (miniDockWidth / 2) + (miniDockWidth * 0.65);
+        }
+    
+        const targetRect = targetItem.getBoundingClientRect();
+        const targetCenter = targetRect.left + targetRect.width / 2;
+        const currentTranslateX = getTranslateX();
+        const newTranslateX = currentTranslateX - (targetCenter - alignmentPoint);
+        
+        scrollContainer.style.transform = `translateX(${newTranslateX}px)`;
+    
+        setActiveItem(targetItem);
+    };
+    
+    const snapToNearest = () => {
+        const dock = document.getElementById('mini-dock');
+        const items = Array.from(document.querySelectorAll('.dock-item'));
+        if (!dock) return;
+
+        const alignmentPoint = dock.getBoundingClientRect().left + dock.getBoundingClientRect().width / 2;
+        let closestItem = null;
+        let minDistance = Infinity;
+
+        items.forEach(item => {
+            const itemRect = item.getBoundingClientRect();
+            const itemCenter = itemRect.left + itemRect.width / 2;
+            const distance = Math.abs(alignmentPoint - itemCenter);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestItem = item;
             }
-            textSpan.style.opacity = '1';
-        }, 300);
-    }
+        });
+        
+        if (closestItem) {
+             snapToItem(closestItem);
+        }
+    };
+    
+    const collapseDock = () => {
+        const mainItem = document.getElementById('dock-item-main');
+        const dock = document.getElementById('mini-dock');
+        if (!mainItem || !dock) return;
+        
+        isExpanded = false;
+        dock.style.width = ''; 
+        snapToItem(mainItem);
+    };
 
-    function selectBetaOption(value, element) {
-        localStorage.setItem('betaUpdates', value);
-        const listContainer = element.closest('.selection-list-container');
-        listContainer.querySelectorAll('.selection-row').forEach(row => row.classList.remove('active'));
-        element.classList.add('active');
+    const resetCollapseTimeout = () => {
+        clearTimeout(collapseTimeout);
+        if (isExpanded) {
+            collapseTimeout = setTimeout(collapseDock, 1000);
+        }
+    };
+    
+    const onPointerDown = (e) => {
+        if (window.isDockTransitioning) return;
+        isPointerDown = true;
+        startX = e.clientX;
+        scrollLeft = getTranslateX();
+        
+        const scrollContainer = document.getElementById('dock-scroll-container');
+        if (scrollContainer) scrollContainer.style.transition = 'none';
+        
+        clearTimeout(collapseTimeout);
+        document.addEventListener('pointermove', onPointerMove);
+        document.addEventListener('pointerup', onPointerUp);
+    };
+    
+    const onPointerMove = (e) => {
+        if (!isPointerDown) return;
+        e.preventDefault();
+        const x = e.clientX;
+        const walk = (x - startX);
+        const dock = document.getElementById('mini-dock');
+        const scrollContainer = document.getElementById('dock-scroll-container');
 
-        const currentState = localStorage.getItem('betaUpdates') || 'disabled';
-        if (currentState !== initialBetaState) {
-            setButtonState(true);
+        if (!isExpanded && Math.abs(walk) > 10) {
+            const mainContainer = document.getElementById('container');
+            if (mainContainer && dock) {
+                dock.style.width = (mainContainer.offsetWidth - 40) + 'px';
+                isExpanded = true;
+            }
+        }
+        
+        if (isExpanded && scrollContainer) {
+            scrollContainer.style.transform = `translateX(${scrollLeft + walk}px)`;
+        }
+    };
+    
+    const onPointerUp = (e) => {
+        isPointerDown = false;
+        document.removeEventListener('pointermove', onPointerMove);
+        document.removeEventListener('pointerup', onPointerUp);
+        
+        const scrollContainer = document.getElementById('dock-scroll-container');
+        if (scrollContainer) {
+            scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+        }
+
+        const walk = e.clientX - startX;
+        if (Math.abs(walk) < 10) {
+            handleItemTap(e.target.closest('.dock-item'));
+            return;
+        }
+        
+        if (isExpanded) {
+            snapToNearest();
+            resetCollapseTimeout();
+        }
+    };
+    
+    const handleItemTap = (item) => {
+        if (!item || window.isDockTransitioning) return;
+    
+        if (item.dataset.page === 'main' && item.classList.contains('active')) {
+            const dock = document.getElementById('mini-dock');
+            dock.classList.remove('shake');
+            void dock.offsetWidth;
+            dock.classList.add('shake');
+            return;
+        }
+
+        const page = item.dataset.page;
+    
+        window.wasDockExpandedOnNav = isExpanded;
+        if (page !== 'main') {
+            window.lastActiveDockPage = page;
+        }
+    
+        setActiveItem(item);
+    
+        window.isDockTransitioning = true;
+        setTimeout(() => {
+            hideMiniDock(() => {
+                if (page === 'dz') openDZPage();
+                else if (page === 'settings') openSettings();
+                else if (page === 'main') changeContent('main');
+                setTimeout(() => window.isDockTransitioning = false, 1000);
+            });
+        }, 200);
+    };
+    
+    function initDock() {
+        const dock = document.getElementById('mini-dock');
+        const scrollContainer = document.getElementById('dock-scroll-container');
+        const items = Array.from(document.querySelectorAll('.dock-item'));
+        if (!dock || !scrollContainer || items.length === 0 || dock.init) return;
+        dock.init = true;
+    
+        if (window.lastActiveDockPage && window.lastActiveDockPage !== 'main') {
+            const targetItem = document.querySelector(`.dock-item[data-page="${window.lastActiveDockPage}"]`);
+            const mainItem = document.getElementById('dock-item-main');
+    
+            if (window.wasDockExpandedOnNav) {
+                const mainContainer = document.getElementById('container');
+                if (mainContainer) {
+                    dock.style.width = (mainContainer.offsetWidth - 40) + 'px';
+                    isExpanded = true;
+                }
+                snapToItem(targetItem);
+                setTimeout(() => {
+                    snapToItem(mainItem);
+                    resetCollapseTimeout();
+                }, 800);
+    
+            } else {
+                isExpanded = false;
+                scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+                snapToItem(mainItem);
+            }
+    
+            window.lastActiveDockPage = null;
+            window.wasDockExpandedOnNav = false;
         } else {
-            setButtonState(false);
+            isExpanded = false;
+            snapToItem(document.getElementById('dock-item-main'));
         }
+    
+        dock.addEventListener('pointerdown', onPointerDown);
     }
+    
+    function initializeApp() {
+        if (typeof window.betaCheckInProgress === 'undefined' || window.betaCheckInProgress) {
+            setTimeout(initializeApp, 100);
+            return;
+        }
+        
+        hideHello();
+        container.style.display = 'block';
+        container.style.animation = 'grow 1s forwards';
 
-    function loadBetaUpdatesPageData() {
-        initialBetaState = localStorage.getItem('betaUpdates') || 'disabled';
-        const rows = document.querySelectorAll('.selection-row');
-        rows.forEach(row => row.classList.remove('active'));
+        const storedName = getUsername();
+        const dontAsk = localStorage.getItem('dontAskName');
+        const needsUpdate = storedName && localStorage.getItem('updateVersion') !== window.currentUpdateVersion;
 
-        if (initialBetaState === 'disabled') {
-            rows[0]?.classList.add('active');
+        if (needsUpdate) {
+            localStorage.removeItem('updateVersion');
+            loadView('viewUpdate');
+            animateButtonIn();
+            setTimeout(loadUpdateContent, 50);
+        } else if (!storedName && !dontAsk) {
+            loadView('view1');
         } else {
-            rows[1]?.classList.add('active');
+            loadMainMenu(true);
         }
-        setButtonState(false); 
+
+        // Подгрузка подсистемы снежинок
+        window.loadSubsystem('Subsystems/Snowflakes.html');
+        
+        if (localStorage.getItem('border') === null) {
+            localStorage.setItem('border', 'enabled');
+        }
+        updateShadows();
+        updateBorder();
     }
 
-    setInterval(overrideSiteInfoButton, 10);
-
-    setTimeout(() => {
-      hideHello();
-      container.style.display = 'block';
-      container.style.animation = 'grow 1s forwards';
-      const storedName = localStorage.getItem('username');
-      const dontAsk = localStorage.getItem('dontAskName');
-      if ((!storedName || isRandomCode(storedName)) && !dontAsk) {
-        loadView('view1');
-      } else {
-        loadMainMenu();
-      }
-      changeBackgroundToSnow();
-      updateShadows();
-      updateBorder();
-      if(getUsername()){
-        if(localStorage.getItem('updateVersion') !== currentUpdateVersion){
-          localStorage.removeItem('updateVersion');
-          loadView('viewUpdate');
-          setTimeout(() => {
-            loadUpdateContent();
-            setupFooterTripleClick();
-          }, 50);
-        }
-      }
-    }, 1500);
+    setTimeout(initializeApp, 1500);
 
     function proceedUpdate() {
-      localStorage.setItem('updateVersion', currentUpdateVersion);
+      localStorage.setItem('updateVersion', window.currentUpdateVersion);
       container.style.animation = 'slideOutCenterLeft 1s forwards';
       setTimeout(() => {
         loadMainMenu();
@@ -945,18 +1395,12 @@
       }
     }
 
-    document.addEventListener('click', (e) => {
-      if (e.target && e.target.getAttribute('onclick') === "changeContent('page1')") {
-        sendMessageToTelegram('Пользователь открыл страницу ДЗ');
-      }
-    });
-
     function loadUpdateContent() {
       const updateContainer = document.getElementById('updateContentContainer');
       if (!updateContainer) return;
       updateContainer.innerHTML = '<div id="updateInner" style="opacity:0;">Загрузка...</div>';
       setTimeout(() => {
-        fetch('PageUpdateList.html')
+        fetch('page3.html')
           .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
           .then(data => {
             const updateInner = document.getElementById('updateInner');
@@ -978,20 +1422,7 @@
       }, 50);
     }
   </script>
-  <script>
-    views.viewUpdate = `<header><h1>Вышло новое обновление</h1></header>
-<main>
-  <div id="updateContentContainer" class="content-container" style="margin-bottom:20px;">
-    Загрузка...
-  </div>
-  <div class="buttons-container">
-    <button class="button" onclick="scrollToBottomAndProceed()">Продолжить</button>
-  </div>
-</main>
-<footer><p id="footerText">© 2025 pasSITE</p></footer>`;
-  </script>
   <script src="scheduleData.js"></script>
-
   <script>
     function attachFadeToCurrentLesson() {
       const elem = document.getElementById('currentLesson');
@@ -1007,21 +1438,7 @@
         elem._fadeAttached = true;
       }
     }
-
     setInterval(attachFadeToCurrentLesson, 500);
   </script>
-  <script>
-    views.viewUpdate = `<header><h1>Вышло новое обновление</h1></header>
-<main>
-  <div id="updateContentContainer" class="content-container" style="margin-bottom:20px;">
-    Загрузка...
-  </div>
-  <div class="buttons-container">
-    <button class="button" onclick="scrollToBottomAndProceed()">Продолжить</button>
-  </div>
-</main>
-<footer><p id="footerText">© 2025 pasSITE</p></footer>`;
-  </script>
-  <script src="scheduleData.js"></script>
 </body>
 </html>
