@@ -1,0 +1,54 @@
+<style>
+  .snowflakes {
+    position: absolute;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+  }
+  .snowflake {
+    position: absolute;
+    top: -10px;
+    background-color: white;
+    border-radius: 50%;
+    opacity: 0.8;
+    animation: snow 10s linear infinite;
+  }
+  @keyframes snow { 0% { transform: translateX(0) translateY(0); opacity: 0.8; } 100% { transform: translateX(50px) translateY(100vh); opacity: 0; } }
+</style>
+
+<div id="subsystem-content">
+  <div class="snowflakes" id="snowflakes"></div>
+</div>
+
+<script>
+  window.changeBackgroundToSnow = function() {
+    document.body.style.transition = 'background-color 1s';
+    document.body.style.backgroundColor = '#1a1a2e';
+    setTimeout(window.createSnowflakes, 3000);
+  };
+
+  window.createSnowflakes = function() {
+    const snowflakesContainer = document.getElementById('snowflakes');
+    if (!snowflakesContainer) return;
+    let count = 0;
+    const interval = setInterval(() => {
+      if (count < 50) {
+        const flake = document.createElement('div');
+        flake.classList.add('snowflake');
+        const size = Math.random() * 5 + 2;
+        flake.style.width = size + 'px';
+        flake.style.height = size + 'px';
+        flake.style.left = Math.random() * 100 + '%';
+        flake.style.animationDuration = (Math.random() * 5 + 5) + 's';
+        snowflakesContainer.appendChild(flake);
+        count++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 100);
+  };
+
+  window.changeBackgroundToSnow();
+</script>
