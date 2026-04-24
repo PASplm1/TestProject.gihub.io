@@ -20,7 +20,8 @@
     .no-shadows .button,
     .no-shadows .settings-icon,
     .no-shadows .settings-back-button,
-    .no-shadows #mini-dock {
+    .no-shadows #mini-dock,
+    .no-shadows #dz-dock {
       box-shadow: none !important;
     }
     .hello {
@@ -55,7 +56,8 @@
     }
     #container.border-enabled .settings-icon,
     #container.border-enabled .settings-back-button,
-    #container.border-enabled ~ #mini-dock {
+    #container.border-enabled ~ #mini-dock,
+    #container.border-enabled ~ #dz-dock {
         border-color: white;
     }
     #container.border-enabled .settings-button {
@@ -287,6 +289,131 @@
         transform: scale(1.1);
         color: yellow;
     }
+
+    .dz-page-wrapper {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .dz-content-layer {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        overflow-y: auto;
+        padding: 95px 20px 95px 20px;
+        z-index: 1;
+    }
+    .dz-content-layer::-webkit-scrollbar { display: none; }
+    .dz-top-mask {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 100px;
+        background: rgba(80,80,85,0.5);
+        backdrop-filter: blur(15px);
+        -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+        mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+        z-index: 2;
+        pointer-events: none;
+    }
+    .dz-bottom-mask {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 100px;
+        background: rgba(80,80,85,0.5);
+        backdrop-filter: blur(15px);
+        -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
+        mask-image: linear-gradient(to top, black 50%, transparent 100%);
+        z-index: 2;
+        pointer-events: none;
+    }
+    .dz-title-layer {
+        position: absolute;
+        top: 25px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        z-index: 3;
+        pointer-events: none;
+    }
+    .dz-title-layer h1 {
+        margin: 0;
+        color: #333;
+    }
+    
+    #dz-dock {
+        position: fixed;
+        bottom: -80px;
+        left: 50%;
+        transform: translateX(-50%) scale(0.2);
+        padding: 12px 0;
+        background: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(3px);
+        border-radius: 17px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        border: 1px solid transparent;
+        z-index: 5;
+        opacity: 0;
+        transition: bottom 0.6s ease-out, transform 0.6s ease-out, opacity 0.4s ease-out;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        touch-action: pan-y;
+    }
+    #dz-dock-scroll-container {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+        padding: 0 35px;
+        transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+        position: relative;
+    }
+    .dz-dock-item {
+        color: white;
+        font-size: 1.1em;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
+        transform: scale(0.8);
+        white-space: nowrap;
+    }
+    .dz-dock-item.active {
+        transform: scale(1.1);
+        color: yellow;
+    }
+    .dz-dock-item.reverting {
+        transition: transform 1s ease, color 1s ease !important;
+        transform: scale(1);
+        color: white;
+    }
+    .dz-dock-separator {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.1em;
+        opacity: 0;
+        transition: opacity 0.4s ease-in-out;
+        pointer-events: none;
+    }
+    .dz-dock-item[data-page="main"],
+    .dz-dock-item[data-page="settings"] {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.4s ease-in-out, transform 0.3s ease-in-out, color 0.3s ease-in-out;
+    }
+    #dz-dock.scrolled .dz-dock-separator,
+    #dz-dock.scrolled .dz-dock-item[data-page="main"],
+    #dz-dock.scrolled .dz-dock-item[data-page="settings"] {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    #dz-dock:not(.scrolled) #dz-dock-item-back {
+        transform: scale(1);
+        color: white;
+    }
+
     .settings-button-value {
         margin-left: auto;
         font-weight: bold;
@@ -477,6 +604,15 @@
     </div>
   </div>
 
+  <div id="dz-dock">
+    <div id="dz-dock-scroll-container">
+        <div id="dz-dock-item-back" class="dz-dock-item" data-page="back">Назад</div>
+        <div class="dz-dock-separator">|</div>
+        <div id="dz-dock-item-main" class="dz-dock-item" data-page="main">Главное</div>
+        <div id="dz-dock-item-settings" class="dz-dock-item" data-page="settings">Настройки</div>
+    </div>
+  </div>
+
   <script>
     (function() {
         const betaFlag = localStorage.getItem('betaUpdates');
@@ -512,7 +648,6 @@
         }
     })();
 
-    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ОС ---
     window.currentUpdateVersion = "2";
     window.originalBgColor = null;
     window.devModeBgColor = "#133526";
@@ -524,7 +659,6 @@
     window.initialBetaState = null;
     window.loadedSubsystems = {};
 
-    // --- ЗАГРУЗЧИК ПОДСИСТЕМ ---
     window.loadSubsystem = async function(url) {
         if (window.loadedSubsystems[url]) return true;
         try {
@@ -583,7 +717,6 @@
       setTimeout(() => { hello.style.display = 'none'; }, 15);
     }
 
-    // --- ОСТАВШИЕСЯ БАЗОВЫЕ VIEWS ---
     window.views = {
       view1: `<div class="settings-container">
         <header><h1>Хм, похоже ты здесь впервые?</h1></header>
@@ -673,15 +806,14 @@
   </main>
   <footer><p id="footerText">© 2025 pasSITE</p></footer>
 </div>`,
-      viewDZ: `<header><h1>ДЗ</h1></header>
-<div class="settings-container">
-  <div class="settings-scroll-container show-scrollbar">
+      viewDZ: `<div class="dz-page-wrapper">
+  <div class="dz-content-layer">
     <div id="currentLesson" style="color:#555; margin-bottom:10px; opacity: 0; transition: opacity 1s;"></div>
     <div id="dzContentArea">Загрузка...</div>
   </div>
-  <div class="settings-back-button-container">
-    <button class="button settings-back-button" onclick="animateAndChangeContent('main')">Назад</button>
-  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>ДЗ</h1></div>
 </div>`,
       viewUpdate: `<header><h1>Вышло новое обновление</h1></header>
 <div class="settings-container">
@@ -1113,8 +1245,10 @@
     function openDZPage() {
         sendMessageToTelegram("Пользователь открыл страницу ДЗ");
         goForward('viewDZ');
+        document.getElementById('dz-dock').style.display = 'flex';
         setTimeout(() => {
             loadContentInto('#dzContentArea', 'page1.html');
+            showDzDock();
         }, 1050);
     }
     
@@ -1123,7 +1257,7 @@
         if(loaded) goForward('view7');
     }
 
-    // --- DOCK LOGIC ---
+    // --- MAIN DOCK LOGIC ---
     let isExpanded = false;
     let isPointerDown = false;
     let startX = 0;
@@ -1338,6 +1472,268 @@
     
         dock.addEventListener('pointerdown', onPointerDown);
     }
+
+    // --- DZ DOCK LOGIC ---
+    let isDzDockScrolled = false;
+    let isDzPointerDown = false;
+    let dzStartX = 0;
+    let dzScrollLeft = 0;
+    let dzCollapseTimeout;
+
+    const getDzTranslateX = () => {
+        const scrollContainer = document.getElementById('dz-dock-scroll-container');
+        const style = window.getComputedStyle(scrollContainer);
+        const matrix = new DOMMatrix(style.transform);
+        return matrix.m41;
+    };
+
+    const setDzActiveItem = (activeItem) => {
+        const items = Array.from(document.querySelectorAll('.dz-dock-item'));
+        items.forEach(item => {
+            item.classList.remove('active');
+            item.classList.remove('reverting');
+        });
+        if (activeItem) {
+            activeItem.classList.add('active');
+        }
+    };
+
+    const snapToDzItem = (targetItem) => {
+        const dock = document.getElementById('dz-dock');
+        const scrollContainer = document.getElementById('dz-dock-scroll-container');
+        if (!targetItem || !dock || !scrollContainer) return;
+    
+        const dockRect = dock.getBoundingClientRect();
+        const alignmentPoint = dockRect.left + dockRect.width / 2;
+    
+        const targetRect = targetItem.getBoundingClientRect();
+        const targetCenter = targetRect.left + targetRect.width / 2;
+        const currentTranslateX = getDzTranslateX();
+        const newTranslateX = currentTranslateX - (targetCenter - alignmentPoint);
+        
+        scrollContainer.style.transform = `translateX(${newTranslateX}px)`;
+        setDzActiveItem(targetItem);
+    };
+    
+    const snapToDzNearest = () => {
+        const dock = document.getElementById('dz-dock');
+        const items = Array.from(document.querySelectorAll('.dz-dock-item'));
+        if (!dock) return;
+
+        const alignmentPoint = dock.getBoundingClientRect().left + dock.getBoundingClientRect().width / 2;
+        let closestItem = null;
+        let minDistance = Infinity;
+
+        items.forEach(item => {
+            const itemRect = item.getBoundingClientRect();
+            const itemCenter = itemRect.left + itemRect.width / 2;
+            const distance = Math.abs(alignmentPoint - itemCenter);
+            if (distance < minDistance) {
+                minDistance = distance;
+                closestItem = item;
+            }
+        });
+        
+        if (closestItem) {
+             snapToDzItem(closestItem);
+        }
+        return closestItem;
+    };
+
+    const revertDzDock = () => {
+        const backItem = document.getElementById('dz-dock-item-back');
+        const dock = document.getElementById('dz-dock');
+        if (!backItem || !dock) return;
+        
+        isDzDockScrolled = false;
+        dock.classList.remove('scrolled');
+        
+        snapToDzItem(backItem);
+        
+        backItem.classList.remove('active');
+        backItem.classList.add('reverting');
+        setTimeout(() => {
+            if (!isDzDockScrolled) {
+                backItem.classList.remove('reverting');
+            }
+        }, 1000);
+    };
+
+    const resetDzCollapseTimeout = () => {
+        clearTimeout(dzCollapseTimeout);
+        if (isDzDockScrolled) {
+            dzCollapseTimeout = setTimeout(() => {
+                // Если пользователь перестал скроллить, обязательно возвращаем к "Назад"
+                revertDzDock(); 
+            }, 1500); 
+        }
+    };
+
+    const onDzPointerDown = (e) => {
+        if (window.isDockTransitioning) return;
+        isDzPointerDown = true;
+        dzStartX = e.clientX;
+        dzScrollLeft = getDzTranslateX();
+        
+        const scrollContainer = document.getElementById('dz-dock-scroll-container');
+        if (scrollContainer) scrollContainer.style.transition = 'none';
+        
+        clearTimeout(dzCollapseTimeout);
+        document.addEventListener('pointermove', onDzPointerMove);
+        document.addEventListener('pointerup', onDzPointerUp);
+    };
+
+    const onDzPointerMove = (e) => {
+        if (!isDzPointerDown) return;
+        e.preventDefault();
+        const x = e.clientX;
+        const walk = (x - dzStartX);
+        const scrollContainer = document.getElementById('dz-dock-scroll-container');
+        const dock = document.getElementById('dz-dock');
+
+        if (!isDzDockScrolled && Math.abs(walk) > 10) {
+            isDzDockScrolled = true;
+            dock.classList.add('scrolled');
+            
+            const backItem = document.getElementById('dz-dock-item-back');
+            backItem.classList.remove('reverting');
+            backItem.classList.add('active');
+        }
+        
+        if (isDzDockScrolled && scrollContainer) {
+            scrollContainer.style.transform = `translateX(${dzScrollLeft + walk}px)`;
+        }
+    };
+
+    const onDzPointerUp = (e) => {
+        isDzPointerDown = false;
+        document.removeEventListener('pointermove', onDzPointerMove);
+        document.removeEventListener('pointerup', onDzPointerUp);
+        
+        const scrollContainer = document.getElementById('dz-dock-scroll-container');
+        if (scrollContainer) {
+            scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+        }
+
+        const walk = e.clientX - dzStartX;
+        if (Math.abs(walk) < 10) {
+            handleDzItemTap(e.target.closest('.dz-dock-item'));
+            return;
+        }
+        
+        if (isDzDockScrolled) {
+            const nearest = snapToDzNearest();
+            if (nearest && nearest.dataset.page === 'back') {
+                 revertDzDock();
+            } else {
+                 resetDzCollapseTimeout();
+            }
+        }
+    };
+
+    const handleDzItemTap = (item) => {
+        if (!item || window.isDockTransitioning) return;
+        const page = item.dataset.page;
+    
+        setDzActiveItem(item);
+        window.isDockTransitioning = true;
+        
+        setTimeout(() => {
+            hideDzDock(() => {
+                if (page === 'back' || page === 'main') {
+                     animateAndChangeContent('main');
+                } else if (page === 'settings') {
+                     openSettings();
+                }
+                setTimeout(() => window.isDockTransitioning = false, 1000);
+            });
+        }, 200);
+    };
+
+    function showDzDock() {
+        const dock = document.getElementById('dz-dock');
+        const container = document.getElementById('container');
+        if (!dock || !container) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const finalBottom = (window.innerHeight - containerRect.bottom) + 27; 
+
+        dock.style.width = (container.offsetWidth - 40) + 'px';
+
+        // Временно отключаем анимации дока, чтобы подготовить его состояние без скачков
+        dock.style.transition = 'none';
+        dock.style.transform = 'translateX(-50%) scale(1)'; // Масштаб 1 нужен для точных вычислений координат
+
+        // Раскрываем все элементы и подготавливаем скролл
+        dock.classList.add('scrolled');
+        const mainItem = document.getElementById('dz-dock-item-main');
+        const scrollContainer = document.getElementById('dz-dock-scroll-container');
+        scrollContainer.style.transition = 'none';
+
+        // Заставляем браузер применить scale(1) перед расчетом позиций
+        void dock.offsetWidth;
+
+        // Позиционируем на пункте "Главное"
+        snapToDzItem(mainItem);
+        isDzDockScrolled = true;
+
+        // Возвращаем в начальное свернутое состояние для анимации
+        dock.style.transform = 'translateX(-50%) scale(0.2)';
+
+        // Снова форсируем рефлоу и возвращаем стили анимации
+        void dock.offsetWidth;
+        dock.style.transition = 'bottom 0.6s ease-out, transform 0.6s ease-out, opacity 0.4s ease-out';
+
+        // Запускаем анимацию появления дока (идет вверх и увеличивается)
+        dock.style.opacity = '1';
+        dock.style.bottom = `${finalBottom}px`;
+        dock.style.transform = 'translateX(-50%) scale(1)';
+        
+        setTimeout(initDzDock, 700);
+    }
+
+    function initDzDock() {
+        const dock = document.getElementById('dz-dock');
+        if (!dock || dock.init) return;
+        dock.init = true;
+        
+        dock.addEventListener('pointerdown', onDzPointerDown);
+
+        const scrollContainer = document.getElementById('dz-dock-scroll-container');
+        // Включаем плавную анимацию для скролла-перелистывания
+        scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+
+        // Автоматически запускаем перелистывание с "Главное" на "Назад"
+        revertDzDock();
+    }
+
+    function cleanupDzDock() {
+        const dock = document.getElementById('dz-dock');
+        if (!dock || !dock.init) return;
+        clearTimeout(dzCollapseTimeout);
+        document.removeEventListener('pointermove', onDzPointerMove);
+        document.removeEventListener('pointerup', onDzPointerUp);
+        dock.removeEventListener('pointerdown', onDzPointerDown);
+        dock.init = false;
+        isDzDockScrolled = false;
+    }
+
+    function hideDzDock(callback) {
+        const dock = document.getElementById('dz-dock');
+        if (!dock) {
+          if (callback) callback();
+          return;
+        }
+        cleanupDzDock();
+        dock.style.bottom = '-80px';
+        dock.style.opacity = '0';
+        // Возвращаем эффект уменьшения при закрытии
+        dock.style.transform = 'translateX(-50%) scale(0.2)'; 
+        setTimeout(() => {
+            dock.style.display = 'none';
+            if (callback) callback();
+        }, 600); 
+    }
     
     function initializeApp() {
         if (typeof window.betaCheckInProgress === 'undefined' || window.betaCheckInProgress) {
@@ -1364,7 +1760,6 @@
             loadMainMenu(true);
         }
 
-        // Подгрузка подсистемы снежинок
         window.loadSubsystem('Subsystems/Snowflakes.html');
         
         if (localStorage.getItem('border') === null) {
