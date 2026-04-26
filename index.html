@@ -20,8 +20,7 @@
     .no-shadows .button,
     .no-shadows .settings-icon,
     .no-shadows .settings-back-button,
-    .no-shadows #mini-dock,
-    .no-shadows #dz-dock {
+    .no-shadows #unified-dock {
       box-shadow: none !important;
     }
     .hello {
@@ -56,8 +55,7 @@
     }
     #container.border-enabled .settings-icon,
     #container.border-enabled .settings-back-button,
-    #container.border-enabled ~ #mini-dock,
-    #container.border-enabled ~ #dz-dock {
+    #container.border-enabled ~ #unified-dock {
         border-color: white;
     }
     #container.border-enabled .settings-button {
@@ -83,7 +81,7 @@
       66% { transform: translateX(-50%) translateX(-10px); }
       100% { transform: translateX(-50%) translateX(0); }
     }
-    #mini-dock.shake { animation: dockShake 0.4s ease-in-out; }
+    #unified-dock.shake { animation: dockShake 0.4s ease-in-out; }
     header, footer { text-align: center; }
     h1 { color: #333; }
     h2, p { color: #555; margin-bottom: 4px; }
@@ -169,6 +167,19 @@
       background: rgba(0,0,0,0.2);
       border-radius: 10px;
     }
+    .rubber-band-scroll {
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+    }
+    .rubber-band-scroll::-webkit-scrollbar {
+        display: none;
+    }
+    .rubber-band-inner {
+        min-height: calc(100% + 2px);
+        padding-top: 10px;
+        padding-bottom: 20px;
+    }
     .settings-group-title {
         color: #333;
         font-size: 1em;
@@ -245,7 +256,7 @@
       transition: opacity 0.5s ease-in;
     }
     
-    #mini-dock {
+    #unified-dock {
         position: fixed;
         bottom: -80px;
         left: 50%;
@@ -257,16 +268,20 @@
         border-radius: 17px;
         box-shadow: 0 4px 20px rgba(0,0,0,0.2);
         border: 1px solid transparent;
-        z-index: 5;
+        z-index: 6;
         opacity: 0;
-        transition: bottom 0.6s ease-out, transform 0.6s ease-out, opacity 0.4s ease-out, width 0.3s ease-in-out;
+        transition: bottom 0.6s ease-out, transform 0.6s ease-out, opacity 0.4s ease-out, width 0.4s ease-in-out;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
         touch-action: pan-y;
     }
-    #dock-scroll-container {
+    #unified-dock.scrolled .dock-separator {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    #unified-dock-scroll-container {
         display: flex;
         align-items: center;
         gap: 25px;
@@ -281,13 +296,30 @@
         cursor: pointer;
         padding: 0;
         margin: 0;
-        transition: all 0.3s ease-in-out;
         transform: scale(0.8);
         white-space: nowrap;
     }
     .dock-item.active {
         transform: scale(1.1);
         color: yellow;
+    }
+    .dock-separator, .dock-arrow {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.1em;
+        pointer-events: none;
+    }
+
+    #unified-dock.dock-idle .dock-item:not([data-page="back"]),
+    #unified-dock.dock-idle .dock-separator,
+    #unified-dock.dock-idle .dock-arrow {
+        opacity: 0;
+        pointer-events: none;
+    }
+    #unified-dock .dock-item, #unified-dock .dock-separator, #unified-dock .dock-arrow {
+        transition: opacity 0.7s ease-in-out, transform 0.3s ease-in-out, color 0.3s ease-in-out;
+    }
+    .dock-item[data-page="back"].active {
+        color: white;
     }
 
     .dz-page-wrapper {
@@ -303,115 +335,43 @@
         top: 0; left: 0; right: 0; bottom: 0;
         overflow-y: auto;
         padding: 95px 20px 95px 20px;
-        z-index: 1;
+        z-index: 4;
     }
     .dz-content-layer::-webkit-scrollbar { display: none; }
     .dz-top-mask {
         position: absolute;
         top: 0; left: 0; right: 0;
-        height: 100px;
+        height: 130px;
         background: rgba(80,80,85,0.5);
         backdrop-filter: blur(15px);
         -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
         mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
-        z-index: 2;
+        z-index: 5;
         pointer-events: none;
     }
     .dz-bottom-mask {
         position: absolute;
         bottom: 0; left: 0; right: 0;
-        height: 100px;
+        height: 130px;
         background: rgba(80,80,85,0.5);
         backdrop-filter: blur(15px);
         -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
         mask-image: linear-gradient(to top, black 50%, transparent 100%);
-        z-index: 2;
+        z-index: 5;
         pointer-events: none;
     }
     .dz-title-layer {
         position: absolute;
-        top: 25px;
+        top: 35px;
         left: 0;
         right: 0;
         text-align: center;
-        z-index: 3;
+        z-index: 7;
         pointer-events: none;
     }
     .dz-title-layer h1 {
         margin: 0;
         color: #333;
-    }
-    
-    #dz-dock {
-        position: fixed;
-        bottom: -80px;
-        left: 50%;
-        transform: translateX(-50%) scale(0.2);
-        padding: 12px 0;
-        background: rgba(255, 255, 255, 0.3);
-        backdrop-filter: blur(3px);
-        border-radius: 17px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-        border: 1px solid transparent;
-        z-index: 5;
-        opacity: 0;
-        transition: bottom 0.6s ease-out, transform 0.6s ease-out, opacity 0.4s ease-out;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-        touch-action: pan-y;
-    }
-    #dz-dock-scroll-container {
-        display: flex;
-        align-items: center;
-        gap: 25px;
-        padding: 0 35px;
-        transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
-        position: relative;
-    }
-    .dz-dock-item {
-        color: white;
-        font-size: 1.1em;
-        font-weight: 500;
-        cursor: pointer;
-        padding: 0;
-        margin: 0;
-        transition: transform 0.3s ease-in-out, color 0.3s ease-in-out;
-        transform: scale(0.8);
-        white-space: nowrap;
-    }
-    .dz-dock-item.active {
-        transform: scale(1.1);
-        color: yellow;
-    }
-    .dz-dock-item.reverting {
-        transition: transform 1s ease, color 1s ease !important;
-        transform: scale(1);
-        color: white;
-    }
-    .dz-dock-separator {
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 1.1em;
-        opacity: 0;
-        transition: opacity 0.4s ease-in-out;
-        pointer-events: none;
-    }
-    .dz-dock-item[data-page="main"],
-    .dz-dock-item[data-page="settings"] {
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.4s ease-in-out, transform 0.3s ease-in-out, color 0.3s ease-in-out;
-    }
-    #dz-dock.scrolled .dz-dock-separator,
-    #dz-dock.scrolled .dz-dock-item[data-page="main"],
-    #dz-dock.scrolled .dz-dock-item[data-page="settings"] {
-        opacity: 1;
-        pointer-events: auto;
-    }
-    #dz-dock:not(.scrolled) #dz-dock-item-back {
-        transform: scale(1);
-        color: white;
     }
 
     .settings-button-value {
@@ -596,21 +556,8 @@
   <div class="hello" id="hello">Hello</div>
   <div id="container"></div>
   
-  <div id="mini-dock">
-    <div id="dock-scroll-container">
-        <div id="dock-item-dz" class="dock-item" data-page="dz">ДЗ</div>
-        <div id="dock-item-main" class="dock-item active" data-page="main">Главное</div>
-        <div id="dock-item-settings" class="dock-item" data-page="settings">Настройки</div>
-    </div>
-  </div>
-
-  <div id="dz-dock">
-    <div id="dz-dock-scroll-container">
-        <div id="dz-dock-item-back" class="dz-dock-item" data-page="back">Назад</div>
-        <div class="dz-dock-separator">|</div>
-        <div id="dz-dock-item-main" class="dz-dock-item" data-page="main">Главное</div>
-        <div id="dz-dock-item-settings" class="dz-dock-item" data-page="settings">Настройки</div>
-    </div>
+  <div id="unified-dock">
+    <div id="unified-dock-scroll-container"></div>
   </div>
 
   <script>
@@ -628,13 +575,11 @@
                     if (response.ok) {
                         window.location.href = 'BETA/index.html';
                     } else {
-                        console.error('BETA/index.html not found. Disabling beta mode.');
                         localStorage.setItem('betaUpdates', 'disabled');
                         window.betaCheckInProgress = false;
                     }
                 })
                 .catch(error => {
-                    console.error('Error checking for BETA/index.html:', error);
                     localStorage.setItem('betaUpdates', 'disabled');
                     window.betaCheckInProgress = false;
                 });
@@ -653,11 +598,26 @@
     window.devModeBgColor = "#133526";
     window.isDevMode = false;
     window.isDockTransitioning = false;
-    window.lastActiveDockPage = null;
-    window.wasDockExpandedOnNav = false;
     window.betaStateChanged = false;
     window.initialBetaState = null;
     window.loadedSubsystems = {};
+    window.navPath = ['main'];
+    window.previousPageForDock = null;
+
+    let dockIdleTimeout = null;
+
+    const pageTitles = {
+        'main': 'Главное',
+        'viewDZ': 'ДЗ',
+        'view7': 'Настройки',
+        'view8': 'Personal Greeting',
+        'view8a': 'Кастомизация',
+        'view8b': 'Button Shadows',
+        'view8c': 'Обводка',
+        'viewAboutSiteSystem': 'О системе сайта',
+        'viewDetails': 'Что нового?',
+        'viewBetaUpdates': 'Бета-обновления'
+    };
 
     window.loadSubsystem = async function(url) {
         if (window.loadedSubsystems[url]) return true;
@@ -689,7 +649,6 @@
             window.loadedSubsystems[url] = true;
             return true;
         } catch (e) {
-            console.error('Ошибка подгрузки ' + url + ':', e);
             return false;
         }
     };
@@ -825,108 +784,391 @@
     };
     const container = document.getElementById('container');
 
-    function showMiniDock() {
-        const dock = document.getElementById('mini-dock');
-        const container = document.getElementById('container');
-        if (!dock || !container) return;
+    function setDockIdle() {
+        clearTimeout(dockIdleTimeout);
+        const dock = document.getElementById('unified-dock');
+        const currentPage = window.navPath[window.navPath.length - 1];
+        if (dock && currentPage !== 'main') {
+            const backItem = document.querySelector('.dock-item[data-page="back"]');
+            if (backItem) snapUnifiedItem(backItem, false);
+            setTimeout(() => {
+                dock.classList.add('dock-idle');
+            }, 400);
+        }
+    }
 
+    function wakeUpDock() {
+        clearTimeout(dockIdleTimeout);
+        const dock = document.getElementById('unified-dock');
+        if (dock) dock.classList.remove('dock-idle');
+    }
+
+    function renderUnifiedDock() {
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        if (!scrollContainer) return;
+
+        const currentPage = window.navPath[window.navPath.length - 1];
+
+        if (currentPage === 'view9' || currentPage === 'view9b') {
+            hideUnifiedDock();
+            return;
+        }
+
+        let html = '';
+        if (currentPage === 'main') {
+            html += `<div class="dock-item" data-page="viewDZ">ДЗ</div>`;
+            html += `<div class="dock-item active" data-page="main">Главное</div>`;
+            html += `<div class="dock-item" data-page="view7">Настройки</div>`;
+        } else {
+            html += `<div class="dock-item" data-page="viewDZ">ДЗ</div>`;
+            html += `<div class="dock-item" data-page="main">Главное</div>`;
+            html += `<div class="dock-separator" style="margin: 0 15px;">|</div>`;
+            html += `<div class="dock-item" data-page="back">Назад</div>`;
+            
+            const breadcrumbs = window.navPath.slice(1, window.navPath.length - 1).reverse();
+            if (breadcrumbs.length > 0) {
+                html += `<div class="dock-separator" style="margin: 0 15px;">|</div>`;
+                breadcrumbs.forEach((p, i) => {
+                    if (i > 0) {
+                        html += `<div class="dock-arrow" style="margin: 0 10px;">></div>`;
+                    }
+                    html += `<div class="dock-item" data-page="${p}">${pageTitles[p] || p}</div>`;
+                });
+            }
+        }
+        scrollContainer.innerHTML = html;
+    }
+
+    function showUnifiedDock() {
+        const dock = document.getElementById('unified-dock');
+        if (!dock) return;
+
+        const currentPage = window.navPath[window.navPath.length - 1];
+        const dzMode = currentPage !== 'main';
+        const isReturningToMain = (currentPage === 'main' && window.previousPageForDock && window.previousPageForDock !== 'main');
+
+        renderUnifiedDock();
         const containerRect = container.getBoundingClientRect();
         const finalBottom = (window.innerHeight - containerRect.bottom) + 27; 
 
-        dock.style.opacity = '1';
-        dock.style.bottom = `${finalBottom}px`;
+        dock.classList.remove('dock-idle');
+
+        // Отключаем транзишены для подготовки состояний
+        dock.style.transition = 'none';
         dock.style.transform = 'translateX(-50%) scale(1)';
         
-        setTimeout(initDock, 700);
-    }
-    
-    function cleanupDock() {
-        const dock = document.getElementById('mini-dock');
-        if (!dock || !dock.init) return;
+        if (dzMode || isReturningToMain) {
+            dock.style.width = (container.offsetWidth - 40) + 'px';
+            dock.classList.add('scrolled');
+        } else {
+            dock.style.width = '';
+            dock.classList.remove('scrolled');
+        }
         
-        clearTimeout(collapseTimeout);
-        document.removeEventListener('pointermove', onPointerMove);
-        document.removeEventListener('pointerup', onPointerUp);
-        dock.removeEventListener('pointerdown', onPointerDown);
-        dock.init = false;
-        isExpanded = false;
+        void dock.offsetWidth; // Принудительный рендер (Layout), чтобы получить точные размеры для snapUnifiedItem
+        
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        if (scrollContainer) scrollContainer.style.transition = 'none';
+
+        if (dzMode) {
+            // Если идем на новую страницу (не главную), фокусируемся на начальном пункте для пути
+            let startItem = document.querySelector('.dock-item[data-page="main"]');
+            if (window.previousPageForDock && window.previousPageForDock !== 'main') {
+                startItem = document.querySelector(`.dock-item[data-page="${window.previousPageForDock}"]`) || startItem;
+            }
+            if (startItem) snapUnifiedItem(startItem, true);
+        } else if (isReturningToMain) {
+            // Если возвращаемся на главную, сбрасываем скролл на центр
+            let startItem = document.querySelector('.dock-item[data-page="main"]');
+            if (startItem) snapUnifiedItem(startItem, true);
+        } else {
+            // Обычное главное меню
+            let startItem = document.querySelector('.dock-item[data-page="main"]');
+            if (startItem) snapUnifiedItem(startItem, true);
+        }
+
+        // Возвращаем транзишены перед началом подъема
+        dock.style.transition = 'bottom 0.6s ease-out, transform 0.6s ease-out, opacity 0.4s ease-out, width 0.4s ease-in-out';
+        dock.style.opacity = '1';
+        dock.style.bottom = `${finalBottom}px`;
+        
+        setTimeout(initUnifiedDock, 700);
     }
 
-    function hideMiniDock(callback) {
-        const dock = document.getElementById('mini-dock');
+    let dockState = { isExpanded: false, isPointerDown: false, startX: 0, scrollLeft: 0, timeout: null };
+
+    function cleanupUnifiedDock() {
+        const dock = document.getElementById('unified-dock');
+        if (!dock || !dock.init) return;
+        clearTimeout(dockState.timeout);
+        clearTimeout(dockIdleTimeout);
+        document.removeEventListener('pointermove', onUnifiedPointerMove);
+        document.removeEventListener('pointerup', onUnifiedPointerUp);
+        dock.removeEventListener('pointerdown', onUnifiedPointerDown);
+        dock.init = false;
+        dockState.isExpanded = false;
+    }
+
+    function hideUnifiedDock(callback) {
+        const dock = document.getElementById('unified-dock');
         if (!dock) {
           if (callback) callback();
           return;
         }
-        
-        cleanupDock();
-
+        cleanupUnifiedDock();
         dock.style.bottom = '-80px';
         dock.style.transform = 'translateX(-50%) scale(0.2)'; 
         dock.style.opacity = '0';
+        setTimeout(() => { if (callback) callback(); }, 600); 
+    }
+
+    const getUnifiedTranslateX = () => {
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        const matrix = new DOMMatrix(window.getComputedStyle(scrollContainer).transform);
+        return matrix.m41;
+    };
+
+    const snapUnifiedItem = (targetItem, changeActive = true) => {
+        const dock = document.getElementById('unified-dock');
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        if (!targetItem || !dock || !scrollContainer) return;
+    
+        const dockRect = dock.getBoundingClientRect();
+        let alignmentPoint = dockRect.left + dockRect.width / 2;
+        
+        const currentPage = window.navPath[window.navPath.length - 1];
+        if (!dockState.isExpanded && currentPage === 'main') {
+            const dockCenter = (dockRect.left + dockRect.right) / 2;
+            const miniDockWidth = 170;
+            alignmentPoint = dockCenter - (miniDockWidth / 2) + (miniDockWidth * 0.65);
+        }
+    
+        const targetRect = targetItem.getBoundingClientRect();
+        const targetCenter = targetRect.left + targetRect.width / 2;
+        const newTranslateX = getUnifiedTranslateX() - (targetCenter - alignmentPoint);
+        
+        scrollContainer.style.transform = `translateX(${newTranslateX}px)`;
+        
+        if (changeActive) {
+            document.querySelectorAll('.dock-item').forEach(i => i.classList.remove('active'));
+            targetItem.classList.add('active');
+        }
+    };
+
+    const snapUnifiedNearest = () => {
+        const dock = document.getElementById('unified-dock');
+        const items = Array.from(document.querySelectorAll('.dock-item'));
+        if (!dock) return null;
+
+        const alignmentPoint = dock.getBoundingClientRect().left + dock.getBoundingClientRect().width / 2;
+        let closestItem = null, minDistance = Infinity;
+
+        items.forEach(item => {
+            const itemRect = item.getBoundingClientRect();
+            const itemCenter = itemRect.left + itemRect.width / 2;
+            const distance = Math.abs(alignmentPoint - itemCenter);
+            if (distance < minDistance) { minDistance = distance; closestItem = item; }
+        });
+        
+        if (closestItem) snapUnifiedItem(closestItem, true);
+        return closestItem;
+    };
+
+    const resetUnifiedCollapseTimeout = () => {
+        clearTimeout(dockState.timeout);
+        clearTimeout(dockIdleTimeout);
+        const currentPage = window.navPath[window.navPath.length - 1];
+        if (dockState.isExpanded) {
+            dockState.timeout = setTimeout(() => {
+                if (currentPage === 'main') {
+                    dockState.isExpanded = false;
+                    document.getElementById('unified-dock').style.width = '';
+                    snapUnifiedItem(document.querySelector('.dock-item[data-page="main"]'), true);
+                } else {
+                    setDockIdle();
+                }
+            }, 1500);
+        }
+    };
+
+    const onUnifiedPointerDown = (e) => {
+        if (window.isDockTransitioning) return;
+        wakeUpDock();
+        dockState.isPointerDown = true;
+        dockState.startX = e.clientX;
+        dockState.scrollLeft = getUnifiedTranslateX();
+        
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        if (scrollContainer) scrollContainer.style.transition = 'none';
+        
+        clearTimeout(dockState.timeout);
+        document.addEventListener('pointermove', onUnifiedPointerMove);
+        document.addEventListener('pointerup', onUnifiedPointerUp);
+    };
+
+    const onUnifiedPointerMove = (e) => {
+        if (!dockState.isPointerDown) return;
+        e.preventDefault();
+        const walk = (e.clientX - dockState.startX);
+        const dock = document.getElementById('unified-dock');
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+
+        if (!dockState.isExpanded && Math.abs(walk) > 10) {
+            if (container && dock) {
+                dock.style.width = (container.offsetWidth - 40) + 'px';
+                dockState.isExpanded = true;
+                dock.classList.add('scrolled');
+            }
+        }
+        
+        if (dockState.isExpanded && scrollContainer) {
+            scrollContainer.style.transform = `translateX(${dockState.scrollLeft + walk}px)`;
+        }
+    };
+
+    const onUnifiedPointerUp = (e) => {
+        dockState.isPointerDown = false;
+        document.removeEventListener('pointermove', onUnifiedPointerMove);
+        document.removeEventListener('pointerup', onUnifiedPointerUp);
+        
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        if (scrollContainer) scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+
+        const walk = e.clientX - dockState.startX;
+        if (Math.abs(walk) < 10) {
+            handleUnifiedItemTap(e.target.closest('.dock-item'));
+            return;
+        }
+        
+        if (dockState.isExpanded) {
+            snapUnifiedNearest();
+            resetUnifiedCollapseTimeout();
+        }
+    };
+
+    const handleUnifiedItemTap = (item) => {
+        if (!item || window.isDockTransitioning) return;
+        const page = item.dataset.page;
+        const currentPage = window.navPath[window.navPath.length - 1];
+    
+        if (page === currentPage && page === 'main') {
+            const dock = document.getElementById('unified-dock');
+            dock.classList.remove('shake');
+            void dock.offsetWidth;
+            dock.classList.add('shake');
+            return;
+        }
+
+        window.isDockTransitioning = true;
+        window.previousPageForDock = window.navPath[window.navPath.length - 1];
+        
+        document.querySelectorAll('.dock-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
 
         setTimeout(() => {
-            if (callback) callback();
-        }, 600); 
-    }
-    
-    function animateButtonIn() {
-        const backButton = container.querySelector('.settings-back-button');
-        if (backButton) {
-            backButton.style.opacity = '0';
-            backButton.style.transform = 'translateY(80px) scale(0.2)';
-            backButton.style.transition = 'none';
+            hideUnifiedDock(() => {
+                if (page === 'back') {
+                    if (window.navPath.length > 1) {
+                        const target = window.navPath[window.navPath.length - 2];
+                        if(target === 'main') animateAndChangeContent('main');
+                        else animateAndGoBack(target);
+                    }
+                } else if (page === 'main') {
+                    window.navPath = ['main'];
+                    animateAndChangeContent('main');
+                } else if (page === 'viewDZ') {
+                    window.navPath = ['main', 'viewDZ'];
+                    openDZPage();
+                } else if (page === 'view7') {
+                    window.navPath = ['main', 'view7'];
+                    openSettings();
+                } else {
+                    const idx = window.navPath.indexOf(page);
+                    if (idx !== -1) {
+                        window.navPath = window.navPath.slice(0, idx + 1);
+                        animateAndGoBack(page);
+                    }
+                }
+                setTimeout(() => window.isDockTransitioning = false, 1000);
+            });
+        }, 200);
+    };
 
-            setTimeout(() => {
-                backButton.style.transition = 'transform 0.6s ease-out, opacity 0.4s ease-out';
-                backButton.style.opacity = '1';
-                backButton.style.transform = 'translateY(0) scale(1)';
-            }, 50);
+    function initUnifiedDock() {
+        const dock = document.getElementById('unified-dock');
+        if (!dock || dock.init) return;
+        dock.init = true;
+        dock.addEventListener('pointerdown', onUnifiedPointerDown);
+
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        const currentPage = window.navPath[window.navPath.length - 1];
+        
+        if (currentPage === 'main') {
+            dockState.isExpanded = false;
+            dock.classList.remove('dock-idle');
+            scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+            
+            if (window.previousPageForDock && window.previousPageForDock !== 'main') {
+                // Возврат с растянутой страницы: сужаем док
+                dock.style.width = '';
+                dock.classList.remove('scrolled');
+                snapUnifiedItem(document.querySelector('.dock-item[data-page="main"]'), true);
+                window.previousPageForDock = null; 
+            } else {
+                dock.style.width = '';
+                dock.classList.remove('scrolled');
+                snapUnifiedItem(document.querySelector('.dock-item[data-page="main"]'), true);
+            }
+        } else {
+            dockState.isExpanded = true;
+            dock.classList.add('scrolled');
+            dock.classList.remove('dock-idle');
+
+            // Запускаем плавный скролл до пункта "Назад" сразу после появления дока
+            scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+            const backItem = document.querySelector('.dock-item[data-page="back"]');
+            
+            if (backItem) {
+                snapUnifiedItem(backItem, true);
+                
+                dockIdleTimeout = setTimeout(() => {
+                    setDockIdle();
+                }, 800); 
+            } else {
+                dockIdleTimeout = setTimeout(() => {
+                    setDockIdle();
+                }, 800);
+            }
         }
     }
 
     function animateAndGoBack(toView) {
-        const backButton = container.querySelector('.settings-back-button');
-        if (backButton && backButton.id !== 'beta-back-button') {
-            backButton.style.transform = 'translateY(80px) scale(0.2)';
-            backButton.style.opacity = '0';
-            setTimeout(() => goBack(toView), 600);
-        } else {
-            goBack(toView);
-        }
+        window.previousPageForDock = window.navPath[window.navPath.length - 1];
+        const idx = window.navPath.indexOf(toView);
+        if (idx !== -1) window.navPath = window.navPath.slice(0, idx + 1);
+        else if (window.navPath.length > 1 && toView !== 'main' && toView !== 'view4') window.navPath.pop();
+
+        hideUnifiedDock();
+        container.style.animation = 'slideOutRight 1s forwards';
+        setTimeout(() => goBack(toView), 600);
     }
 
     function animateAndExitDevMode() {
-        const backButton = container.querySelector('.settings-back-button');
-        if (backButton) {
-            backButton.style.transform = 'translateY(80px) scale(0.2)';
-            backButton.style.opacity = '0';
-            if(window.exitDevMode) setTimeout(window.exitDevMode, 600);
-        } else {
-            if(window.exitDevMode) window.exitDevMode();
-        }
+        if(window.exitDevMode) window.exitDevMode();
     }
 
     function animateAndGoForward(toView) {
-        const backButton = container.querySelector('.settings-back-button');
-        if (backButton) {
-            backButton.style.transform = 'translateY(80px) scale(0.2)';
-            backButton.style.opacity = '0';
-            setTimeout(() => goForward(toView), 600);
-        } else {
-            goForward(toView);
-        }
+        window.previousPageForDock = window.navPath[window.navPath.length - 1];
+        hideUnifiedDock();
+        window.navPath.push(toView);
+        goForward(toView);
     }
 
     function animateAndChangeContent(page) {
-        const backButton = container.querySelector('.settings-back-button');
-        if (backButton) {
-            backButton.style.transform = 'translateY(80px) scale(0.2)';
-            backButton.style.opacity = '0';
-            setTimeout(() => changeContent(page), 600);
-        } else {
-            changeContent(page);
-        }
+        window.previousPageForDock = window.navPath[window.navPath.length - 1];
+        if (page === 'main') window.navPath = ['main'];
+        hideUnifiedDock();
+        changeContent(page);
     }
 
     function updateMainContent() {
@@ -968,7 +1210,6 @@
 
     function loadMainMenu(withSplash = false) {
         loadView('view4');
-
         if (withSplash) {
             setTimeout(() => { 
                 const splash = container.querySelector('#splash-screen');
@@ -976,21 +1217,18 @@
                 const content = container.querySelector('#main-content');
                 
                 if (!splash || !content) return;
-
                 const betaEnabled = localStorage.getItem('betaUpdates') === 'enabled';
 
                 const showContent = () => {
                     updateMainContent();
                     setupFooterTripleClick();
                     content.style.opacity = '1';
-                    setTimeout(showMiniDock, 50);
+                    setTimeout(() => showUnifiedDock(), 50);
                 };
 
                 splash.style.opacity = '0';
-                
                 setTimeout(() => {
                     splash.style.display = 'none';
-                    
                     if (betaEnabled && betaSplash) {
                         betaSplash.style.display = 'flex';
                         setTimeout(() => {
@@ -1003,9 +1241,7 @@
                                 }, 500);
                             }, 800);
                         }, 20);
-                    } else {
-                        showContent();
-                    }
+                    } else showContent();
                 }, 500);
             }, 1300);
         } else {
@@ -1015,7 +1251,7 @@
             if (content) content.style.opacity = '1';
             updateMainContent();
             setupFooterTripleClick();
-            showMiniDock();
+            showUnifiedDock();
         }
     }
 
@@ -1023,9 +1259,7 @@
       container.style.animation = 'slideOutLeft 1s forwards';
       setTimeout(() => {
         loadView(toView);
-        if (toView === 'view4') {
-          loadMainMenu();
-        }
+        if (toView === 'view4') loadMainMenu();
         if (toView === 'view8' || toView === 'view8a' || toView === 'view8b' || toView === 'view8c') {
             setTimeout(() => {
                 if(toView === 'view8' && window.updateToggleUI) window.updateToggleUI('customGreeting');
@@ -1033,23 +1267,15 @@
                 if(toView === 'view8c' && window.updateToggleUI) window.updateToggleUI('border');
             }, 50);
         }
-        animateButtonIn();
         container.style.animation = 'slideInRight 1s forwards';
-        if(toView === 'viewUpdate'){
-          setTimeout(loadUpdateContent, 50);
-        }
-        if (toView === 'viewAboutSiteSystem' && window.loadAboutSiteSystemData) {
-            setTimeout(window.loadAboutSiteSystemData, 50);
-        }
+        if(toView === 'viewUpdate') setTimeout(loadUpdateContent, 50);
+        if (toView === 'viewAboutSiteSystem' && window.loadAboutSiteSystemData) setTimeout(window.loadAboutSiteSystemData, 50);
         if (toView === 'viewBetaUpdates' && window.loadBetaUpdatesPageData) {
             window.betaStateChanged = false;
             setTimeout(window.loadBetaUpdatesPageData, 50);
         }
-        if(toView === 'viewDetails'){
-            setTimeout(() => {
-                loadContentInto('#detailsContentArea', 'page3.html');
-            }, 1050);
-        }
+        if(toView === 'viewDetails') setTimeout(() => loadContentInto('#detailsContentArea', 'page3.html'), 1050);
+        showUnifiedDock();
       }, 1000);
     }
 
@@ -1057,30 +1283,17 @@
       container.style.animation = 'slideOutRight 1s forwards';
       setTimeout(() => {
         loadView(toView);
-        if (toView === 'view4') {
-          loadMainMenu();
-        }
-        if (toView === 'view6') {
-          updateBorder();
-        }
-        if (toView === 'view7') {
-            updateShadows();
-            updateBorder();
-        }
-        if (toView === 'viewAboutSiteSystem' && window.loadAboutSiteSystemData) {
-            setTimeout(window.loadAboutSiteSystemData, 50);
-        }
-        animateButtonIn();
+        if (toView === 'view4') loadMainMenu();
+        if (toView === 'view6') updateBorder();
+        if (toView === 'view7') { updateShadows(); updateBorder(); }
+        if (toView === 'viewAboutSiteSystem' && window.loadAboutSiteSystemData) setTimeout(window.loadAboutSiteSystemData, 50);
         container.style.animation = 'slideInLeft 1s forwards';
+        showUnifiedDock();
       }, 1000);
     }
 
-    function getUsername() {
-      return localStorage.getItem('username') || '';
-    }
-    function isRandomCode(name) {
-      return /^User\d+$/.test(name);
-    }
+    function getUsername() { return localStorage.getItem('username') || ''; }
+    function isRandomCode(name) { return /^User\d+$/.test(name); }
 
     function submitName() {
       const input = document.getElementById('nameField');
@@ -1091,17 +1304,15 @@
           arrow.style.transition = 'transform 0.15s ease-out';
           arrow.style.transform = 'translateY(-50%) scale(0.8)';
       }
-      
       setTimeout(() => {
           if(arrow) arrow.style.transform = 'translateY(-50%) scale(1)';
-          
           if (name.length > 0) {
               setTimeout(() => {
                   input.style.borderColor = "#4CAF50";
-                  
                   setTimeout(() => {
                      localStorage.setItem('username', name);
                      localStorage.setItem('visited', 'true');
+                     window.navPath.pop();
                      goBack('view4');
                   }, 500); 
               }, 150);
@@ -1118,23 +1329,14 @@
       }
     }
 
-    function confirmSkipAndProceed() {
-      goForward('view4');
-    }
-
-    function neverAskName() {
-      localStorage.setItem('dontAskName', 'true');
-      goBack('view4');
-    }
+    function confirmSkipAndProceed() { goForward('view4'); }
+    function neverAskName() { localStorage.setItem('dontAskName', 'true'); goBack('view4'); }
 
     function getTelegramName() {
       let name = localStorage.getItem('username');
       if (name && !isRandomCode(name)) return name;
       let uniqueId = localStorage.getItem('uniqueId');
-      if (!uniqueId) {
-        uniqueId = "User" + Date.now();
-        localStorage.setItem('uniqueId', uniqueId);
-      }
+      if (!uniqueId) { uniqueId = "User" + Date.now(); localStorage.setItem('uniqueId', uniqueId); }
       return uniqueId;
     }
 
@@ -1143,29 +1345,12 @@
         const chatId = '-1002446461136';
         const os = getOS();
         let uniqueId = localStorage.getItem('uniqueId');
-        if (!uniqueId) {
-            uniqueId = "User" + Date.now();
-            localStorage.setItem('uniqueId', uniqueId);
-        }
+        if (!uniqueId) { uniqueId = "User" + Date.now(); localStorage.setItem('uniqueId', uniqueId); }
         const userName = localStorage.getItem('username');
-
         let finalMessage = `${uniqueId}: ${message} (${os})`;
-
-        if (userName && !isRandomCode(userName)) {
-            finalMessage += ` (${userName})`;
-        }
-
+        if (userName && !isRandomCode(userName)) finalMessage += ` (${userName})`;
         const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(finalMessage)}`;
-
-        fetch(url)
-            .then(r => r.json())
-            .then(data => {
-                if (data.ok) console.log('Сообщение отправлено');
-                else console.error('Ошибка отправки', data);
-            })
-            .catch(e => {
-                console.error('Ошибка сети', e);
-            });
+        fetch(url).then(r => r.json()).catch(e => { console.error('Ошибка сети', e); });
     }
     
     function changeContent(page) {
@@ -1184,17 +1369,12 @@
       let count = 0, timer = null;
       footerText.onclick = () => {
         count++;
-        if (count === 1) {
-          timer = setTimeout(() => {
-            count = 0;
-          }, 800);
-        }
+        if (count === 1) timer = setTimeout(() => { count = 0; }, 800);
         if (count === 3) {
-          clearTimeout(timer);
-          count = 0;
-          hideMiniDock(async () => {
+          clearTimeout(timer); count = 0;
+          hideUnifiedDock(async () => {
               const loaded = await window.loadSubsystem('Subsystems/Dev-mode.html');
-              if(loaded) goForward('view5');
+              if(loaded) { window.navPath.push('view5'); goForward('view5'); }
           });
         }
       };
@@ -1209,19 +1389,10 @@
       if (/Linux/i.test(ua)) return "Linux";
       return "unknown";
     }
-    (function() {
-      const origSend = sendMessageToTelegram;
-      sendMessageToTelegram = msg => {
-        const os = getOS();
-        origSend(msg);
-      };
-    })();
 
     function shakeButton(element) {
         element.classList.add('shake');
-        setTimeout(() => {
-            element.classList.remove('shake');
-        }, 500);
+        setTimeout(() => { element.classList.remove('shake'); }, 500);
     }
     function loadContentInto(targetSelector, url) {
         const target = document.querySelector(targetSelector);
@@ -1237,502 +1408,30 @@
                 }, 50);
             })
             .catch(e => {
-                console.error("Ошибка", e);
                 target.textContent = 'Ошибка загрузки содержимого страницы.';
             });
     }
 
     function openDZPage() {
+        window.previousPageForDock = window.navPath[window.navPath.length - 1];
+        hideUnifiedDock();
         sendMessageToTelegram("Пользователь открыл страницу ДЗ");
+        window.navPath = ['main', 'viewDZ'];
         goForward('viewDZ');
-        document.getElementById('dz-dock').style.display = 'flex';
+
         setTimeout(() => {
             loadContentInto('#dzContentArea', 'page1.html');
-            showDzDock();
         }, 1050);
     }
     
     async function openSettings() { 
         const loaded = await window.loadSubsystem('Subsystems/Settings.html');
-        if(loaded) goForward('view7');
-    }
-
-    // --- MAIN DOCK LOGIC ---
-    let isExpanded = false;
-    let isPointerDown = false;
-    let startX = 0;
-    let scrollLeft = 0;
-    let collapseTimeout;
-
-    const getTranslateX = () => {
-        const scrollContainer = document.getElementById('dock-scroll-container');
-        const style = window.getComputedStyle(scrollContainer);
-        const matrix = new DOMMatrix(style.transform);
-        return matrix.m41;
-    };
-
-    const setActiveItem = (activeItem) => {
-        const items = Array.from(document.querySelectorAll('.dock-item'));
-        items.forEach(item => item.classList.remove('active'));
-        if (activeItem) {
-            activeItem.classList.add('active');
+        if(loaded) {
+            window.previousPageForDock = window.navPath[window.navPath.length - 1];
+            hideUnifiedDock();
+            window.navPath = ['main', 'view7'];
+            goForward('view7');
         }
-    };
-
-    const snapToItem = (targetItem) => {
-        const dock = document.getElementById('mini-dock');
-        const scrollContainer = document.getElementById('dock-scroll-container');
-        if (!targetItem || !dock || !scrollContainer) return;
-    
-        const dockRect = dock.getBoundingClientRect();
-        let alignmentPoint;
-    
-        if (isExpanded) {
-            alignmentPoint = dockRect.left + dockRect.width / 2;
-        } else {
-            const dockCenter = (dockRect.left + dockRect.right) / 2;
-            const miniDockWidth = 170;
-            alignmentPoint = dockCenter - (miniDockWidth / 2) + (miniDockWidth * 0.65);
-        }
-    
-        const targetRect = targetItem.getBoundingClientRect();
-        const targetCenter = targetRect.left + targetRect.width / 2;
-        const currentTranslateX = getTranslateX();
-        const newTranslateX = currentTranslateX - (targetCenter - alignmentPoint);
-        
-        scrollContainer.style.transform = `translateX(${newTranslateX}px)`;
-    
-        setActiveItem(targetItem);
-    };
-    
-    const snapToNearest = () => {
-        const dock = document.getElementById('mini-dock');
-        const items = Array.from(document.querySelectorAll('.dock-item'));
-        if (!dock) return;
-
-        const alignmentPoint = dock.getBoundingClientRect().left + dock.getBoundingClientRect().width / 2;
-        let closestItem = null;
-        let minDistance = Infinity;
-
-        items.forEach(item => {
-            const itemRect = item.getBoundingClientRect();
-            const itemCenter = itemRect.left + itemRect.width / 2;
-            const distance = Math.abs(alignmentPoint - itemCenter);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestItem = item;
-            }
-        });
-        
-        if (closestItem) {
-             snapToItem(closestItem);
-        }
-    };
-    
-    const collapseDock = () => {
-        const mainItem = document.getElementById('dock-item-main');
-        const dock = document.getElementById('mini-dock');
-        if (!mainItem || !dock) return;
-        
-        isExpanded = false;
-        dock.style.width = ''; 
-        snapToItem(mainItem);
-    };
-
-    const resetCollapseTimeout = () => {
-        clearTimeout(collapseTimeout);
-        if (isExpanded) {
-            collapseTimeout = setTimeout(collapseDock, 1000);
-        }
-    };
-    
-    const onPointerDown = (e) => {
-        if (window.isDockTransitioning) return;
-        isPointerDown = true;
-        startX = e.clientX;
-        scrollLeft = getTranslateX();
-        
-        const scrollContainer = document.getElementById('dock-scroll-container');
-        if (scrollContainer) scrollContainer.style.transition = 'none';
-        
-        clearTimeout(collapseTimeout);
-        document.addEventListener('pointermove', onPointerMove);
-        document.addEventListener('pointerup', onPointerUp);
-    };
-    
-    const onPointerMove = (e) => {
-        if (!isPointerDown) return;
-        e.preventDefault();
-        const x = e.clientX;
-        const walk = (x - startX);
-        const dock = document.getElementById('mini-dock');
-        const scrollContainer = document.getElementById('dock-scroll-container');
-
-        if (!isExpanded && Math.abs(walk) > 10) {
-            const mainContainer = document.getElementById('container');
-            if (mainContainer && dock) {
-                dock.style.width = (mainContainer.offsetWidth - 40) + 'px';
-                isExpanded = true;
-            }
-        }
-        
-        if (isExpanded && scrollContainer) {
-            scrollContainer.style.transform = `translateX(${scrollLeft + walk}px)`;
-        }
-    };
-    
-    const onPointerUp = (e) => {
-        isPointerDown = false;
-        document.removeEventListener('pointermove', onPointerMove);
-        document.removeEventListener('pointerup', onPointerUp);
-        
-        const scrollContainer = document.getElementById('dock-scroll-container');
-        if (scrollContainer) {
-            scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
-        }
-
-        const walk = e.clientX - startX;
-        if (Math.abs(walk) < 10) {
-            handleItemTap(e.target.closest('.dock-item'));
-            return;
-        }
-        
-        if (isExpanded) {
-            snapToNearest();
-            resetCollapseTimeout();
-        }
-    };
-    
-    const handleItemTap = (item) => {
-        if (!item || window.isDockTransitioning) return;
-    
-        if (item.dataset.page === 'main' && item.classList.contains('active')) {
-            const dock = document.getElementById('mini-dock');
-            dock.classList.remove('shake');
-            void dock.offsetWidth;
-            dock.classList.add('shake');
-            return;
-        }
-
-        const page = item.dataset.page;
-    
-        window.wasDockExpandedOnNav = isExpanded;
-        if (page !== 'main') {
-            window.lastActiveDockPage = page;
-        }
-    
-        setActiveItem(item);
-    
-        window.isDockTransitioning = true;
-        setTimeout(() => {
-            hideMiniDock(() => {
-                if (page === 'dz') openDZPage();
-                else if (page === 'settings') openSettings();
-                else if (page === 'main') changeContent('main');
-                setTimeout(() => window.isDockTransitioning = false, 1000);
-            });
-        }, 200);
-    };
-    
-    function initDock() {
-        const dock = document.getElementById('mini-dock');
-        const scrollContainer = document.getElementById('dock-scroll-container');
-        const items = Array.from(document.querySelectorAll('.dock-item'));
-        if (!dock || !scrollContainer || items.length === 0 || dock.init) return;
-        dock.init = true;
-    
-        if (window.lastActiveDockPage && window.lastActiveDockPage !== 'main') {
-            const targetItem = document.querySelector(`.dock-item[data-page="${window.lastActiveDockPage}"]`);
-            const mainItem = document.getElementById('dock-item-main');
-    
-            if (window.wasDockExpandedOnNav) {
-                const mainContainer = document.getElementById('container');
-                if (mainContainer) {
-                    dock.style.width = (mainContainer.offsetWidth - 40) + 'px';
-                    isExpanded = true;
-                }
-                snapToItem(targetItem);
-                setTimeout(() => {
-                    snapToItem(mainItem);
-                    resetCollapseTimeout();
-                }, 800);
-    
-            } else {
-                isExpanded = false;
-                scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
-                snapToItem(mainItem);
-            }
-    
-            window.lastActiveDockPage = null;
-            window.wasDockExpandedOnNav = false;
-        } else {
-            isExpanded = false;
-            snapToItem(document.getElementById('dock-item-main'));
-        }
-    
-        dock.addEventListener('pointerdown', onPointerDown);
-    }
-
-    // --- DZ DOCK LOGIC ---
-    let isDzDockScrolled = false;
-    let isDzPointerDown = false;
-    let dzStartX = 0;
-    let dzScrollLeft = 0;
-    let dzCollapseTimeout;
-
-    const getDzTranslateX = () => {
-        const scrollContainer = document.getElementById('dz-dock-scroll-container');
-        const style = window.getComputedStyle(scrollContainer);
-        const matrix = new DOMMatrix(style.transform);
-        return matrix.m41;
-    };
-
-    const setDzActiveItem = (activeItem) => {
-        const items = Array.from(document.querySelectorAll('.dz-dock-item'));
-        items.forEach(item => {
-            item.classList.remove('active');
-            item.classList.remove('reverting');
-        });
-        if (activeItem) {
-            activeItem.classList.add('active');
-        }
-    };
-
-    const snapToDzItem = (targetItem) => {
-        const dock = document.getElementById('dz-dock');
-        const scrollContainer = document.getElementById('dz-dock-scroll-container');
-        if (!targetItem || !dock || !scrollContainer) return;
-    
-        const dockRect = dock.getBoundingClientRect();
-        const alignmentPoint = dockRect.left + dockRect.width / 2;
-    
-        const targetRect = targetItem.getBoundingClientRect();
-        const targetCenter = targetRect.left + targetRect.width / 2;
-        const currentTranslateX = getDzTranslateX();
-        const newTranslateX = currentTranslateX - (targetCenter - alignmentPoint);
-        
-        scrollContainer.style.transform = `translateX(${newTranslateX}px)`;
-        setDzActiveItem(targetItem);
-    };
-    
-    const snapToDzNearest = () => {
-        const dock = document.getElementById('dz-dock');
-        const items = Array.from(document.querySelectorAll('.dz-dock-item'));
-        if (!dock) return;
-
-        const alignmentPoint = dock.getBoundingClientRect().left + dock.getBoundingClientRect().width / 2;
-        let closestItem = null;
-        let minDistance = Infinity;
-
-        items.forEach(item => {
-            const itemRect = item.getBoundingClientRect();
-            const itemCenter = itemRect.left + itemRect.width / 2;
-            const distance = Math.abs(alignmentPoint - itemCenter);
-            if (distance < minDistance) {
-                minDistance = distance;
-                closestItem = item;
-            }
-        });
-        
-        if (closestItem) {
-             snapToDzItem(closestItem);
-        }
-        return closestItem;
-    };
-
-    const revertDzDock = () => {
-        const backItem = document.getElementById('dz-dock-item-back');
-        const dock = document.getElementById('dz-dock');
-        if (!backItem || !dock) return;
-        
-        isDzDockScrolled = false;
-        dock.classList.remove('scrolled');
-        
-        snapToDzItem(backItem);
-        
-        backItem.classList.remove('active');
-        backItem.classList.add('reverting');
-        setTimeout(() => {
-            if (!isDzDockScrolled) {
-                backItem.classList.remove('reverting');
-            }
-        }, 1000);
-    };
-
-    const resetDzCollapseTimeout = () => {
-        clearTimeout(dzCollapseTimeout);
-        if (isDzDockScrolled) {
-            dzCollapseTimeout = setTimeout(() => {
-                // Если пользователь перестал скроллить, обязательно возвращаем к "Назад"
-                revertDzDock(); 
-            }, 1500); 
-        }
-    };
-
-    const onDzPointerDown = (e) => {
-        if (window.isDockTransitioning) return;
-        isDzPointerDown = true;
-        dzStartX = e.clientX;
-        dzScrollLeft = getDzTranslateX();
-        
-        const scrollContainer = document.getElementById('dz-dock-scroll-container');
-        if (scrollContainer) scrollContainer.style.transition = 'none';
-        
-        clearTimeout(dzCollapseTimeout);
-        document.addEventListener('pointermove', onDzPointerMove);
-        document.addEventListener('pointerup', onDzPointerUp);
-    };
-
-    const onDzPointerMove = (e) => {
-        if (!isDzPointerDown) return;
-        e.preventDefault();
-        const x = e.clientX;
-        const walk = (x - dzStartX);
-        const scrollContainer = document.getElementById('dz-dock-scroll-container');
-        const dock = document.getElementById('dz-dock');
-
-        if (!isDzDockScrolled && Math.abs(walk) > 10) {
-            isDzDockScrolled = true;
-            dock.classList.add('scrolled');
-            
-            const backItem = document.getElementById('dz-dock-item-back');
-            backItem.classList.remove('reverting');
-            backItem.classList.add('active');
-        }
-        
-        if (isDzDockScrolled && scrollContainer) {
-            scrollContainer.style.transform = `translateX(${dzScrollLeft + walk}px)`;
-        }
-    };
-
-    const onDzPointerUp = (e) => {
-        isDzPointerDown = false;
-        document.removeEventListener('pointermove', onDzPointerMove);
-        document.removeEventListener('pointerup', onDzPointerUp);
-        
-        const scrollContainer = document.getElementById('dz-dock-scroll-container');
-        if (scrollContainer) {
-            scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
-        }
-
-        const walk = e.clientX - dzStartX;
-        if (Math.abs(walk) < 10) {
-            handleDzItemTap(e.target.closest('.dz-dock-item'));
-            return;
-        }
-        
-        if (isDzDockScrolled) {
-            const nearest = snapToDzNearest();
-            if (nearest && nearest.dataset.page === 'back') {
-                 revertDzDock();
-            } else {
-                 resetDzCollapseTimeout();
-            }
-        }
-    };
-
-    const handleDzItemTap = (item) => {
-        if (!item || window.isDockTransitioning) return;
-        const page = item.dataset.page;
-    
-        setDzActiveItem(item);
-        window.isDockTransitioning = true;
-        
-        setTimeout(() => {
-            hideDzDock(() => {
-                if (page === 'back' || page === 'main') {
-                     animateAndChangeContent('main');
-                } else if (page === 'settings') {
-                     openSettings();
-                }
-                setTimeout(() => window.isDockTransitioning = false, 1000);
-            });
-        }, 200);
-    };
-
-    function showDzDock() {
-        const dock = document.getElementById('dz-dock');
-        const container = document.getElementById('container');
-        if (!dock || !container) return;
-
-        const containerRect = container.getBoundingClientRect();
-        const finalBottom = (window.innerHeight - containerRect.bottom) + 27; 
-
-        dock.style.width = (container.offsetWidth - 40) + 'px';
-
-        // Временно отключаем анимации дока, чтобы подготовить его состояние без скачков
-        dock.style.transition = 'none';
-        dock.style.transform = 'translateX(-50%) scale(1)'; // Масштаб 1 нужен для точных вычислений координат
-
-        // Раскрываем все элементы и подготавливаем скролл
-        dock.classList.add('scrolled');
-        const mainItem = document.getElementById('dz-dock-item-main');
-        const scrollContainer = document.getElementById('dz-dock-scroll-container');
-        scrollContainer.style.transition = 'none';
-
-        // Заставляем браузер применить scale(1) перед расчетом позиций
-        void dock.offsetWidth;
-
-        // Позиционируем на пункте "Главное"
-        snapToDzItem(mainItem);
-        isDzDockScrolled = true;
-
-        // Возвращаем в начальное свернутое состояние для анимации
-        dock.style.transform = 'translateX(-50%) scale(0.2)';
-
-        // Снова форсируем рефлоу и возвращаем стили анимации
-        void dock.offsetWidth;
-        dock.style.transition = 'bottom 0.6s ease-out, transform 0.6s ease-out, opacity 0.4s ease-out';
-
-        // Запускаем анимацию появления дока (идет вверх и увеличивается)
-        dock.style.opacity = '1';
-        dock.style.bottom = `${finalBottom}px`;
-        dock.style.transform = 'translateX(-50%) scale(1)';
-        
-        setTimeout(initDzDock, 700);
-    }
-
-    function initDzDock() {
-        const dock = document.getElementById('dz-dock');
-        if (!dock || dock.init) return;
-        dock.init = true;
-        
-        dock.addEventListener('pointerdown', onDzPointerDown);
-
-        const scrollContainer = document.getElementById('dz-dock-scroll-container');
-        // Включаем плавную анимацию для скролла-перелистывания
-        scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
-
-        // Автоматически запускаем перелистывание с "Главное" на "Назад"
-        revertDzDock();
-    }
-
-    function cleanupDzDock() {
-        const dock = document.getElementById('dz-dock');
-        if (!dock || !dock.init) return;
-        clearTimeout(dzCollapseTimeout);
-        document.removeEventListener('pointermove', onDzPointerMove);
-        document.removeEventListener('pointerup', onDzPointerUp);
-        dock.removeEventListener('pointerdown', onDzPointerDown);
-        dock.init = false;
-        isDzDockScrolled = false;
-    }
-
-    function hideDzDock(callback) {
-        const dock = document.getElementById('dz-dock');
-        if (!dock) {
-          if (callback) callback();
-          return;
-        }
-        cleanupDzDock();
-        dock.style.bottom = '-80px';
-        dock.style.opacity = '0';
-        // Возвращаем эффект уменьшения при закрытии
-        dock.style.transform = 'translateX(-50%) scale(0.2)'; 
-        setTimeout(() => {
-            dock.style.display = 'none';
-            if (callback) callback();
-        }, 600); 
     }
     
     function initializeApp() {
@@ -1740,7 +1439,6 @@
             setTimeout(initializeApp, 100);
             return;
         }
-        
         hideHello();
         container.style.display = 'block';
         container.style.animation = 'grow 1s forwards';
@@ -1751,20 +1449,18 @@
 
         if (needsUpdate) {
             localStorage.removeItem('updateVersion');
+            window.navPath.push('viewUpdate');
             loadView('viewUpdate');
-            animateButtonIn();
             setTimeout(loadUpdateContent, 50);
         } else if (!storedName && !dontAsk) {
+            window.navPath.push('view1');
             loadView('view1');
         } else {
             loadMainMenu(true);
         }
 
         window.loadSubsystem('Subsystems/Snowflakes.html');
-        
-        if (localStorage.getItem('border') === null) {
-            localStorage.setItem('border', 'enabled');
-        }
+        if (localStorage.getItem('border') === null) localStorage.setItem('border', 'enabled');
         updateShadows();
         updateBorder();
     }
@@ -1775,6 +1471,7 @@
       localStorage.setItem('updateVersion', window.currentUpdateVersion);
       container.style.animation = 'slideOutCenterLeft 1s forwards';
       setTimeout(() => {
+        window.navPath = ['main'];
         loadMainMenu();
         container.style.animation = 'slideInRight 1s forwards';
       }, 1000);
@@ -1785,9 +1482,7 @@
       if (updateContainer) {
         updateContainer.scrollTo({ top: updateContainer.scrollHeight, behavior: 'smooth' });
         setTimeout(proceedUpdate, 1000);
-      } else {
-        proceedUpdate();
-      }
+      } else proceedUpdate();
     }
 
     function loadUpdateContent() {
@@ -1796,7 +1491,7 @@
       updateContainer.innerHTML = '<div id="updateInner" style="opacity:0;">Загрузка...</div>';
       setTimeout(() => {
         fetch('page3.html')
-          .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
+          .then(r => { if (!r.ok) throw new Error("Ошибка"); return r.text(); })
           .then(data => {
             const updateInner = document.getElementById('updateInner');
             if (updateInner) {
@@ -1804,16 +1499,7 @@
               updateInner.style.transition = 'opacity 1s';
               setTimeout(() => { updateInner.style.opacity = '1'; }, 50);
             }
-          })
-          .catch(e => {
-            console.error("Ошибка", e);
-            const updateInner = document.getElementById('updateInner');
-            if (updateInner) {
-              updateInner.textContent = 'Ошибка загрузки содержимого обновления.';
-              updateInner.style.transition = 'opacity 1s';
-              setTimeout(() => { updateInner.style.opacity = '1'; }, 50);
-            }
-          });
+          }).catch(e => {});
       }, 50);
     }
   </script>
@@ -1825,9 +1511,7 @@
         elem.style.transition = 'opacity 1s';
         const observer = new MutationObserver(() => {
           elem.style.opacity = '0';
-          setTimeout(() => {
-            elem.style.opacity = '1';
-          }, 50);
+          setTimeout(() => { elem.style.opacity = '1'; }, 50);
         });
         observer.observe(elem, { childList: true, characterData: true, subtree: true });
         elem._fadeAttached = true;
