@@ -286,7 +286,7 @@
         align-items: center;
         gap: 25px;
         padding: 0 35px;
-        transition: transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1);
+        transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
         position: relative;
     }
     .dock-item {
@@ -787,13 +787,15 @@
     function setDockIdle() {
         clearTimeout(dockIdleTimeout);
         const dock = document.getElementById('unified-dock');
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
         const currentPage = window.navPath[window.navPath.length - 1];
         if (dock && currentPage !== 'main') {
+            if (scrollContainer) scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
             const backItem = document.querySelector('.dock-item[data-page="back"]');
-            if (backItem) snapUnifiedItem(backItem, false);
-            setTimeout(() => {
+            if (backItem) snapUnifiedItem(backItem, true);
+            dockIdleTimeout = setTimeout(() => {
                 dock.classList.add('dock-idle');
-            }, 400);
+            }, 800);
         }
     }
 
@@ -818,6 +820,11 @@
         if (currentPage === 'main') {
             html += `<div class="dock-item" data-page="viewDZ">ДЗ</div>`;
             html += `<div class="dock-item active" data-page="main">Главное</div>`;
+            html += `<div class="dock-item" data-page="view7">Настройки</div>`;
+        } else if (currentPage === 'viewDZ') {
+            html += `<div class="dock-item" data-page="back">Назад</div>`;
+            html += `<div class="dock-separator" style="margin: 0 15px;">|</div>`;
+            html += `<div class="dock-item" data-page="main">Главное</div>`;
             html += `<div class="dock-item" data-page="view7">Настройки</div>`;
         } else {
             html += `<div class="dock-item" data-page="viewDZ">ДЗ</div>`;
@@ -853,7 +860,6 @@
 
         dock.classList.remove('dock-idle');
 
-        // Отключаем транзишены для подготовки состояний
         dock.style.transition = 'none';
         dock.style.transform = 'translateX(-50%) scale(1)';
         
@@ -865,29 +871,29 @@
             dock.classList.remove('scrolled');
         }
         
-        void dock.offsetWidth; // Принудительный рендер (Layout), чтобы получить точные размеры для snapUnifiedItem
+        void dock.offsetWidth;
         
         const scrollContainer = document.getElementById('unified-dock-scroll-container');
         if (scrollContainer) scrollContainer.style.transition = 'none';
 
         if (dzMode) {
-            // Если идем на новую страницу (не главную), фокусируемся на начальном пункте для пути
             let startItem = document.querySelector('.dock-item[data-page="main"]');
             if (window.previousPageForDock && window.previousPageForDock !== 'main') {
                 startItem = document.querySelector(`.dock-item[data-page="${window.previousPageForDock}"]`) || startItem;
             }
             if (startItem) snapUnifiedItem(startItem, true);
         } else if (isReturningToMain) {
-            // Если возвращаемся на главную, сбрасываем скролл на центр
-            let startItem = document.querySelector('.dock-item[data-page="main"]');
-            if (startItem) snapUnifiedItem(startItem, true);
+            let startItem = document.querySelector(`.dock-item[data-page="${window.previousPageForDock}"]`);
+            if (!startItem && window.previousPageForDock !== 'viewDZ') {
+                startItem = document.querySelector('.dock-item[data-page="view7"]');
+            }
+            if (!startItem) startItem = document.querySelector('.dock-item[data-page="main"]');
+            if (startItem) snapUnifiedItem(startItem, false);
         } else {
-            // Обычное главное меню
-            let startItem = document.querySelector('.dock-item[data-page="main"]');
-            if (startItem) snapUnifiedItem(startItem, true);
+            let startItem = document.querySelector('.dock-item[data-page="view7"]');
+            if (startItem) snapUnifiedItem(startItem, false);
         }
 
-        // Возвращаем транзишены перед началом подъема
         dock.style.transition = 'bottom 0.6s ease-out, transform 0.6s ease-out, opacity 0.4s ease-out, width 0.4s ease-in-out';
         dock.style.opacity = '1';
         dock.style.bottom = `${finalBottom}px`;
@@ -983,6 +989,8 @@
                 if (currentPage === 'main') {
                     dockState.isExpanded = false;
                     document.getElementById('unified-dock').style.width = '';
+                    const scrollContainer = document.getElementById('unified-dock-scroll-container');
+                    if (scrollContainer) scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
                     snapUnifiedItem(document.querySelector('.dock-item[data-page="main"]'), true);
                 } else {
                     setDockIdle();
@@ -1032,7 +1040,7 @@
         document.removeEventListener('pointerup', onUnifiedPointerUp);
         
         const scrollContainer = document.getElementById('unified-dock-scroll-container');
-        if (scrollContainer) scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+        if (scrollContainer) scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
 
         const walk = e.clientX - dockState.startX;
         if (Math.abs(walk) < 10) {
@@ -1106,25 +1114,17 @@
         if (currentPage === 'main') {
             dockState.isExpanded = false;
             dock.classList.remove('dock-idle');
-            scrollContainer.style.transition = 'transform 0.4s cubic-bezier(0.1, 0.9, 0.2, 1)';
+            scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
             
-            if (window.previousPageForDock && window.previousPageForDock !== 'main') {
-                // Возврат с растянутой страницы: сужаем док
-                dock.style.width = '';
-                dock.classList.remove('scrolled');
-                snapUnifiedItem(document.querySelector('.dock-item[data-page="main"]'), true);
-                window.previousPageForDock = null; 
-            } else {
-                dock.style.width = '';
-                dock.classList.remove('scrolled');
-                snapUnifiedItem(document.querySelector('.dock-item[data-page="main"]'), true);
-            }
+            dock.style.width = '';
+            dock.classList.remove('scrolled');
+            snapUnifiedItem(document.querySelector('.dock-item[data-page="main"]'), true);
+            window.previousPageForDock = null; 
         } else {
             dockState.isExpanded = true;
             dock.classList.add('scrolled');
             dock.classList.remove('dock-idle');
 
-            // Запускаем плавный скролл до пункта "Назад" сразу после появления дока
             scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
             const backItem = document.querySelector('.dock-item[data-page="back"]');
             
