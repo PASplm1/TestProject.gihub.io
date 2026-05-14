@@ -811,7 +811,7 @@
 
         const currentPage = window.navPath[window.navPath.length - 1];
 
-        if (currentPage === 'view9' || currentPage === 'view9b') {
+        if (currentPage === 'view1' || currentPage === 'view2' || currentPage === 'view2b' || currentPage === 'view3' || currentPage === 'view9' || currentPage === 'view9b') {
             hideUnifiedDock();
             return;
         }
@@ -851,6 +851,12 @@
         if (!dock) return;
 
         const currentPage = window.navPath[window.navPath.length - 1];
+        
+        if (currentPage === 'view1' || currentPage === 'view2' || currentPage === 'view2b' || currentPage === 'view3' || currentPage === 'view9' || currentPage === 'view9b') {
+            hideUnifiedDock();
+            return;
+        }
+        
         const dzMode = currentPage !== 'main';
         const isReturningToMain = (currentPage === 'main' && window.previousPageForDock && window.previousPageForDock !== 'main');
 
@@ -866,9 +872,11 @@
         if (dzMode || isReturningToMain) {
             dock.style.width = (container.offsetWidth - 40) + 'px';
             dock.classList.add('scrolled');
+            dockState.isExpanded = true;
         } else {
             dock.style.width = '';
             dock.classList.remove('scrolled');
+            dockState.isExpanded = false;
         }
         
         void dock.offsetWidth;
@@ -888,7 +896,19 @@
                 startItem = document.querySelector('.dock-item[data-page="view7"]');
             }
             if (!startItem) startItem = document.querySelector('.dock-item[data-page="main"]');
-            if (startItem) snapUnifiedItem(startItem, false);
+            if (startItem) {
+                snapUnifiedItem(startItem, true);
+                if (startItem.dataset.page !== 'main') {
+                    setTimeout(() => {
+                        const mainItem = document.querySelector('.dock-item[data-page="main"]');
+                        if (mainItem) {
+                            const scCont = document.getElementById('unified-dock-scroll-container');
+                            if (scCont) scCont.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                            snapUnifiedItem(mainItem, true);
+                        }
+                    }, 1000);
+                }
+            }
         } else {
             let startItem = document.querySelector('.dock-item[data-page="view7"]');
             if (startItem) snapUnifiedItem(startItem, false);
@@ -1082,7 +1102,6 @@
                         else animateAndGoBack(target);
                     }
                 } else if (page === 'main') {
-                    window.navPath = ['main'];
                     animateAndChangeContent('main');
                 } else if (page === 'viewDZ') {
                     window.navPath = ['main', 'viewDZ'];
