@@ -1,279 +1,1701 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iOS Liquid Glass Auth</title>
-    <style>
-        :root {
-            --glass-bg: rgba(255, 255, 255, 0.12);
-            --glass-border: rgba(255, 255, 255, 0.45);
-            --glass-highlight: inset 0 1px 2px rgba(255, 255, 255, 0.65), inset 0 -1px 1px rgba(255, 255, 255, 0.2);
-            --text-color: #ffffff;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>pasSITE - Домашка</title>
+  <style>
+    * { -webkit-tap-highlight-color: transparent !important; }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #007BFF;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+      transition: background-color 1s;
+    }
+    .no-shadows .button,
+    .no-shadows .settings-icon,
+    .no-shadows .settings-back-button,
+    .no-shadows #unified-dock {
+      box-shadow: none !important;
+    }
+    .hello {
+      font-size: 5vw;
+      color: white;
+      position: absolute;
+      z-index: 1;
+      animation: scaleAnimation 2s forwards;
+    }
+    @keyframes scaleAnimation {
+      0% { opacity: 1; transform: scale(0.3); }
+      100% { opacity: 1; transform: scale(1.5); }
+    }
+    #container {
+      background: rgba(255, 255, 255, 0.5);
+      border: none;
+      border-radius: 20px;
+      padding: 5vw;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      backdrop-filter: blur(3px);
+      width: 77vw;
+      min-height: 85vh;
+      max-width: 800px;
+      position: absolute;
+      transform: scale(0);
+      animation: grow 1s forwards;
+      display: none;
+      z-index: 2;
+    }
+    #container.border-enabled {
+      border: 1px solid white;
+    }
+    #container.border-enabled .settings-icon,
+    #container.border-enabled .settings-back-button,
+    #container.border-enabled ~ #unified-dock {
+        border-color: white;
+    }
+    #container.border-enabled .settings-button {
+        border: 2px solid white !important;
+    }
+    @keyframes grow { from { transform: scale(0); } to { transform: scale(1); } }
+    @keyframes slideOutRight { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(100%); opacity: 0; } }
+    @keyframes slideInLeft { 0% { transform: translateX(-100%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOutLeft { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(-100%); opacity: 0; } }
+    @keyframes slideInRight { 0% { transform: translateX(100%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
+    @keyframes slideOutCenterLeft { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(-100%); opacity: 0; } }
+    @keyframes shake {
+      0% { transform: translateX(0); }
+      25% { transform: translateX(5px); }
+      50% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+      100% { transform: translateX(0); }
+    }
+    .shake { animation: shake 0.5s; }
+    @keyframes dockShake {
+      0% { transform: translateX(-50%) translateX(0) scale(1.08); }
+      33% { transform: translateX(-50%) translateX(10px) scale(1.08); }
+      66% { transform: translateX(-50%) translateX(-10px) scale(1.08); }
+      100% { transform: translateX(-50%) translateX(0) scale(1.08); }
+    }
+    #unified-dock.shake { animation: dockShake 0.4s ease-in-out; }
+    header, footer { text-align: center; }
+    h1 { color: #333; }
+    h2, p { color: #555; margin-bottom: 4px; }
+    #content { margin-bottom: 20px; }
+    .buttons-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      gap: 10px;
+    }
+    .button {
+      padding: 15px 20px;
+      background: #4CAF50;
+      color: white;
+      text-decoration: none;
+      border-radius: 5px;
+      transition: background 0.3s, box-shadow 0.3s;
+      cursor: pointer;
+      text-align: center;
+      border: 2px solid white;
+      outline: none;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    }
+    .button:hover { background: gray; }
+    .button:focus { outline: none; box-shadow: 0 0 0 2px white; }
+    .content-container {
+      max-height: 42vh;
+      overflow-y: auto;
+      padding-right: 10px;
+      padding-top: 15px;
+      padding-bottom: 15px;
+      -webkit-mask-image: linear-gradient(to bottom, transparent, black 35px, black calc(100% - 35px), transparent);
+      mask-image: linear-gradient(to bottom, transparent, black 35px, black calc(100% - 35px), transparent);
+    }
+    .content-container::-webkit-scrollbar {
+      width: 5px;
+    }
+    .content-container::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+    }
+    input[type="text"],
+    input[type="password"] {
+      background-color: #444;
+      color: white;
+      border-radius: 10px;
+      border: 2px solid white;
+      padding: 10px;
+      margin-bottom: 20px;
+      width: 87%;
+      box-sizing: border-box;
+      font-size: 1.5em;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: center;
+    }
+    #devError { text-align: center; }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: #09090e;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            user-select: none;
-        }
+    .settings-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        max-height: 70vh;
+        justify-content: space-between;
+    }
+    .settings-scroll-container {
+        overflow-y: auto;
+        padding: 0 5px;
+        -webkit-mask-image: linear-gradient(to bottom, transparent, black 35px, black calc(100% - 35px), transparent);
+        mask-image: linear-gradient(to bottom, transparent, black 35px, black calc(100% - 35px), transparent);
+        margin: 6px 0 18px 0;
+        flex-grow: 1;
+    }
+    .settings-scroll-container::-webkit-scrollbar {
+        display: none;
+    }
+    .settings-scroll-container.show-scrollbar::-webkit-scrollbar {
+        display: block;
+        width: 5px;
+    }
+    .settings-scroll-container.show-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 10px;
+    }
+    .rubber-band-scroll {
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior-y: contain;
+    }
+    .rubber-band-scroll::-webkit-scrollbar {
+        display: none;
+    }
+    .rubber-band-inner {
+        min-height: calc(100% + 2px);
+        padding-top: 10px;
+        padding-bottom: 20px;
+    }
+    .settings-group-title {
+        color: #333;
+        font-size: 1em;
+        margin-top: 15px;
+        margin-bottom: 8px;
+        padding-left: 10px;
+        font-weight: bold;
+    }
+    .settings-button {
+        background: rgba(255, 255, 255, 0.4) !important;
+        border-radius: 12px !important;
+        padding: 12px 15px !important;
+        display: flex !important;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: left;
+        width: 100%;
+        box-sizing: border-box;
+        margin-bottom: 10px;
+        border: 2px solid transparent !important;
+        min-height: 62px;
+    }
+    .settings-button > span {
+        margin-left: 15px;
+        font-size: 1.1em;
+    }
+    .settings-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 500;
+        color: white;
+        background: rgba(255, 255, 255, 0.3);
+        box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        transition: box-shadow 0.3s;
+        flex-shrink: 0;
+        border: 1px solid transparent;
+    }
+    .settings-back-button-container {
+        padding: 0 5px;
+    }
+    .settings-back-button {
+        background: rgba(255, 255, 255, 0.3) !important;
+        border-radius: 12px !important;
+        border: 1px solid transparent;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    #splash-screen, #beta-splash-screen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      font-size: 7vw;
+      font-weight: bold;
+      color: #333;
+      transition: opacity 0.5s ease-out;
+      z-index: 10;
+      width: 100%;
+      height: 100%;
+    }
+    #beta-splash-screen {
+        display: none;
+        opacity: 0;
+    }
+    #main-content {
+      transition: opacity 0.5s ease-in;
+    }
+    
+    #unified-dock {
+        position: fixed;
+        bottom: -80px;
+        left: 50%;
+        transform: translateX(-50%) scale(0.2);
+        width: 170px;
+        padding: 12px 0;
+        background: rgba(255, 255, 255, 0.3);
+        backdrop-filter: blur(3px);
+        border-radius: 17px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        border: 1px solid transparent;
+        z-index: 6;
+        opacity: 0;
+        transition: bottom 0.6s ease-out, transform 0.6s ease-out, opacity 0.4s ease-out, width 0.4s ease-in-out;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        touch-action: pan-y;
+    }
+    #unified-dock.scrolled .dock-separator {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    #unified-dock-scroll-container {
+        display: flex;
+        align-items: center;
+        gap: 25px;
+        padding: 0 35px;
+        transition: transform 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        position: relative;
+    }
+    .dock-item {
+        color: white;
+        font-size: 1.1em;
+        font-weight: 500;
+        cursor: pointer;
+        padding: 0;
+        margin: 0;
+        transform: scale(0.8);
+        white-space: nowrap;
+    }
+    .dock-item.active {
+        transform: scale(1.1);
+        color: yellow;
+    }
+    .dock-separator, .dock-arrow {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 1.1em;
+        pointer-events: none;
+    }
 
-        /* Жидкие цветные сферы на фоне для создания эффекта преломления стекла */
-        .bg-blur-1 {
-            position: absolute;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, #ff2d55 0%, rgba(255,45,85,0) 70%);
-            top: -100px;
-            left: -100px;
-            filter: blur(50px);
-            opacity: 0.6;
-            animation: float 12s infinite alternate;
-        }
+    #unified-dock.dock-idle .dock-item:not([data-page="back"]):not([data-page="betaRestart"]),
+    #unified-dock.dock-idle .dock-separator,
+    #unified-dock.dock-idle .dock-arrow {
+        opacity: 0;
+        pointer-events: none;
+    }
+    #unified-dock .dock-item, #unified-dock .dock-separator, #unified-dock .dock-arrow {
+        transition: opacity 0.7s ease-in-out, transform 0.3s ease-in-out, color 0.3s ease-in-out;
+    }
+    .dock-item[data-page="back"].active, .dock-item[data-page="betaRestart"].active {
+        color: white;
+    }
 
-        .bg-blur-2 {
-            position: absolute;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, #5856d6 0%, rgba(88,86,214,0) 70%);
-            bottom: -150px;
-            right: -100px;
-            filter: blur(60px);
-            opacity: 0.6;
-            animation: float 18s infinite alternate-reverse;
-        }
+    .dz-page-wrapper {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        border-radius: 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+    .dz-content-layer {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        overflow-y: auto;
+        padding: 95px 20px 95px 20px;
+        z-index: 4;
+    }
+    .dz-content-layer::-webkit-scrollbar { display: none; }
+    .dz-top-mask {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 130px;
+        background: rgba(80,80,85,0.5);
+        backdrop-filter: blur(15px);
+        -webkit-mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+        mask-image: linear-gradient(to bottom, black 50%, transparent 100%);
+        z-index: 5;
+        pointer-events: none;
+    }
+    .dz-bottom-mask {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        height: 130px;
+        background: rgba(80,80,85,0.5);
+        backdrop-filter: blur(15px);
+        -webkit-mask-image: linear-gradient(to top, black 50%, transparent 100%);
+        mask-image: linear-gradient(to top, black 50%, transparent 100%);
+        z-index: 5;
+        pointer-events: none;
+    }
+    .dz-title-layer {
+        position: absolute;
+        top: 35px;
+        left: 0;
+        right: 0;
+        text-align: center;
+        z-index: 7;
+        pointer-events: none;
+    }
+    .dz-title-layer h1 {
+        margin: 0;
+        color: #333;
+    }
 
-        @keyframes float {
-            0% { transform: translate(0, 0) scale(1); }
-            100% { transform: translate(50px, 40px) scale(1.1); }
-        }
-
-        /* Карточка из жидкого стекла */
-        .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(30px) saturate(210%);
-            -webkit-backdrop-filter: blur(30px) saturate(210%);
-            border: 1px solid var(--glass-border);
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), var(--glass-highlight);
-            border-radius: 32px;
-            padding: 35px 25px;
-            text-align: center;
-            width: 340px;
-            box-sizing: border-box;
-            position: relative;
-            z-index: 10;
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        .hidden {
-            display: none !important;
-            opacity: 0;
-            transform: scale(0.95);
-        }
-
-        h1 {
-            color: var(--text-color);
-            font-size: 28px;
-            font-weight: 700;
-            margin: 0 0 8px 0;
-            letter-spacing: -0.5px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
-        }
-
-        .subtitle {
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 14px;
-            margin-bottom: 30px;
-            line-height: 1.4;
-        }
-
-        /* Кнопки в стиле iOS */
-        .btn {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 16px 20px;
-            font-size: 16px;
-            border-radius: 16px;
-            cursor: pointer;
-            font-weight: 600;
-            width: 100%;
-            transition: all 0.2s ease;
-            box-shadow: var(--glass-highlight);
-            margin-bottom: 12px;
-            backdrop-filter: blur(5px);
-        }
-
-        .btn:active {
-            background: rgba(255, 255, 255, 0.35);
-            transform: scale(0.98);
-        }
-
-        /* Акцентная кнопка */
-        .btn-primary {
-            background: #ffffff;
-            color: #000000;
-            border: none;
-            box-shadow: 0 4px 15px rgba(255,255,255,0.3);
-        }
-
-        .btn-primary:active {
-            background: rgba(255, 255, 255, 0.85);
-        }
-
-        /* Кнопка закрытия/блокировки */
-        .close-btn {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.15);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            cursor: pointer;
-            font-size: 18px;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-            box-shadow: var(--glass-highlight);
-        }
-
-        .close-btn:active {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .badge {
-            display: inline-block;
-            background: rgba(52, 199, 89, 0.2);
-            border: 1px solid rgba(52, 199, 89, 0.4);
-            color: #34c759;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            margin-top: 20px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
-        }
-    </style>
+    .settings-button-value {
+        margin-left: auto;
+        font-weight: bold;
+        color: #555;
+    }
+    .about-system-foundation {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        height: auto;
+        padding-bottom: 60px !important;
+        position: relative;
+        padding-top: 15px !important;
+        padding-left: 15px !important;
+        padding-right: 15px !important;
+    }
+    .about-system-top-section {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    .about-system-icon {
+        width: 70px !important;
+        height: 70px !important;
+        font-size: 3em !important;
+        font-weight: bold !important;
+        margin-right: 15px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2) !important;
+        flex-shrink: 0;
+        border-radius: 13.2px !important;
+    }
+    .about-system-version-info {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        color: #333;
+    }
+    .about-system-version-info h3 {
+        margin: 0;
+        font-size: 0.8em;
+        font-weight: bold;
+    }
+    .about-system-details-container {
+        height: 157px;
+        overflow-y: auto;
+        padding: 0 0 35px 0;
+        border-top: 1px solid rgba(0,0,0,0.1);
+        border-bottom: 1px solid rgba(0,0,0,0.1);
+        -webkit-mask-image: linear-gradient(to bottom, transparent, black 5px, black calc(100% - 15px), transparent);
+        mask-image: linear-gradient(to bottom, transparent, black 5px, black calc(100% - 15px), transparent);
+        color: #555;
+        font-size: 0.9em;
+    }
+    .about-system-details-container::-webkit-scrollbar { display: none; }
+    .about-system-whats-new-button {
+        position: absolute;
+        bottom: 15px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: calc(100% - 30px);
+        background: rgba(100, 180, 255, 0.45) !important;
+        backdrop-filter: blur(5px);
+        border-radius: 10px !important;
+        font-weight: bold;
+        color: white;
+        padding: 12px 20px !important;
+        border: 1px solid rgba(255, 255, 255, 0.7) !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .about-system-footer-note {
+        font-size: 0.8em;
+        color: #666;
+        text-align: center;
+        padding: 0 30px;
+        margin-top: 15px;
+    }
+    .settings-toggle-base {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
+        cursor: pointer;
+    }
+    .settings-toggle-label {
+        font-weight: bold;
+        font-size: 0.9em;
+        color: #333;
+        margin-left: 0 !important;
+    }
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 51px;
+        height: 31px;
+        flex-shrink: 0;
+    }
+    .toggle-switch-background {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc;
+        transition: .4s;
+        border-radius: 34px;
+    }
+    .toggle-switch-handle {
+        position: absolute;
+        height: 27px;
+        width: 27px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-switch.active .toggle-switch-background {
+        background-color: #4CAF50;
+    }
+    .toggle-switch.active .toggle-switch-handle {
+        transform: translateX(20px);
+    }
+    .description-block {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        justify-content: center !important;
+        height: auto !important;
+        min-height: 80px;
+        padding: 15px !important;
+        cursor: default !important;
+        margin-bottom: 0 !important;
+    }
+    .description-block p {
+        margin: 0;
+        font-size: 0.9em;
+        color: #555;
+    }
+    .selection-list-container {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        justify-content: center !important;
+        padding: 0 !important;
+        height: auto !important;
+        min-height: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    .selection-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 15px;
+        cursor: pointer;
+    }
+    .selection-row:hover {
+        background: rgba(0,0,0,0.05);
+    }
+    .selection-row-label {
+        font-weight: bold;
+        font-size: 0.9em;
+        color: #333;
+    }
+    .selection-divider {
+        height: 1px;
+        background-color: rgba(0,0,0,0.1);
+        margin: 0 15px;
+    }
+    .selection-checkmark {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #8e8e93;
+        opacity: 0;
+        transition: opacity 0.2s;
+    }
+    .selection-row.active .selection-checkmark {
+        opacity: 1;
+    }
+  </style>
 </head>
 <body>
+  <div class="hello" id="hello">Hello</div>
+  <div id="container"></div>
+  
+  <div id="unified-dock">
+    <div id="unified-dock-scroll-container"></div>
+  </div>
 
-    <div class="bg-blur-1"></div>
-    <div class="bg-blur-2"></div>
-
-    <div id="auth-screen" class="glass-card">
-        <h1>Привет</h1>
-        <p class="subtitle">Создай ключ или используй Face ID для мгновенного входа в систему безопасности.</p>
+  <script>
+    (function() {
+        const betaFlag = localStorage.getItem('betaUpdates');
+        const isBetaEnabled = betaFlag === 'enabled';
+        const currentPath = window.location.pathname;
         
-        <button id="login-btn" class="btn btn-primary">Войти по Face ID</button>
-        <button id="register-btn" class="btn">Создать ключ доступа</button>
+        const amInBetaFolder = currentPath.includes('/BETA/');
+        
+        if (isBetaEnabled && !amInBetaFolder) {
+            window.betaCheckInProgress = true;
+            fetch('BETA/index.html', { method: 'HEAD' })
+                .then(response => {
+                    if (response.ok) {
+                        window.location.href = 'BETA/index.html';
+                    } else {
+                        localStorage.setItem('betaUpdates', 'disabled');
+                        window.betaCheckInProgress = false;
+                    }
+                })
+                .catch(error => {
+                    localStorage.setItem('betaUpdates', 'disabled');
+                    window.betaCheckInProgress = false;
+                });
+        } 
+        else if (!isBetaEnabled && amInBetaFolder) {
+            window.location.href = '../index.html';
+            window.betaCheckInProgress = true;
+        } 
+        else {
+            window.betaCheckInProgress = false;
+        }
+    })();
+
+    window.currentUpdateVersion = "2";
+    window.originalBgColor = null;
+    window.devModeBgColor = "#133526";
+    window.isDevMode = false;
+    window.isDockTransitioning = false;
+    window.isDockShaking = false;
+    window.betaStateChanged = false;
+    window.initialBetaState = null;
+    window.loadedSubsystems = {};
+    window.navPath = ['main'];
+    window.previousPageForDock = null;
+
+    let dockIdleTimeout = null;
+
+    const pageTitles = {
+        'main': 'Главное',
+        'viewDZ': 'ДЗ',
+        'view7': 'Настройки',
+        'view8': 'Personal Greeting',
+        'view8a': 'Кастомизация',
+        'view8b': 'Button Shadows',
+        'view8c': 'Обводка',
+        'viewAboutSiteSystem': 'О системе сайта',
+        'viewDetails': 'Что нового?',
+        'viewBetaUpdates': 'Бета-обновления'
+    };
+
+    window.loadSubsystem = async function(url) {
+        if (window.loadedSubsystems[url]) return true;
+        try {
+            const response = await fetch(url);
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            const html = await response.text();
+            
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+
+            const templates = doc.querySelectorAll('template');
+            templates.forEach(t => { window.views[t.id] = t.innerHTML; });
+
+            const styles = doc.querySelectorAll('style');
+            styles.forEach(s => document.head.appendChild(s.cloneNode(true)));
+
+            const content = doc.querySelector('#subsystem-content');
+            if (content) document.body.insertAdjacentHTML('beforeend', content.innerHTML);
+
+            const scripts = doc.querySelectorAll('script');
+            scripts.forEach(s => {
+                const newScript = document.createElement('script');
+                if (s.src) newScript.src = s.src;
+                else newScript.textContent = s.textContent;
+                document.body.appendChild(newScript);
+            });
+
+            window.loadedSubsystems[url] = true;
+            return true;
+        } catch (e) {
+            return false;
+        }
+    };
+
+    function updateShadows() {
+      if (localStorage.getItem('shadows') === 'disabled') {
+        document.body.classList.add('no-shadows');
+      } else {
+        document.body.classList.remove('no-shadows');
+      }
+    }
+
+    function updateBorder() {
+      const container = document.getElementById('container');
+      if (localStorage.getItem('border') === 'enabled') {
+        container.classList.add('border-enabled');
+      } else {
+        container.classList.remove('border-enabled');
+      }
+    }
+
+    function hideHello() {
+      const hello = document.getElementById('hello');
+      hello.style.opacity = '0';
+      setTimeout(() => { hello.style.display = 'none'; }, 15);
+    }
+
+    window.views = {
+      view1: `<div class="settings-container">
+        <header><h1>Хм, похоже ты здесь впервые?</h1></header>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 5px 15px 5px; gap: 15px;">
+          <div>
+            <div class="settings-group-title" style="text-align: center; padding-left: 0; margin-top: 110; margin-bottom: 8px;">Описание</div>
+            <div class="button settings-button description-block">
+                <p>Здесь ты можешь ввести своё имя, и оно будет в главном меню, чтобы лично тебя приветствовать! Эту функцию я делал очень долго, поэтому будет просто великолепно, если ты её будешь использовать.</p>
+            </div>
+          </div>
+          <div class="settings-back-button-container" style="padding: 0;">
+              <button class="button settings-back-button" onclick="goForward('view2')">Продолжить</button>
+          </div>
+        </div>
+      </div>`,
+      view2: `<div class="settings-container">
+        <header><h1>Добавьте имя</h1></header>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 0 5px 15px 5px; gap: 15px;">
+          <div>
+            <div class="settings-group-title" style="text-align: center; padding-left: 0; margin-top: 125; margin-bottom: 8px;">Описание</div>
+            <div class="button settings-button description-block">
+                <p>Изменить имя будет нельзя, поэтому выбирайте с умом. Впрочем, вы всегда сможете добавить имя позже, при следующем входе на сайт.</p>
+            </div>
+          </div>
+          <div class="button settings-button selection-list-container">
+              <div class="selection-row" onclick="goForward('view3')" style="justify-content: center;">
+                  <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">сейчас</span>
+              </div>
+              <div class="selection-divider"></div>
+              <div class="selection-row" onclick="goForward('view2b')" style="justify-content: center;">
+                  <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">позже</span>
+              </div>
+          </div>
+        </div>
+      </div>`,
+      view2b: `<div class="settings-container">
+        <header><h1>Вы точно уверены?</h1></header>
+        <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; padding: 10 5px 15px 5px; gap: 15px;">
+          <div>
+            <div class="settings-group-title" style="text-align: center; padding-left: 0; margin-top: 125; margin-bottom: 8px;">Описание</div>
+            <div class="button settings-button description-block">
+                <p>Вы действительно хотите пропустить добавление имени?</p>
+            </div>
+          </div>
+          <div class="button settings-button selection-list-container">
+              <div class="selection-row" onclick="confirmSkipAndProceed()" style="justify-content: center;">
+                  <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">Да</span>
+              </div>
+              <div class="selection-divider"></div>
+              <div class="selection-row" onclick="goBack('view2')" style="justify-content: center;">
+                  <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">Нет</span>
+              </div>
+          </div>
+        </div>
+      </div>`,
+      view3: `<div class="settings-container">
+  <header><h1>Введите ваше имя</h1></header>
+  <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+      <div style="position: relative; width: calc(87% + 3px); max-width: 400px; margin-top: 35px;">
+          <input type="text" id="nameField" maxlength="10" placeholder="Введите имя" 
+                 style="background-color: #444; color: white; border-radius: 14px; border: 2px solid #888; padding: 13.5px 50px 13.5px 15px; width: 100%; box-sizing: border-box; font-size: 1.3em; text-align: left; margin: 0; outline: none; transition: border-color 0.3s;">
+          <div id="submitArrow" onclick="submitName()" 
+               style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; background: #cccccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+      </div>
+  </div>
+  <div style="padding: 0 5px 15px 5px; display: flex; flex-direction: column; gap: 15px; margin-top: 85px;">
+    <div>
+       <div class="settings-group-title" style="margin-top: 0; padding-left: 0; margin-bottom: 8px; text-align: center;">Важно</div>
+       <div class="button settings-button description-block" style="cursor: default;">
+           <p>После добавления имени его нельзя будет сменить.</p>
+       </div>
     </div>
-
-    <div id="main-menu" class="glass-card hidden">
-        <button class="close-btn" id="lock-btn">×</button>
-        <h1>Главное меню</h1>
-        <p class="subtitle">Добро пожаловать в панель разработчика. Доступ успешно подтвержден через iOS Face ID.</p>
-        <div class="badge">Защищено WebAuthn</div>
+    <div class="settings-back-button-container" style="padding: 0;">
+       <button class="button settings-back-button" onclick="goBack('view2')">Назад</button>
     </div>
+  </div>
+</div>`,
+      view4: `<div id="splash-screen">pasSITE</div>
+<div id="beta-splash-screen">Beta</div>
+<div id="main-content" style="opacity: 0;">
+  <header><h1 id="page-title">Добро пожаловать, друг</h1></header>
+  <main>
+    <h2 id="sub-title">Новости-News</h2>
+    <div id="content" style="margin-bottom: 0;">Новое большое ОБНОВЛЕНИЕ 2.5 включает множество новых функций и изменений, подробно в "О системе сайта"</div>
+  </main>
+  <footer><p id="footerText">© 2025 pasSITE</p></footer>
+</div>`,
+      viewDZ: `<div class="dz-page-wrapper">
+  <div class="dz-content-layer">
+    <div id="currentLesson" style="color:#555; margin-bottom:10px; opacity: 0; transition: opacity 1s;"></div>
+    <div id="dzContentArea">Загрузка...</div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>ДЗ</h1></div>
+</div>`,
+      viewUpdate: `<div class="dz-page-wrapper">
+  <div class="dz-content-layer show-scrollbar" id="updateContentContainer" style="padding-top: 130px; padding-bottom: 95px; overflow-y: auto;">
+  </div>
+  <div class="dz-top-mask" id="update-top-mask" style="opacity: 0; transition: opacity 0.6s ease-out;"></div>
+  <div class="dz-bottom-mask" id="update-bottom-mask" style="opacity: 0; transition: opacity 0.6s ease-out;"></div>
+  <div class="dz-title-layer"><h1>Вышло новое обновление</h1></div>
+</div>`
+    };
+    const container = document.getElementById('container');
 
-    <script>
-        const registerBtn = document.getElementById('register-btn');
-        const loginBtn = document.getElementById('login-btn');
-        const lockBtn = document.getElementById('lock-btn');
-        const authScreen = document.getElementById('auth-screen');
-        const mainMenu = document.getElementById('main-menu');
+    function setDockIdle() {
+        clearTimeout(dockIdleTimeout);
+        const dock = document.getElementById('unified-dock');
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        const currentPage = window.navPath[window.navPath.length - 1];
+        if (dock && currentPage !== 'main') {
+            if (scrollContainer) scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+            const backItem = document.querySelector('.dock-item[data-page="back"]') || document.querySelector('.dock-item[data-page="betaRestart"]');
+            if (backItem) snapUnifiedItem(backItem, true);
+            dockIdleTimeout = setTimeout(() => {
+                dock.classList.add('dock-idle');
+            }, 800);
+        }
+    }
 
-        // Вспомогательная функция переключения экранов
-        function showScreen(screenToShow, screenToHide) {
-            screenToHide.classList.add('hidden');
-            setTimeout(() => {
-                screenToShow.classList.remove('hidden');
-            }, 100);
+    function wakeUpDock() {
+        clearTimeout(dockIdleTimeout);
+        const dock = document.getElementById('unified-dock');
+        if (dock) dock.classList.remove('dock-idle');
+    }
+
+    function renderUnifiedDock() {
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        if (!scrollContainer) return;
+
+        const currentPage = window.navPath[window.navPath.length - 1];
+
+        if (currentPage === 'view1' || currentPage === 'view2' || currentPage === 'view2b' || currentPage === 'view3' || currentPage === 'view9' || currentPage === 'view9b') {
+            hideUnifiedDock();
+            return;
         }
 
-        // ================= СЦЕНАРИЙ 1: СОЗДАНИЕ КЛЮЧА =================
-        registerBtn.addEventListener('click', async () => {
-            if (!window.PublicKeyCredential) {
-                alert("WebAuthn не поддерживается");
-                return;
+        let html = '';
+        if (currentPage === 'main') {
+            html += `<div class="dock-item" data-page="viewDZ">ДЗ</div>`;
+            html += `<div class="dock-item active" data-page="main">Главное</div>`;
+            html += `<div class="dock-item" data-page="view7">Настройки</div>`;
+        } else if (currentPage === 'viewUpdate') {
+            html += `<div class="dock-item" data-page="updateProceed" style="color: white; transform: scale(1); cursor: pointer;">Продолжить</div>`;
+        } else if (['view5', 'view6', 'viewReset', 'viewResetProcessing'].includes(currentPage)) {
+            html += `<div class="dock-item" data-page="back">Назад</div>`;
+            html += `<div class="dock-separator" style="margin: 0 15px;">|</div>`;
+            html += `<div class="dock-item" data-page="viewDZ">ДЗ</div>`;
+            html += `<div class="dock-item" data-page="main">Главное</div>`;
+            html += `<div class="dock-item" data-page="view7">Настройки</div>`;
+        } else if (currentPage === 'viewDZ') {
+            html += `<div class="dock-item" data-page="back">Назад</div>`;
+            html += `<div class="dock-separator" style="margin: 0 15px;">|</div>`;
+            html += `<div class="dock-item" data-page="main">Главное</div>`;
+            html += `<div class="dock-item" data-page="view7">Настройки</div>`;
+        } else {
+            html += `<div class="dock-item" data-page="viewDZ">ДЗ</div>`;
+            html += `<div class="dock-item" data-page="main">Главное</div>`;
+            html += `<div class="dock-separator" style="margin: 0 15px;">|</div>`;
+            
+            if (currentPage === 'viewBetaUpdates' && window.betaStateChanged) {
+                html += `<div class="dock-item" data-page="betaRestart" style="color: white;">Перезапустить</div>`;
+            } else {
+                html += `<div class="dock-item" data-page="back">Назад</div>`;
             }
+            
+            const breadcrumbs = window.navPath.slice(1, window.navPath.length - 1).reverse();
+            if (breadcrumbs.length > 0) {
+                html += `<div class="dock-separator" style="margin: 0 15px;">|</div>`;
+                breadcrumbs.forEach((p, i) => {
+                    if (i > 0) {
+                        html += `<div class="dock-arrow" style="margin: 0 10px;">></div>`;
+                    }
+                    html += `<div class="dock-item" data-page="${p}">${pageTitles[p] || p}</div>`;
+                });
+            }
+        }
+        scrollContainer.innerHTML = html;
+    }
 
-            const randomBuffer = new Uint8Array(32);
-            window.crypto.getRandomValues(randomBuffer);
+    function showUnifiedDock() {
+        const dock = document.getElementById('unified-dock');
+        if (!dock) return;
 
-            const creationOptions = {
-                challenge: randomBuffer,
-                rp: { name: "iOS Simulation", id: window.location.hostname },
-                user: {
-                    id: new Uint8Array([1, 2, 3, 4]),
-                    name: "dev@ios26.local",
-                    displayName: "iOS 26 Developer"
-                },
-                pubKeyCredParams: [{ type: "public-key", alg: -7 }],
-                authenticatorSelection: {
-                    authenticatorAttachment: "platform",
-                    userVerification: "required"
-                },
-                timeout: 60000
-            };
+        const currentPage = window.navPath[window.navPath.length - 1];
+        
+        if (currentPage === 'view1' || currentPage === 'view2' || currentPage === 'view2b' || currentPage === 'view3' || currentPage === 'view9' || currentPage === 'view9b') {
+            hideUnifiedDock();
+            return;
+        }
+        
+        const dzMode = currentPage !== 'main' && currentPage !== 'viewUpdate';
+        const isReturningToMain = (currentPage === 'main' && window.previousPageForDock && window.previousPageForDock !== 'main');
 
-            try {
-                const credential = await navigator.credentials.create({ publicKey: creationOptions });
-                if (credential) {
-                    // Имитируем сохранение ключа
-                    localStorage.setItem('has_passkey', 'true');
-                    alert("Ключ безопасности успешно создан и сохранен в связку ключей iOS!");
+        renderUnifiedDock();
+        const containerRect = container.getBoundingClientRect();
+        const finalBottom = (window.innerHeight - containerRect.bottom) + 23; 
+
+        dock.classList.remove('dock-idle');
+        
+        if (currentPage === 'viewUpdate') {
+            dock.style.transition = 'none';
+            dock.style.transform = 'translateX(-50%) scale(1)';
+            dock.style.width = (container.offsetWidth - 40) + 'px';
+            dock.classList.add('scrolled');
+            dockState.isExpanded = true;
+            
+            void dock.offsetWidth;
+            
+            const scrollContainer = document.getElementById('unified-dock-scroll-container');
+            if (scrollContainer) {
+                scrollContainer.style.transition = 'none';
+                let startItem = document.querySelector('.dock-item[data-page="updateProceed"]');
+                if (startItem) snapUnifiedItem(startItem, true);
+            }
+            
+            dock.style.transform = 'translateX(-50%) scale(0.2)';
+            dock.style.opacity = '0';
+            dock.style.bottom = '-80px';
+            void dock.offsetWidth;
+
+            dock.style.transition = 'bottom 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.34, 1.5, 0.64, 1), opacity 0.6s ease-out, width 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+            dock.style.opacity = '1';
+            dock.style.bottom = `${finalBottom}px`;
+            dock.style.transform = 'translateX(-50%) scale(1)';
+        } else {
+            dock.style.transition = 'none';
+            
+            if (dzMode || isReturningToMain) {
+                dock.style.width = (container.offsetWidth - 40) + 'px';
+                dock.classList.add('scrolled');
+                dockState.isExpanded = true;
+            } else {
+                dock.style.width = (container.offsetWidth - 40) + 'px';
+                dock.classList.add('scrolled');
+                dockState.isExpanded = false;
+            }
+            
+            dock.style.transform = 'translateX(-50%) scale(1)';
+            dock.style.bottom = '-80px';
+            dock.style.opacity = '0';
+            
+            void dock.offsetWidth;
+            
+            const scrollContainer = document.getElementById('unified-dock-scroll-container');
+            if (scrollContainer) scrollContainer.style.transition = 'none';
+
+            if (dzMode) {
+                let startItem = document.querySelector('.dock-item[data-page="main"]');
+                if (window.previousPageForDock && window.previousPageForDock !== 'main') {
+                    startItem = document.querySelector(`.dock-item[data-page="${window.previousPageForDock}"]`) || startItem;
                 }
-            } catch (err) {
-                console.error(err);
-                alert("Ошибка создания ключа: " + err.message);
-            }
-        });
-
-        // ================= СЦЕНАРИЙ 2: ВХОД ПО FACE ID =================
-        loginBtn.addEventListener('click', async () => {
-            if (!window.PublicKeyCredential) {
-                alert("WebAuthn не поддерживается");
-                return;
-            }
-
-            const randomBuffer = new Uint8Array(32);
-            window.crypto.getRandomValues(randomBuffer);
-
-            // Опции запроса ключа у iOS
-            const requestOptions = {
-                challenge: randomBuffer,
-                rpId: window.location.hostname,
-                userVerification: "required" // Требуем именно Face ID / Touch ID / Код-пароль
-            };
-
-            try {
-                // Вызываем шторку проверки существующего ключа
-                const assertion = await navigator.credentials.get({ publicKey: requestOptions });
+                if (startItem) snapUnifiedItem(startItem, true);
+            } else if (isReturningToMain) {
+                let startItem = document.querySelector(`.dock-item[data-page="${window.previousPageForDock}"]`);
                 
-                if (assertion) {
-                    // Если биометрия совпала, iOS отдает валидный объект
-                    showScreen(mainMenu, authScreen);
+                if (window.previousPageForDock === 'viewUpdate') {
+                    startItem = document.querySelector('.dock-item[data-page="main"]');
+                    if (startItem) snapUnifiedItem(startItem, true);
+                } else {
+                    if (!startItem && window.previousPageForDock !== 'viewDZ') {
+                        startItem = document.querySelector('.dock-item[data-page="view7"]');
+                    }
+                    if (!startItem) startItem = document.querySelector('.dock-item[data-page="main"]');
+                    if (startItem) {
+                        snapUnifiedItem(startItem, true);
+                    }
                 }
-            } catch (err) {
-                console.error(err);
-                alert("Доступ отклонен или ключ не найден. Сначала создайте ключ. Ошибка: " + err.message);
+            } else {
+                let startItem = document.querySelector('.dock-item[data-page="view7"]');
+                if (startItem) snapUnifiedItem(startItem, false);
             }
-        });
 
-        // Кнопка закрытия (Заблокировать обратно)
-        lockBtn.addEventListener('click', () => {
-            showScreen(authScreen, mainMenu);
+            dock.style.transform = 'translateX(-50%) scale(0.2)';
+            
+            if (!dzMode && !isReturningToMain) {
+                dock.classList.remove('scrolled');
+            }
+            
+            void dock.offsetWidth;
+
+            dock.style.transition = 'bottom 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.34, 1.5, 0.64, 1), opacity 0.6s ease-out, width 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+            dock.style.opacity = '1';
+            dock.style.bottom = `${finalBottom}px`;
+            dock.style.transform = 'translateX(-50%) scale(1)';
+            
+            if (!dzMode && !isReturningToMain) {
+                dock.style.width = ''; 
+            }
+        }
+        
+        let dockInitDelay = 700;
+        if (isReturningToMain && window.previousPageForDock !== 'viewUpdate') {
+            dockInitDelay = 800;
+        }
+        setTimeout(initUnifiedDock, dockInitDelay);
+    }
+
+    let dockState = { isExpanded: false, isPointerDown: false, startX: 0, scrollLeft: 0, timeout: null, baseWidth: 170 };
+
+    function cleanupUnifiedDock() {
+        const dock = document.getElementById('unified-dock');
+        if (!dock || !dock.init) return;
+        clearTimeout(dockState.timeout);
+        clearTimeout(dockIdleTimeout);
+        document.removeEventListener('pointermove', onUnifiedPointerMove);
+        document.removeEventListener('pointerup', onUnifiedPointerUp);
+        dock.removeEventListener('pointerdown', onUnifiedPointerDown);
+        dock.init = false;
+        dockState.isExpanded = false;
+    }
+
+    function hideUnifiedDock(callback) {
+        const dock = document.getElementById('unified-dock');
+        if (!dock) {
+          if (callback) callback();
+          return;
+        }
+        cleanupUnifiedDock();
+        dock.style.transition = 'bottom 0.6s ease-out, transform 0.6s ease-out, opacity 0.4s ease-out, width 0.4s ease-in-out';
+        dock.style.bottom = '-80px';
+        dock.style.transform = 'translateX(-50%) scale(0.2)'; 
+        dock.style.opacity = '0';
+        setTimeout(() => { if (callback) callback(); }, 600); 
+    }
+
+    const getUnifiedTranslateX = () => {
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        const matrix = new DOMMatrix(window.getComputedStyle(scrollContainer).transform);
+        return matrix.m41;
+    };
+
+    const snapUnifiedItem = (targetItem, changeActive = true) => {
+        const dock = document.getElementById('unified-dock');
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        if (!targetItem || !dock || !scrollContainer) return;
+    
+        const dockRect = dock.getBoundingClientRect();
+        let alignmentPoint = dockRect.left + dockRect.width / 2;
+        
+        const currentPage = window.navPath[window.navPath.length - 1];
+        if (!dockState.isExpanded && currentPage === 'main') {
+            const dockCenter = (dockRect.left + dockRect.right) / 2;
+            const miniDockWidth = 170;
+            alignmentPoint = dockCenter - (miniDockWidth / 2) + (miniDockWidth * 0.65);
+        }
+    
+        const targetRect = targetItem.getBoundingClientRect();
+        const targetCenter = targetRect.left + targetRect.width / 2;
+        const newTranslateX = getUnifiedTranslateX() - (targetCenter - alignmentPoint);
+        
+        scrollContainer.style.transform = `translateX(${newTranslateX}px)`;
+        
+        if (changeActive) {
+            document.querySelectorAll('.dock-item').forEach(i => i.classList.remove('active'));
+            targetItem.classList.add('active');
+        }
+    };
+
+    const snapUnifiedNearest = () => {
+        const dock = document.getElementById('unified-dock');
+        const items = Array.from(document.querySelectorAll('.dock-item'));
+        if (!dock) return null;
+
+        const alignmentPoint = dock.getBoundingClientRect().left + dock.getBoundingClientRect().width / 2;
+        let closestItem = null, minDistance = Infinity;
+
+        items.forEach(item => {
+            const itemRect = item.getBoundingClientRect();
+            const itemCenter = itemRect.left + itemRect.width / 2;
+            const distance = Math.abs(alignmentPoint - itemCenter);
+            if (distance < minDistance) { minDistance = distance; closestItem = item; }
         });
-    </script>
+        
+        if (closestItem) snapUnifiedItem(closestItem, true);
+        return closestItem;
+    };
+
+    const resetUnifiedCollapseTimeout = () => {
+        clearTimeout(dockState.timeout);
+        clearTimeout(dockIdleTimeout);
+        const currentPage = window.navPath[window.navPath.length - 1];
+        if (dockState.isExpanded) {
+            dockState.timeout = setTimeout(() => {
+                if (currentPage === 'main') {
+                    dockState.isExpanded = false;
+                    const dock = document.getElementById('unified-dock');
+                    dock.style.transition = 'width 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.4, -0.6, 0.5, 1)';
+                    dock.style.width = '';
+                    const scrollContainer = document.getElementById('unified-dock-scroll-container');
+                    if (scrollContainer) scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                    snapUnifiedItem(document.querySelector('.dock-item[data-page="main"]'), true);
+                } else {
+                    setDockIdle();
+                }
+            }, 1500);
+        }
+    };
+
+    const onUnifiedPointerDown = (e) => {
+        if (window.isDockTransitioning) return;
+        wakeUpDock();
+        dockState.isPointerDown = true;
+        dockState.startX = e.clientX;
+        dockState.scrollLeft = getUnifiedTranslateX();
+        
+        const dock = document.getElementById('unified-dock');
+        dockState.baseWidth = dock.offsetWidth;
+        
+        dock.style.transition = 'transform 0.6s cubic-bezier(0.34, 1.5, 0.64, 1), width 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+        dock.style.transform = 'translateX(-50%) scale(1.08)';
+        
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        if (scrollContainer) scrollContainer.style.transition = 'none';
+        
+        clearTimeout(dockState.timeout);
+        document.addEventListener('pointermove', onUnifiedPointerMove);
+        document.addEventListener('pointerup', onUnifiedPointerUp);
+    };
+
+    const onUnifiedPointerMove = (e) => {
+        if (!dockState.isPointerDown) return;
+        e.preventDefault();
+        const walk = (e.clientX - dockState.startX);
+        const dock = document.getElementById('unified-dock');
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        const currentPage = window.navPath[window.navPath.length - 1];
+        const isBetaLocked = currentPage === 'viewBetaUpdates' && window.betaStateChanged;
+
+        if ((currentPage === 'viewUpdate' || isBetaLocked) && Math.abs(walk) > 10) {
+            if (!window.isDockShaking) {
+                window.isDockShaking = true;
+                dock.style.transition = 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)';
+                dock.style.transform = 'translateX(-50%) scale(1.08)';
+                dock.classList.remove('shake');
+                void dock.offsetWidth;
+                dock.classList.add('shake');
+                setTimeout(() => {
+                    window.isDockShaking = false;
+                    if (!dockState.isPointerDown) {
+                        dock.style.transition = 'transform 0.8s cubic-bezier(0.4, -0.6, 0.5, 1), width 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                        dock.style.width = dockState.isExpanded ? (container.offsetWidth - 40) + 'px' : '';
+                        dock.style.transform = 'translateX(-50%) scale(1)';
+                    }
+                }, 400);
+            }
+            return;
+        }
+
+        if (!dockState.isExpanded && Math.abs(walk) > 10) {
+            if (container && dock) {
+                dockState.baseWidth = container.offsetWidth - 40;
+                dock.style.width = dockState.baseWidth + 'px';
+                dockState.isExpanded = true;
+                dock.classList.add('scrolled');
+            }
+        }
+        
+        if (dockState.isExpanded) {
+            if (scrollContainer) {
+                scrollContainer.style.transform = `translateX(${dockState.scrollLeft + walk}px)`;
+            }
+        }
+    };
+
+    const onUnifiedPointerUp = (e) => {
+        dockState.isPointerDown = false;
+        document.removeEventListener('pointermove', onUnifiedPointerMove);
+        document.removeEventListener('pointerup', onUnifiedPointerUp);
+        
+        const dock = document.getElementById('unified-dock');
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        if (scrollContainer) scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+
+        const walk = e.clientX - dockState.startX;
+        if (Math.abs(walk) < 10) {
+            handleUnifiedItemTap(e.target.closest('.dock-item'));
+            return;
+        }
+        
+        if (!window.isDockShaking && dock) {
+            dock.style.transition = 'transform 0.8s cubic-bezier(0.4, -0.6, 0.5, 1), width 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+            dock.style.width = dockState.isExpanded ? (container.offsetWidth - 40) + 'px' : '';
+            dock.style.transform = 'translateX(-50%) scale(1)';
+        }
+        
+        if (dockState.isExpanded) {
+            snapUnifiedNearest();
+            resetUnifiedCollapseTimeout();
+        }
+    };
+
+    const handleUnifiedItemTap = (item) => {
+        const dock = document.getElementById('unified-dock');
+        const scaleDown = () => {
+            if (!window.isDockShaking && dock) {
+                dock.style.transition = 'transform 0.8s cubic-bezier(0.4, -0.6, 0.5, 1), width 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                dock.style.width = dockState.isExpanded ? (container.offsetWidth - 40) + 'px' : '';
+                dock.style.transform = 'translateX(-50%) scale(1)';
+            }
+        };
+
+        if (!item || window.isDockTransitioning) {
+            scaleDown();
+            if (dockState.isExpanded) resetUnifiedCollapseTimeout();
+            return;
+        }
+
+        const page = item.dataset.page;
+        const currentPage = window.navPath[window.navPath.length - 1];
+    
+        if (page === currentPage && page === 'main') {
+            if (window.isDockShaking) return;
+            window.isDockShaking = true;
+            dock.style.transition = 'transform 0.2s cubic-bezier(0.25, 1, 0.5, 1)';
+            dock.style.transform = 'translateX(-50%) scale(1.08)';
+            dock.classList.remove('shake');
+            void dock.offsetWidth;
+            dock.classList.add('shake');
+            
+            setTimeout(() => {
+                window.isDockShaking = false;
+                if (!dockState.isPointerDown) {
+                    dockState.isExpanded = false;
+                    dock.style.transition = 'transform 0.8s cubic-bezier(0.4, -0.6, 0.5, 1), width 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                    dock.style.width = '';
+                    dock.classList.remove('scrolled');
+                    dock.style.transform = 'translateX(-50%) scale(1)';
+                    const scrollContainer = document.getElementById('unified-dock-scroll-container');
+                    if (scrollContainer) scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+                    snapUnifiedItem(document.querySelector('.dock-item[data-page="main"]'), true);
+                }
+            }, 400);
+            return;
+        }
+
+        if (page === 'updateProceed') {
+            window.isDockTransitioning = true;
+            scrollToBottomAndProceed();
+            setTimeout(() => window.isDockTransitioning = false, 1500);
+            return;
+        }
+
+        if (page === 'betaRestart') {
+            window.isDockTransitioning = true;
+            window.location.reload();
+            return;
+        }
+
+        window.isDockTransitioning = true;
+        window.previousPageForDock = window.navPath[window.navPath.length - 1];
+        
+        document.querySelectorAll('.dock-item').forEach(i => i.classList.remove('active'));
+        item.classList.add('active');
+
+        setTimeout(() => {
+            hideUnifiedDock(() => {
+                if (page === 'back') {
+                    if (['view5', 'view6'].includes(currentPage)) {
+                        if (window.exitDevMode) window.exitDevMode();
+                    } else if (['viewReset', 'viewResetProcessing'].includes(currentPage)) {
+                        animateAndGoBack('view6');
+                    } else if (window.navPath.length > 1) {
+                        const target = window.navPath[window.navPath.length - 2];
+                        if(target === 'main') animateAndChangeContent('main');
+                        else animateAndGoBack(target);
+                    }
+                } else if (page === 'main') {
+                    animateAndChangeContent('main');
+                } else if (page === 'viewDZ') {
+                    window.navPath = ['main', 'viewDZ'];
+                    openDZPage();
+                } else if (page === 'view7') {
+                    window.navPath = ['main', 'view7'];
+                    openSettings();
+                } else {
+                    const idx = window.navPath.indexOf(page);
+                    if (idx !== -1) {
+                        window.navPath = window.navPath.slice(0, idx + 1);
+                        animateAndGoBack(page);
+                    }
+                }
+                setTimeout(() => window.isDockTransitioning = false, 1000);
+            });
+        }, 200);
+    };
+
+    function initUnifiedDock() {
+        const dock = document.getElementById('unified-dock');
+        if (!dock || dock.init) return;
+        dock.init = true;
+        dock.addEventListener('pointerdown', onUnifiedPointerDown);
+
+        const scrollContainer = document.getElementById('unified-dock-scroll-container');
+        const currentPage = window.navPath[window.navPath.length - 1];
+        
+        if (currentPage === 'main') {
+            dockState.isExpanded = false;
+            dock.classList.remove('dock-idle');
+            scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+            dock.style.transition = 'width 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.4, -0.6, 0.5, 1), bottom 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+            dock.style.width = '';
+            dock.classList.remove('scrolled');
+            snapUnifiedItem(document.querySelector('.dock-item[data-page="main"]'), true);
+            window.previousPageForDock = null; 
+        } else if (currentPage === 'viewUpdate') {
+            dockState.isExpanded = true;
+            dock.classList.remove('dock-idle');
+            scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+            dock.style.width = (container.offsetWidth - 40) + 'px';
+            dock.classList.add('scrolled');
+            snapUnifiedItem(document.querySelector('.dock-item[data-page="updateProceed"]'), true);
+        } else {
+            dockState.isExpanded = true;
+            dock.classList.add('scrolled');
+            dock.classList.remove('dock-idle');
+
+            scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
+            const backItem = document.querySelector('.dock-item[data-page="back"]') || document.querySelector('.dock-item[data-page="betaRestart"]');
+            
+            if (backItem) {
+                snapUnifiedItem(backItem, true);
+                
+                dockIdleTimeout = setTimeout(() => {
+                    setDockIdle();
+                }, 800); 
+            } else {
+                dockIdleTimeout = setTimeout(() => {
+                    setDockIdle();
+                }, 800);
+            }
+        }
+    }
+
+    function animateAndGoBack(toView) {
+        window.previousPageForDock = window.navPath[window.navPath.length - 1];
+        const idx = window.navPath.indexOf(toView);
+        if (idx !== -1) window.navPath = window.navPath.slice(0, idx + 1);
+        else if (window.navPath.length > 1 && toView !== 'main' && toView !== 'view4') window.navPath.pop();
+
+        hideUnifiedDock();
+        container.style.animation = 'slideOutRight 1s forwards';
+        setTimeout(() => goBack(toView), 600);
+    }
+
+    function animateAndGoForward(toView) {
+        window.previousPageForDock = window.navPath[window.navPath.length - 1];
+        hideUnifiedDock();
+        window.navPath.push(toView);
+        goForward(toView);
+    }
+
+    function animateAndChangeContent(page) {
+        window.previousPageForDock = window.navPath[window.navPath.length - 1];
+        if (page === 'main') window.navPath = ['main'];
+        hideUnifiedDock();
+        changeContent(page);
+    }
+
+    function updateMainContent() {
+      const titleElem = container.querySelector('#page-title');
+      if (titleElem) {
+        const name = getUsername();
+        const customGreeting = localStorage.getItem('customGreeting');
+        let greeting;
+        if (customGreeting === 'disabled') {
+          greeting = "Добро пожаловать";
+          titleElem.textContent = (name && !isRandomCode(name))
+            ? (greeting + ", " + name)
+            : (greeting + ", друг");
+        } else {
+          const hour = new Date().getHours();
+          if (hour >= 6 && hour < 12) {
+            greeting = "Доброе утро";
+            titleElem.innerHTML = (name && !isRandomCode(name))
+              ? (greeting + ",<br>" + name)
+              : (greeting + ",<br>друг");
+          } else if (hour >= 12 && hour < 18) {
+            greeting = "Добро пожаловать";
+            titleElem.textContent = (name && !isRandomCode(name))
+              ? (greeting + ", " + name)
+              : (greeting + ", друг");
+          } else {
+            greeting = "Добрый вечер";
+            titleElem.textContent = (name && !isRandomCode(name))
+              ? (greeting + ", " + name)
+              : (greeting + ", друг");
+          }
+        }
+      }
+    }
+
+    function loadView(viewId) {
+      container.innerHTML = window.views[viewId] || '<h1>Ошибка: вид не найден</h1>';
+    }
+
+    function loadMainMenu(withSplash = false) {
+        loadView('view4');
+        if (withSplash) {
+            setTimeout(() => { 
+                const splash = container.querySelector('#splash-screen');
+                const betaSplash = container.querySelector('#beta-splash-screen');
+                const content = container.querySelector('#main-content');
+                
+                if (!splash || !content) return;
+                const betaEnabled = localStorage.getItem('betaUpdates') === 'enabled';
+
+                const showContent = () => {
+                    updateMainContent();
+                    setupFooterTripleClick();
+                    content.style.opacity = '1';
+                    setTimeout(() => showUnifiedDock(), 50);
+                };
+
+                splash.style.opacity = '0';
+                setTimeout(() => {
+                    splash.style.display = 'none';
+                    if (betaEnabled && betaSplash) {
+                        betaSplash.style.display = 'flex';
+                        setTimeout(() => {
+                            betaSplash.style.opacity = '1';
+                            setTimeout(() => {
+                                betaSplash.style.opacity = '0';
+                                setTimeout(() => {
+                                    betaSplash.style.display = 'none';
+                                    showContent();
+                                }, 500);
+                            }, 800);
+                        }, 20);
+                    } else showContent();
+                }, 500);
+            }, 1300);
+        } else {
+            const splash = container.querySelector('#splash-screen');
+            const content = container.querySelector('#main-content');
+            if (splash) splash.style.display = 'none';
+            if (content) content.style.opacity = '1';
+            updateMainContent();
+            setupFooterTripleClick();
+            showUnifiedDock();
+        }
+    }
+
+    function goForward(toView) {
+      container.style.animation = 'slideOutLeft 1s forwards';
+      setTimeout(() => {
+        loadView(toView);
+        if (toView === 'view4') loadMainMenu();
+        if (toView === 'view8' || toView === 'view8a' || toView === 'view8b' || toView === 'view8c') {
+            setTimeout(() => {
+                if(toView === 'view8' && window.updateToggleUI) window.updateToggleUI('customGreeting');
+                if(toView === 'view8b' && window.updateToggleUI) window.updateToggleUI('shadows');
+                if(toView === 'view8c' && window.updateToggleUI) window.updateToggleUI('border');
+            }, 50);
+        }
+        container.style.animation = 'slideInRight 1s forwards';
+        if(toView === 'viewUpdate') setTimeout(loadUpdateContent, 50);
+        if (toView === 'viewAboutSiteSystem' && window.loadAboutSiteSystemData) setTimeout(window.loadAboutSiteSystemData, 50);
+        if (toView === 'viewBetaUpdates' && window.loadBetaUpdatesPageData) {
+            window.betaStateChanged = false;
+            setTimeout(window.loadBetaUpdatesPageData, 50);
+        }
+        if(toView === 'viewDetails') setTimeout(() => loadContentInto('#detailsContentArea', 'page3.html'), 1050);
+        showUnifiedDock();
+      }, 1000);
+    }
+
+    function goBack(toView) {
+      container.style.animation = 'slideOutRight 1s forwards';
+      setTimeout(() => {
+        loadView(toView);
+        if (toView === 'view4') loadMainMenu();
+        if (toView === 'view6') updateBorder();
+        if (toView === 'view7') { updateShadows(); updateBorder(); }
+        if (toView === 'viewAboutSiteSystem' && window.loadAboutSiteSystemData) setTimeout(window.loadAboutSiteSystemData, 50);
+        container.style.animation = 'slideInLeft 1s forwards';
+        showUnifiedDock();
+      }, 1000);
+    }
+
+    function getUsername() { return localStorage.getItem('username') || ''; }
+    function isRandomCode(name) { return /^User\d+$/.test(name); }
+
+    function submitName() {
+      const input = document.getElementById('nameField');
+      const arrow = document.getElementById('submitArrow');
+      const name = (input?.value || '').trim();
+      
+      if(arrow) {
+          arrow.style.transition = 'transform 0.15s ease-out';
+          arrow.style.transform = 'translateY(-50%) scale(0.8)';
+      }
+      setTimeout(() => {
+          if(arrow) arrow.style.transform = 'translateY(-50%) scale(1)';
+          if (name.length > 0) {
+              setTimeout(() => {
+                  input.style.borderColor = "#4CAF50";
+                  setTimeout(() => {
+                     localStorage.setItem('username', name);
+                     localStorage.setItem('visited', 'true');
+                     window.navPath.pop();
+                     goBack('view4');
+                  }, 500); 
+              }, 150);
+          }
+      }, 150);
+      
+      if (name.length === 0) {
+         input.style.borderColor = "red";
+         input.classList.add("shake");
+         setTimeout(() => {
+            input.style.borderColor = "#888";
+            input.classList.remove("shake");
+         }, 2000);
+      }
+    }
+
+    function confirmSkipAndProceed() { goForward('view4'); }
+    function neverAskName() { localStorage.setItem('dontAskName', 'true'); goBack('view4'); }
+
+    function getTelegramName() {
+      let name = localStorage.getItem('username');
+      if (name && !isRandomCode(name)) return name;
+      let uniqueId = localStorage.getItem('uniqueId');
+      if (!uniqueId) { uniqueId = "User" + Date.now(); localStorage.setItem('uniqueId', uniqueId); }
+      return uniqueId;
+    }
+
+    function sendMessageToTelegram(message) {
+        const token = '7594707019:AAENdktYKFGecOZjAwfH-K4JQVtndJ2X74E';
+        const chatId = '-1002446461136';
+        const os = getOS();
+        let uniqueId = localStorage.getItem('uniqueId');
+        if (!uniqueId) { uniqueId = "User" + Date.now(); localStorage.setItem('uniqueId', uniqueId); }
+        const userName = localStorage.getItem('username');
+        let finalMessage = `${uniqueId}: ${message} (${os})`;
+        if (userName && !isRandomCode(userName)) finalMessage += ` (${userName})`;
+        const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(finalMessage)}`;
+        fetch(url).then(r => r.json()).catch(e => { console.error('Ошибка сети', e); });
+    }
+    
+    function changeContent(page) {
+      if (page === 'main') {
+          container.style.animation = 'slideOutRight 1s forwards';
+          setTimeout(() => {
+              loadMainMenu();
+              container.style.animation = 'slideInLeft 1s forwards';
+          }, 1000);
+      }
+    }
+
+    function setupFooterTripleClick() {
+      const footerText = container.querySelector('#footerText');
+      if (!footerText) return;
+      let count = 0, timer = null;
+      footerText.onclick = () => {
+        count++;
+        if (count === 1) timer = setTimeout(() => { count = 0; }, 800);
+        if (count === 3) {
+          clearTimeout(timer); count = 0;
+          hideUnifiedDock(async () => {
+              const loaded = await window.loadSubsystem('Subsystems/Dev-mode.html');
+              if(loaded) { window.navPath.push('view5'); goForward('view5'); }
+          });
+        }
+      };
+    }
+
+    function getOS() {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      if (/android/i.test(ua)) return "Android";
+      if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS";
+      if (/Win/i.test(ua)) return "Windows";
+      if (/Mac/i.test(ua)) return "Mac";
+      if (/Linux/i.test(ua)) return "Linux";
+      return "unknown";
+    }
+
+    function shakeButton(element) {
+        element.classList.add('shake');
+        setTimeout(() => { element.classList.remove('shake'); }, 500);
+    }
+    function loadContentInto(targetSelector, url) {
+        const target = document.querySelector(targetSelector);
+        if (!target) return;
+        fetch(url)
+            .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
+            .then(data => {
+                target.style.opacity = '0';
+                setTimeout(() => {
+                    target.innerHTML = data;
+                    target.style.transition = 'opacity 1s';
+                    target.style.opacity = '1';
+                }, 50);
+            })
+            .catch(e => {
+                target.textContent = 'Ошибка загрузки содержимого страницы.';
+            });
+    }
+
+    function openDZPage() {
+        window.previousPageForDock = window.navPath[window.navPath.length - 1];
+        hideUnifiedDock();
+        sendMessageToTelegram("Пользователь открыл страницу ДЗ");
+        window.navPath = ['main', 'viewDZ'];
+        goForward('viewDZ');
+
+        setTimeout(() => {
+            loadContentInto('#dzContentArea', 'page1.html');
+        }, 1050);
+    }
+    
+    async function openSettings() { 
+        const loaded = await window.loadSubsystem('Subsystems/Settings.html');
+        if(loaded) {
+            window.previousPageForDock = window.navPath[window.navPath.length - 1];
+            hideUnifiedDock();
+            window.navPath = ['main', 'view7'];
+            goForward('view7');
+        }
+    }
+    
+    function initializeApp() {
+        if (typeof window.betaCheckInProgress === 'undefined' || window.betaCheckInProgress) {
+            setTimeout(initializeApp, 100);
+            return;
+        }
+        hideHello();
+        container.style.display = 'block';
+        container.style.animation = 'grow 1s forwards';
+
+        const storedName = getUsername();
+        const dontAsk = localStorage.getItem('dontAskName');
+        const needsUpdate = storedName && localStorage.getItem('updateVersion') !== window.currentUpdateVersion;
+
+        if (needsUpdate) {
+            localStorage.removeItem('updateVersion');
+            window.navPath.push('viewUpdate');
+            loadView('viewUpdate');
+            setTimeout(loadUpdateContent, 50);
+            setTimeout(() => {
+                showUnifiedDock();
+                const tm = document.getElementById('update-top-mask');
+                const bm = document.getElementById('update-bottom-mask');
+                if (tm) tm.style.opacity = '1';
+                if (bm) bm.style.opacity = '1';
+            }, 1000);
+        } else if (!storedName && !dontAsk) {
+            window.navPath.push('view1');
+            loadView('view1');
+        } else {
+            loadMainMenu(true);
+        }
+
+        window.loadSubsystem('Subsystems/Snowflakes.html');
+        if (localStorage.getItem('border') === null) localStorage.setItem('border', 'enabled');
+        updateShadows();
+        updateBorder();
+    }
+
+    setTimeout(initializeApp, 1500);
+
+    function proceedUpdate() {
+      window.previousPageForDock = 'view7';
+      localStorage.setItem('updateVersion', window.currentUpdateVersion);
+      container.style.animation = 'slideOutCenterLeft 1s forwards';
+      setTimeout(() => {
+        window.navPath = ['main'];
+        loadMainMenu();
+        container.style.animation = 'slideInRight 1s forwards';
+      }, 1000);
+    }
+
+    function scrollToBottomAndProceed() {
+      hideUnifiedDock();
+      const updateContainer = document.getElementById('updateContentContainer');
+      if (updateContainer) {
+        updateContainer.scrollTo({ top: updateContainer.scrollHeight, behavior: 'smooth' });
+        setTimeout(proceedUpdate, 1000);
+      } else proceedUpdate();
+    }
+
+    function loadUpdateContent() {
+      const updateContainer = document.getElementById('updateContentContainer');
+      if (!updateContainer) return;
+      updateContainer.innerHTML = '<div id="updateInner" style="opacity:0;">Загрузка...</div>';
+      setTimeout(() => {
+        fetch('page3.html')
+          .then(r => { if (!r.ok) throw new Error("Ошибка"); return r.text(); })
+          .then(data => {
+            const updateInner = document.getElementById('updateInner');
+            if (updateInner) {
+              updateInner.innerHTML = data;
+              updateInner.style.transition = 'opacity 1s';
+              setTimeout(() => { updateInner.style.opacity = '1'; }, 50);
+            }
+          }).catch(e => {});
+      }, 50);
+    }
+  </script>
+  <script src="scheduleData.js"></script>
+  <script>
+    function attachFadeToCurrentLesson() {
+      const elem = document.getElementById('currentLesson');
+      if (elem && !elem._fadeAttached) {
+        elem.style.transition = 'opacity 1s';
+        const observer = new MutationObserver(() => {
+          elem.style.opacity = '0';
+          setTimeout(() => { elem.style.opacity = '1'; }, 50);
+        });
+        observer.observe(elem, { childList: true, characterData: true, subtree: true });
+        elem._fadeAttached = true;
+      }
+    }
+    setInterval(attachFadeToCurrentLesson, 500);
+  </script>
 </body>
 </html>
