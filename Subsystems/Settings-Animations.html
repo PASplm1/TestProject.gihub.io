@@ -26,7 +26,7 @@
   height: 12px;
   background-color: rgba(120, 120, 128, 0.2);
   border-radius: 6px;
-  margin: 0 2px;
+  margin: 0 5px;
   position: relative;
   touch-action: none;
   cursor: pointer;
@@ -41,9 +41,9 @@
   transform: translateX(-50%);
   pointer-events: none;
 }
-.slider-dot.left { left: 0%; }
+.slider-dot.left { left: 3px; }
 .slider-dot.center { left: 50%; }
-.slider-dot.right { left: 100%; }
+.slider-dot.right { left: calc(100% - 3px); }
 .slider-blue-path-left {
   position: absolute;
   top: 0; bottom: 0;
@@ -51,7 +51,7 @@
   background-color: #007BFF;
   border-radius: 6px;
   pointer-events: none;
-  transition: left 0.15s ease-out, right 0.15s ease-out, opacity 0.15s ease-out;
+  transition: opacity 0.1s ease-out;
 }
 .slider-blue-path-right {
   position: absolute;
@@ -60,7 +60,11 @@
   background-color: #007BFF;
   border-radius: 6px;
   pointer-events: none;
-  transition: left 0.15s ease-out, right 0.15s ease-out, opacity 0.15s ease-out;
+  transition: opacity 0.1s ease-out;
+}
+.slider-blue-path-left.snapped,
+.slider-blue-path-right.snapped {
+  transition: left 0.1s ease-out, right 0.1s ease-out, opacity 0.1s ease-out;
 }
 .slider-oval-selector {
   position: absolute;
@@ -74,13 +78,16 @@
   border-radius: 9px;
   transform: translate(-50%, -50%) scale(1);
   box-shadow: 0 2px 5px rgba(0,0,0,0.25);
-  transition: transform 0.85s cubic-bezier(0.25, 1, 0.5, 1), width 0.85s ease, height 0.85s ease, background-color 0.85s ease, backdrop-filter 0.85s ease, -webkit-backdrop-filter 0.85s ease, left 0.15s ease-out;
+  transition: transform 0.85s cubic-bezier(0.25, 1, 0.5, 1), width 0.85s ease, height 0.85s ease, background-color 0.85s ease, backdrop-filter 0.85s ease, -webkit-backdrop-filter 0.85s ease;
   cursor: grab;
   touch-action: none;
   z-index: 3;
 }
+.slider-oval-selector.snapped {
+  transition: transform 0.85s cubic-bezier(0.25, 1, 0.5, 1), width 0.85s ease, height 0.85s ease, background-color 0.85s ease, backdrop-filter 0.85s ease, -webkit-backdrop-filter 0.85s ease, left 0.1s ease-out;
+}
 .slider-oval-selector.interacting {
-  transform: translate(-50%, -50%) scale(1.45);
+  transform: translate(-50%, -50%) scale(1.80);
   background-color: rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -193,7 +200,7 @@
         <div class="button settings-button description-block">
             <p>Выбор режима определяет физику движения окон. Динамический стиль активирует упругие пружинные переходы, стандартный — линейные.</p>
         </div>
-        <p class="about-system-footer-note" style="margin-bottom: 5px;">Эффект применяется ко всем системным слоям и всплывающим блокам меню автоматически.</p>
+        <p class="about-system-footer-note" style="margin-bottom: 5px;">Эффект применяется ко всем системным слоям и всплывающим blocks меню автоматически.</p>
     </div>
   </div>
   <div class="dz-top-mask"></div>
@@ -219,20 +226,41 @@
 
     function updateSliderDOM(pct) {
         if (!handleEl) return;
+        
+        let isSnapped = (pct === 0 || pct === 0.5 || pct === 1.0) && !isDragging;
+        if (isSnapped) {
+            handleEl.classList.add('snapped');
+            pathLeft.classList.add('snapped');
+            pathRight.classList.add('snapped');
+        } else {
+            handleEl.classList.remove('snapped');
+            pathLeft.classList.remove('snapped');
+            pathRight.classList.remove('snapped');
+        }
+
         handleEl.style.left = (pct * 100) + '%';
+        
         if (pct < 0.5) {
             pathLeft.style.left = (pct * 100) + '%';
             pathLeft.style.right = '50%';
             pathLeft.style.opacity = '1';
-            pathRight.style.opacity = '0';
+            pathRight.style.left = '50%';
+            pathRight.style.right = 'calc(50% - 6px)';
+            pathRight.style.opacity = '1';
         } else if (pct > 0.5) {
+            pathLeft.style.left = 'calc(50% - 6px)';
+            pathLeft.style.right = '50%';
+            pathLeft.style.opacity = '1';
             pathRight.style.left = '50%';
             pathRight.style.right = ((1 - pct) * 100) + '%';
             pathRight.style.opacity = '1';
-            pathLeft.style.opacity = '0';
         } else {
-            pathLeft.style.opacity = '0';
-            pathRight.style.opacity = '0';
+            pathLeft.style.left = 'calc(50% - 6px)';
+            pathLeft.style.right = '50%';
+            pathLeft.style.opacity = '1';
+            pathRight.style.left = '50%';
+            pathRight.style.right = 'calc(50% - 6px)';
+            pathRight.style.opacity = '1';
         }
     }
 
@@ -243,9 +271,9 @@
         let pct = offset / rect.width;
         pct = Math.max(0, Math.min(1, pct));
 
-        if (Math.abs(pct - 0) < 0.05) pct = 0;
-        if (Math.abs(pct - 0.5) < 0.05) pct = 0.5;
-        if (Math.abs(pct - 1.0) < 0.05) pct = 1.0;
+        if (Math.abs(pct - 0) < 0.12) pct = 0;
+        if (Math.abs(pct - 0.5) < 0.12) pct = 0.5;
+        if (Math.abs(pct - 1.0) < 0.12) pct = 1.0;
 
         localStorage.setItem('animationSpeedValue', pct.toFixed(3));
         updateSliderDOM(pct);
