@@ -1,3 +1,50 @@
+<style>
+.toggle-switch {
+  width: 51px;
+  height: 31px;
+  background-color: rgba(120, 120, 128, 0.32);
+  border-radius: 15.5px;
+  position: relative;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.toggle-switch-background {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #34C759;
+  border-radius: 15.5px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.toggle-switch-handle {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 1px 1px rgba(0,0,0,0.16), 0 3px 1px rgba(0,0,0,0.1);
+  transition: transform 0.3s cubic-bezier(0.2, 0.85, 0.32, 1.2), filter 0.2s ease;
+  z-index: 1;
+}
+.toggle-switch.active .toggle-switch-background {
+  opacity: 1;
+}
+.toggle-switch.active .toggle-switch-handle {
+  transform: translateX(20px);
+}
+.settings-toggle-base {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+.settings-toggle-label {
+  flex-grow: 1;
+  text-align: left;
+}
+</style>
+
 <template id="view7">
 <div class="dz-page-wrapper">
   <div class="dz-content-layer rubber-band-scroll">
@@ -16,13 +63,9 @@
           <div class="settings-icon">3</div>
           <span>Button Shadows</span>
         </div>
-        <div class="button settings-button" onclick="shakeButton(this)">
+        <div class="button settings-button" onclick="window.loadSubsystem('Subsystems/Settings-Animations.html').then(loaded => { if(loaded) { animateAndGoForward('viewAnimations'); } })">
           <div class="settings-icon">4</div>
           <span>Анимации</span>
-        </div>
-        <div class="button settings-button" onclick="shakeButton(this)">
-          <div class="settings-icon">5</div>
-          <span>Скорость анимаций</span>
         </div>
         <div class="button settings-button" onclick="animateAndGoForward('view8c')">
           <div class="settings-icon">6</div>
@@ -265,7 +308,138 @@
 </template>
 
 <script>
+  window.wasToggleDragged = false;
+  
+  const toggleDragState = {
+      isDragging: false,
+      startX: 0,
+      currentX: 0,
+      toggleEl: null,
+      handleEl: null,
+      bgEl: null,
+      maxTravel: 20,
+      initialState: false,
+      settingKey: '',
+      moved: false
+  };
+
+  document.addEventListener('pointerdown', function(e) {
+      const toggleBase = e.target.closest('.settings-toggle-base');
+      if (!toggleBase) return;
+      const toggleEl = toggleBase.querySelector('.toggle-switch');
+      if (!toggleEl) return;
+
+      toggleDragState.isDragging = true;
+      toggleDragState.moved = false;
+      toggleDragState.startX = e.clientX;
+      toggleDragState.toggleEl = toggleEl;
+      toggleDragState.handleEl = toggleEl.querySelector('.toggle-switch-handle');
+      toggleDragState.bgEl = toggleEl.querySelector('.toggle-switch-background');
+      toggleDragState.settingKey = toggleEl.getAttribute('data-setting');
+      
+      if (toggleDragState.handleEl) {
+          toggleDragState.handleEl.style.transition = 'none';
+          toggleDragState.handleEl.style.filter = 'blur(1px)';
+      }
+      if (toggleDragState.bgEl) {
+          toggleDragState.bgEl.style.transition = 'none';
+      }
+
+      const currentState = localStorage.getItem(toggleDragState.settingKey);
+      if (toggleDragState.settingKey === 'border') {
+          toggleDragState.initialState = currentState === 'enabled';
+      } else {
+          toggleDragState.initialState = currentState !== 'disabled';
+      }
+
+      const switchWidth = toggleEl.offsetWidth || 51;
+      const handleWidth = toggleDragState.handleEl ? toggleDragState.handleEl.offsetWidth : 27;
+      toggleDragState.maxTravel = switchWidth - handleWidth - 4; 
+      if(toggleDragState.maxTravel <= 0) toggleDragState.maxTravel = 20;
+
+      toggleDragState.currentX = toggleDragState.initialState ? toggleDragState.maxTravel : 0;
+  });
+
+  document.addEventListener('pointermove', function(e) {
+      if (!toggleDragState.isDragging) return;
+      
+      const deltaX = e.clientX - toggleDragState.startX;
+      if (Math.abs(deltaX) > 2) {
+          toggleDragState.moved = true;
+          window.wasToggleDragged = true;
+      }
+
+      let newX = toggleDragState.currentX + deltaX;
+      newX = Math.max(0, Math.min(newX, toggleDragState.maxTravel));
+      const progress = newX / toggleDragState.maxTravel;
+
+      if (toggleDragState.handleEl) {
+          toggleDragState.handleEl.style.transform = `translateX(${newX}px)`;
+      }
+      if (toggleDragState.bgEl) {
+          toggleDragState.bgEl.style.opacity = progress;
+      }
+  });
+
+  document.addEventListener('pointerup', function(e) {
+      if (!toggleDragState.isDragging) return;
+      
+      if (toggleDragState.handleEl) {
+          toggleDragState.handleEl.style.transition = '';
+          toggleDragState.handleEl.style.filter = '';
+      }
+      if (toggleDragState.bgEl) {
+          toggleDragState.bgEl.style.transition = '';
+      }
+
+      if (toggleDragState.moved) {
+          const deltaX = e.clientX - toggleDragState.startX;
+          let newX = toggleDragState.currentX + deltaX;
+          newX = Math.max(0, Math.min(newX, toggleDragState.maxTravel));
+          
+          const progress = newX / toggleDragState.maxTravel;
+          const newState = progress > 0.5;
+
+          if (toggleDragState.handleEl) toggleDragState.handleEl.style.transform = '';
+          if (toggleDragState.bgEl) toggleDragState.bgEl.style.opacity = '';
+
+          if (newState !== toggleDragState.initialState) {
+              let valToSet = '';
+              if (toggleDragState.settingKey === 'border') {
+                  valToSet = newState ? 'enabled' : 'disabled';
+              } else {
+                  valToSet = newState ? 'enabled' : 'disabled';
+              }
+              localStorage.setItem(toggleDragState.settingKey, valToSet);
+              
+              if (toggleDragState.settingKey === 'customGreeting') {
+                  if(window.updateMainContent) window.updateMainContent();
+              } else if (toggleDragState.settingKey === 'shadows') {
+                  if(window.updateShadows) window.updateShadows();
+              } else if (toggleDragState.settingKey === 'border') {
+                  if(window.updateBorder) window.updateBorder();
+              }
+          }
+          if(window.updateToggleUI) window.updateToggleUI(toggleDragState.settingKey);
+          
+          setTimeout(() => { window.wasToggleDragged = false; }, 50);
+      } else {
+          if (toggleDragState.handleEl) toggleDragState.handleEl.style.transform = '';
+          if (toggleDragState.bgEl) toggleDragState.bgEl.style.opacity = '';
+          window.wasToggleDragged = false;
+      }
+
+      toggleDragState.isDragging = false;
+  });
+
+  document.addEventListener('touchmove', function(e) {
+      if (toggleDragState.isDragging) {
+          e.preventDefault();
+      }
+  }, { passive: false });
+
   window.toggleSetting = function(settingKey) {
+      if (window.wasToggleDragged) return;
       const currentState = localStorage.getItem(settingKey);
       let isCurrentlyEnabled;
 
