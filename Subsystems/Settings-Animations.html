@@ -44,27 +44,15 @@
 .slider-dot.left { left: 3px; }
 .slider-dot.center { left: 50%; }
 .slider-dot.right { left: calc(100% - 3px); }
-.slider-blue-path-left {
+.slider-blue-path {
   position: absolute;
   top: 0; bottom: 0;
-  right: 50%; left: 50%;
   background-color: #007BFF;
   border-radius: 6px;
   pointer-events: none;
-  transition: opacity 0.1s ease-out;
 }
-.slider-blue-path-right {
-  position: absolute;
-  top: 0; bottom: 0;
-  left: 50%; right: 50%;
-  background-color: #007BFF;
-  border-radius: 6px;
-  pointer-events: none;
-  transition: opacity 0.1s ease-out;
-}
-.slider-blue-path-left.snapped,
-.slider-blue-path-right.snapped {
-  transition: left 0.1s ease-out, right 0.1s ease-out, opacity 0.1s ease-out;
+.slider-blue-path.snapped {
+  transition: left 0.1s ease-out, right 0.1s ease-out;
 }
 .slider-oval-selector {
   position: absolute;
@@ -144,8 +132,7 @@
         <div class="button settings-button slider-wrapper">
             <span class="slider-sign minus">-</span>
             <div class="slider-track-field" id="animSpeedTrack">
-                <div class="slider-blue-path-left" id="sliderPathLeft"></div>
-                <div class="slider-blue-path-right" id="sliderPathRight"></div>
+                <div class="slider-blue-path" id="sliderPath"></div>
                 <div class="slider-oval-selector" id="sliderHandle"></div>
                 <div class="slider-dot left"></div>
                 <div class="slider-dot center"></div>
@@ -221,46 +208,31 @@
     let isDragging = false;
     let trackEl = null;
     let handleEl = null;
-    let pathLeft = null;
-    let pathRight = null;
+    let pathEl = null;
 
     function updateSliderDOM(pct) {
         if (!handleEl) return;
         
-        let isSnapped = (pct === 0 || pct === 0.5 || pct === 1.0) && !isDragging;
+        let isSnapped = (pct === 0 || pct === 0.5 || pct === 1.0);
         if (isSnapped) {
             handleEl.classList.add('snapped');
-            pathLeft.classList.add('snapped');
-            pathRight.classList.add('snapped');
+            if (pathEl) pathEl.classList.add('snapped');
         } else {
             handleEl.classList.remove('snapped');
-            pathLeft.classList.remove('snapped');
-            pathRight.classList.remove('snapped');
+            if (pathEl) pathEl.classList.remove('snapped');
         }
 
         handleEl.style.left = (pct * 100) + '%';
         
-        if (pct < 0.5) {
-            pathLeft.style.left = (pct * 100) + '%';
-            pathLeft.style.right = '50%';
-            pathLeft.style.opacity = '1';
-            pathRight.style.left = '50%';
-            pathRight.style.right = 'calc(50% - 6px)';
-            pathRight.style.opacity = '1';
-        } else if (pct > 0.5) {
-            pathLeft.style.left = 'calc(50% - 6px)';
-            pathLeft.style.right = '50%';
-            pathLeft.style.opacity = '1';
-            pathRight.style.left = '50%';
-            pathRight.style.right = ((1 - pct) * 100) + '%';
-            pathRight.style.opacity = '1';
-        } else {
-            pathLeft.style.left = 'calc(50% - 6px)';
-            pathLeft.style.right = '50%';
-            pathLeft.style.opacity = '1';
-            pathRight.style.left = '50%';
-            pathRight.style.right = 'calc(50% - 6px)';
-            pathRight.style.opacity = '1';
+        if (pathEl) {
+            if (pct <= 0.5) {
+                pathEl.style.left = `calc(${pct * 100}% - ${pct * 12}px)`;
+                pathEl.style.right = 'calc(50% - 6px)';
+            } else {
+                let t = 1 - pct;
+                pathEl.style.left = 'calc(50% - 6px)';
+                pathEl.style.right = `calc(${t * 100}% - ${t * 12}px)`;
+            }
         }
     }
 
@@ -271,9 +243,9 @@
         let pct = offset / rect.width;
         pct = Math.max(0, Math.min(1, pct));
 
-        if (Math.abs(pct - 0) < 0.12) pct = 0;
-        if (Math.abs(pct - 0.5) < 0.12) pct = 0.5;
-        if (Math.abs(pct - 1.0) < 0.12) pct = 1.0;
+        if (Math.abs(pct - 0) < 0.08) pct = 0;
+        if (Math.abs(pct - 0.5) < 0.04) pct = 0.5;
+        if (Math.abs(pct - 1.0) < 0.08) pct = 1.0;
 
         localStorage.setItem('animationSpeedValue', pct.toFixed(3));
         updateSliderDOM(pct);
@@ -286,8 +258,7 @@
 
         trackEl = document.getElementById('animSpeedTrack');
         handleEl = document.getElementById('sliderHandle');
-        pathLeft = document.getElementById('sliderPathLeft');
-        pathRight = document.getElementById('sliderPathRight');
+        pathEl = document.getElementById('sliderPath');
 
         if (!trackEl || !handleEl) return;
 
@@ -317,10 +288,9 @@
     function setupSliderInitialization() {
         const t = document.getElementById('animSpeedTrack');
         const h = document.getElementById('sliderHandle');
-        const pl = document.getElementById('sliderPathLeft');
-        const pr = document.getElementById('sliderPathRight');
-        if (t && h && pl && pr) {
-            trackEl = t; handleEl = h; pathLeft = pl; pathRight = pr;
+        const p = document.getElementById('sliderPath');
+        if (t && h && p) {
+            trackEl = t; handleEl = h; pathEl = p;
             const saved = parseFloat(localStorage.getItem('animationSpeedValue') || '0.5');
             updateSliderDOM(saved);
         }
