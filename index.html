@@ -1070,8 +1070,6 @@
                     const dock = document.getElementById('unified-dock');
                     dock.style.transition = 'width 0.8s cubic-bezier(0.25, 1, 0.5, 1), transform 0.8s cubic-bezier(0.4, -0.6, 0.5, 1)';
                     dock.style.width = '';
-                    dock.classList.remove('scrolled');
-                    dock.style.transform = 'translateX(-50%) scale(1)';
                     const scrollContainer = document.getElementById('unified-dock-scroll-container');
                     if (scrollContainer) scrollContainer.style.transition = 'transform 0.8s cubic-bezier(0.25, 1, 0.5, 1)';
                     snapUnifiedItem(document.querySelector('.dock-item[data-page="main"]'), true);
@@ -1138,6 +1136,13 @@
                 dock.style.width = dockState.baseWidth + 'px';
                 dockState.isExpanded = true;
                 dock.classList.add('scrolled');
+                
+                void dock.offsetWidth;
+                const activeItem = document.querySelector('.dock-item.active');
+                if (activeItem) {
+                    snapUnifiedItem(activeItem, false);
+                    dockState.scrollLeft = getUnifiedTranslateX();
+                }
             }
         }
         
