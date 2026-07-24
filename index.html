@@ -51,17 +51,6 @@
       display: none;
       z-index: 2;
     }
-    #container.border-enabled {
-      border: 1px solid white;
-    }
-    #container.border-enabled .settings-icon,
-    #container.border-enabled .settings-back-button,
-    #container.border-enabled ~ #unified-dock {
-        border-color: white;
-    }
-    #container.border-enabled .settings-button {
-        border: 2px solid white !important;
-    }
     @keyframes grow { from { transform: scale(0); } to { transform: scale(1); } }
     @keyframes slideOutRight { 0% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(100%); opacity: 0; } }
     @keyframes slideInLeft { 0% { transform: translateX(-100%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
@@ -663,12 +652,10 @@
       }
     }
 
+    // Вызов движка обводки
     function updateBorder() {
-      const container = document.getElementById('container');
-      if (localStorage.getItem('border') === 'enabled') {
-        container.classList.add('border-enabled');
-      } else {
-        container.classList.remove('border-enabled');
+      if (window.BordersEngine) {
+          window.BordersEngine.applyCurrentState();
       }
     }
 
@@ -1392,7 +1379,15 @@
                     updateMainContent();
                     setupFooterTripleClick();
                     content.style.opacity = '1';
-                    setTimeout(() => showUnifiedDock(), 50);
+                    setTimeout(() => {
+                        showUnifiedDock();
+                        // iOS: Запрос разрешения через 100мс после отрисовки меню
+                        if (window.BordersEngine && localStorage.getItem('borderStyleValue') === 'realistic' && localStorage.getItem('gyroscope') === 'enabled' && getOS() === 'iOS') {
+                            setTimeout(() => {
+                                window.BordersEngine.requestIOSPermissionSilently();
+                            }, 100);
+                        }
+                    }, 50);
                 };
 
                 splash.style.opacity = '0';
@@ -1421,6 +1416,13 @@
             updateMainContent();
             setupFooterTripleClick();
             showUnifiedDock();
+            
+            // iOS: Запрос разрешения для возврата в главное меню
+            if (window.BordersEngine && localStorage.getItem('borderStyleValue') === 'realistic' && localStorage.getItem('gyroscope') === 'enabled' && getOS() === 'iOS') {
+                setTimeout(() => {
+                    window.BordersEngine.requestIOSPermissionSilently();
+                }, 100);
+            }
         }
     }
 
@@ -1612,6 +1614,11 @@
         container.style.display = 'block';
         container.style.animation = 'grow 1s forwards';
 
+        // Инициализация движка обводки (загружается сразу при запуске)
+        window.loadSubsystem('Subsystems/Borders.Engine.html').then(() => {
+            if (window.BordersEngine) window.BordersEngine.init();
+        });
+
         const storedName = getUsername();
         const dontAsk = localStorage.getItem('dontAskName');
         const needsUpdate = storedName && localStorage.getItem('updateVersion') !== window.currentUpdateVersion;
@@ -1636,7 +1643,6 @@
         }
 
         window.loadSubsystem('Subsystems/Snowflakes.html');
-        if (localStorage.getItem('border') === null) localStorage.setItem('border', 'enabled');
         updateShadows();
         updateBorder();
     }
