@@ -1,0 +1,269 @@
+<style id="borders-engine-styles">
+  :root {
+    --specular-angle: 45deg;
+    --specular-opacity: 1;
+  }
+
+  #container,
+  .demo-island-element,
+  .settings-icon,
+  .settings-back-button,
+  #unified-dock,
+  .settings-button {
+    border-color: transparent !important;
+  }
+
+  .settings-icon,
+  .settings-back-button,
+  .settings-button {
+    position: relative;
+  }
+
+  #container::before,
+  .demo-island-element::before,
+  .settings-icon::before,
+  .settings-back-button::before,
+  #unified-dock::before,
+  .settings-button::before {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 9;
+  }
+
+  #container::before {
+    inset: 0px;
+    border: 1px solid white;
+  }
+
+  .demo-island-element::before,
+  .settings-icon::before,
+  .settings-back-button::before {
+    inset: -1px;
+    border: 1px solid white;
+  }
+
+  #unified-dock::before {
+    inset: 0px;
+    border: 1px solid white;
+  }
+
+  .settings-button::before {
+    inset: -2px;
+    border: 2px solid white;
+  }
+
+  body.standard-border-enabled #container::before,
+  body.standard-border-enabled .demo-island-element::before,
+  body.standard-border-enabled .settings-icon::before,
+  body.standard-border-enabled .settings-back-button::before,
+  body.standard-border-enabled #unified-dock::before,
+  body.standard-border-enabled .settings-button::before {
+    opacity: 1;
+  }
+
+  #container::after,
+  .demo-island-element::after,
+  .settings-icon::after,
+  .settings-back-button::after,
+  #unified-dock::after,
+  .settings-button::after {
+    content: "";
+    position: absolute;
+    border-radius: inherit;
+    background: linear-gradient(var(--specular-angle), rgba(255,255,255,0.95) 0%, rgba(255,255,255,0) 35%, rgba(255,255,255,0) 65%, rgba(255,255,255,0.95) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 10;
+  }
+
+  .demo-island-element::after,
+  .settings-icon::after,
+  .settings-back-button::after {
+    inset: -1px;
+    padding: 1px;
+  }
+
+  .settings-button::after {
+    inset: -2px;
+    padding: 2px;
+  }
+
+  #container::after {
+    inset: 0px;
+    padding: 2px;
+  }
+
+  #unified-dock::after {
+    inset: 0px;
+    padding: 1px;
+  }
+
+  body.realistic-border-enabled #container::after,
+  body.realistic-border-enabled .demo-island-element::after,
+  body.realistic-border-enabled .settings-icon::after,
+  body.realistic-border-enabled .settings-back-button::after,
+  body.realistic-border-enabled #unified-dock::after,
+  body.realistic-border-enabled .settings-button::after {
+    opacity: var(--specular-opacity);
+  }
+</style>
+
+<script>
+window.BordersEngine = {
+    lastGamma: 0,
+    lastBeta: 0,
+    idleTimer: null,
+    isIdle: true,
+    gyroActive: false,
+    transitionTimer: null,
+    
+    init: function() {
+        if (localStorage.getItem('border') === null) localStorage.setItem('border', 'enabled');
+        if (localStorage.getItem('borderStyleValue') === null) localStorage.setItem('borderStyleValue', 'standard');
+        if (localStorage.getItem('gyroscope') === null) localStorage.setItem('gyroscope', 'disabled');
+        
+        this.handleOrientationBound = this.handleOrientation.bind(this);
+        this.applyCurrentState();
+    },
+
+    applyCurrentState: function() {
+        const isEnabled = localStorage.getItem('border') === 'enabled';
+        const style = localStorage.getItem('borderStyleValue');
+        const gyroEnabled = localStorage.getItem('gyroscope') === 'enabled';
+
+        if (this.transitionTimer) {
+            clearTimeout(this.transitionTimer);
+            this.transitionTimer = null;
+        }
+
+        const isStandardActive = document.body.classList.contains('standard-border-enabled');
+        const isRealisticActive = document.body.classList.contains('realistic-border-enabled');
+
+        if (isEnabled) {
+            if (style === 'realistic') {
+                if (isStandardActive && !isRealisticActive) {
+                    document.body.classList.add('realistic-border-enabled');
+                    this.transitionTimer = setTimeout(() => {
+                        document.body.classList.remove('standard-border-enabled');
+                        this.transitionTimer = null;
+                    }, 100);
+                } else {
+                    document.body.classList.add('realistic-border-enabled');
+                    document.body.classList.remove('standard-border-enabled');
+                }
+                
+                document.documentElement.style.setProperty('--specular-angle', '45deg');
+                document.documentElement.style.setProperty('--specular-opacity', '1');
+
+                if (gyroEnabled) {
+                    this.startGyroscope();
+                } else {
+                    this.stopGyroscope();
+                }
+            } else {
+                if (isRealisticActive && !isStandardActive) {
+                    document.body.classList.add('standard-border-enabled');
+                    this.transitionTimer = setTimeout(() => {
+                        document.body.classList.remove('realistic-border-enabled');
+                        this.transitionTimer = null;
+                    }, 100);
+                } else {
+                    document.body.classList.add('standard-border-enabled');
+                    document.body.classList.remove('realistic-border-enabled');
+                }
+                this.stopGyroscope();
+            }
+        } else {
+            document.body.classList.remove('standard-border-enabled', 'realistic-border-enabled');
+            this.stopGyroscope();
+        }
+    },
+
+    startGyroscope: function() {
+        if (this.gyroActive) return;
+        if (this.getOS() !== 'iOS') {
+            window.addEventListener('deviceorientation', this.handleOrientationBound);
+            this.gyroActive = true;
+        }
+    },
+
+    stopGyroscope: function() {
+        window.removeEventListener('deviceorientation', this.handleOrientationBound);
+        this.gyroActive = false;
+        document.documentElement.style.setProperty('--specular-angle', '45deg');
+        document.documentElement.style.setProperty('--specular-opacity', '1');
+    },
+
+    requestIOSPermissionSilently: function() {
+        if (this.getOS() !== 'iOS') return;
+        if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+            DeviceOrientationEvent.requestPermission()
+                .then(permissionState => {
+                    if (permissionState === 'granted') {
+                        if (!this.gyroActive) {
+                            window.addEventListener('deviceorientation', this.handleOrientationBound);
+                            this.gyroActive = true;
+                        }
+                    }
+                })
+                .catch(e => {
+                    console.log('Запрос к гироскопу был отклонен или заблокирован WebKit: ', e);
+                });
+        }
+    },
+
+    handleOrientation: function(e) {
+        if (!e.gamma && !e.beta) return;
+        
+        let gamma = e.gamma;
+        let beta = e.beta;
+        
+        let delta = Math.abs(gamma - this.lastGamma) + Math.abs(beta - this.lastBeta);
+        
+        if (delta > 0.8) {
+            this.lastGamma = gamma;
+            this.lastBeta = beta;
+            
+            let angle = Math.atan2(beta, gamma) * (180 / Math.PI) + 90;
+            
+            if (this.isIdle) {
+                this.isIdle = false;
+                document.documentElement.style.setProperty('--specular-angle', angle + 'deg');
+                document.documentElement.style.setProperty('--specular-opacity', '1');
+            } else {
+                document.documentElement.style.setProperty('--specular-angle', angle + 'deg');
+            }
+            
+            clearTimeout(this.idleTimer);
+            this.idleTimer = setTimeout(() => {
+                this.triggerIdle();
+            }, 1000); 
+        }
+    },
+    
+    triggerIdle: function() {
+        this.isIdle = true;
+        document.documentElement.style.setProperty('--specular-opacity', '0');
+        setTimeout(() => {
+            if (this.isIdle) {
+                document.documentElement.style.setProperty('--specular-angle', '45deg');
+                document.documentElement.style.setProperty('--specular-opacity', '1');
+            }
+        }, 800); 
+    },
+
+    getOS: function() {
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) return "iOS";
+        return "other";
+    }
+};
+</script>
