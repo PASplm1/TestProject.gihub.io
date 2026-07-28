@@ -20,20 +20,28 @@
   opacity: 1 !important;
 }
 
-/* Применение SVG-фильтра к элементу дока */
+/* Применение реалистичного размытия к элементу единого дока */
 #unified-dock.realistic-blur-active {
-  backdrop-filter: url(#dock-realistic-blur-filter) blur(10px) saturate(180%) !important;
-  -webkit-backdrop-filter: url(#dock-realistic-blur-filter) blur(10px) saturate(180%) !important;
+  will-change: backdrop-filter, transform, width;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
+  backdrop-filter: url(#dock-realistic-blur-filter) blur(12px) saturate(180%) !important;
+}
+
+/* Оптимизация производительности: во время жестов и анимаций временно переключаем на легкое CSS-размытие */
+#unified-dock.realistic-blur-active:active,
+#unified-dock.realistic-blur-active.shake {
+  backdrop-filter: blur(16px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
 }
 </style>
 
 <!-- SVG-фильтр реалистичного размытия -->
 <div id="subsystem-content">
-  <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" aria-hidden="true">
+  <svg style="position: absolute; width: 0; height: 0; overflow: hidden; pointer-events: none;" aria-hidden="true">
     <defs>
-      <filter id="dock-realistic-blur-filter" x="-20%" y="-20%" width="140%" height="140%">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
-        <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+      <filter id="dock-realistic-blur-filter" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur" />
+        <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 18 -7" result="goo" />
         <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
       </filter>
     </defs>
@@ -98,6 +106,7 @@
     window.BlurEngine = {
         init: function() {
             this.applyCurrentState();
+            this.setupObserver();
             this.updateUI();
         },
 
@@ -136,13 +145,13 @@
         updateUI: function() {
             const currentStyle = this.getCurrentStyle();
 
-            // Обновление ярлыка текущего стиля на главной странице размытия
+            // 1. Обновление подзаголовка на главной странице размытия
             const currentLabel = document.getElementById('currentBlurStyleLabel');
             if (currentLabel) {
                 currentLabel.textContent = currentStyle === 'realistic' ? 'Реалистичная' : 'Стандартная';
             }
 
-            // Обновление активного галочки в списке выбора
+            // 2. Обновление активных галочек (чекмарков)
             const rows = document.querySelectorAll('[data-blur-style]');
             rows.forEach(row => {
                 if (row.getAttribute('data-blur-style') === currentStyle) {
@@ -152,7 +161,7 @@
                 }
             });
 
-            // Обновление текста описания
+            // 3. Обновление текста описания
             const desc = document.getElementById('blurStyleDescriptionText');
             if (desc) {
                 if (currentStyle === 'realistic') {
@@ -161,10 +170,29 @@
                     desc.textContent = 'Стандартное размытие использует базовые системные параметры фильтрации.';
                 }
             }
+        },
+
+        // Автоматическое отслеживание рендера страниц в #container
+        setupObserver: function() {
+            const container = document.getElementById('container');
+            if (!container || this._observerAttached) return;
+
+            const observer = new MutationObserver(() => {
+                if (document.getElementById('currentBlurStyleLabel') || document.querySelector('[data-blur-style]')) {
+                    this.updateUI();
+                }
+            });
+
+            observer.observe(container, { childList: true, subtree: true });
+            this._observerAttached = true;
         }
     };
 
-    // Автоматическая инициализация движка размытия
-    window.BlurEngine.init();
+    // Автоматическая инициализация
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => window.BlurEngine.init());
+    } else {
+        window.BlurEngine.init();
+    }
 })();
 </script>
