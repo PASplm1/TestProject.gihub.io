@@ -1,0 +1,170 @@
+<style>
+:root {
+  --style-text-left-offset: 0px;
+  --style-chevron-right-offset: 0px;
+}
+
+.style-chevron {
+  font-size: 1.2em;
+  color: #8e8e93;
+  font-weight: bold;
+  margin-right: var(--style-chevron-right-offset);
+}
+
+.selection-checkmark {
+  opacity: 0 !important;
+  transition: opacity 0.3s ease !important;
+}
+
+.selection-row.active .selection-checkmark {
+  opacity: 1 !important;
+}
+
+/* Применение SVG-фильтра к элементу дока */
+#unified-dock.realistic-blur-active {
+  backdrop-filter: url(#dock-realistic-blur-filter) blur(10px) saturate(180%) !important;
+  -webkit-backdrop-filter: url(#dock-realistic-blur-filter) blur(10px) saturate(180%) !important;
+}
+</style>
+
+<!-- SVG-фильтр реалистичного размытия -->
+<div id="subsystem-content">
+  <svg style="position: absolute; width: 0; height: 0; overflow: hidden;" aria-hidden="true">
+    <defs>
+      <filter id="dock-realistic-blur-filter" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur" />
+        <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 19 -9" result="goo" />
+        <feComposite in="SourceGraphic" in2="goo" operator="atop"/>
+      </filter>
+    </defs>
+  </svg>
+</div>
+
+<!-- Шаблон главной страницы размытия -->
+<template id="viewBlur">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer rubber-band-scroll">
+    <div class="rubber-band-inner">
+        <div class="settings-group-title" style="margin-top: 11px;">Стили размытия</div>
+        <div class="button settings-button" onclick="animateAndGoForward('viewBlurStyles')" style="cursor: pointer; display: flex; align-items: center; padding: 10px 18px; box-sizing: border-box;">
+            <span style="margin-left: var(--style-text-left-offset); font-weight: bold; color: #333; margin-right: auto;" id="currentBlurStyleLabel">Стандартная</span>
+            <span class="style-chevron">›</span>
+        </div>
+        
+        <div class="settings-group-title">Описание</div>
+        <div class="button settings-button description-block">
+            <p>Эта функция настраивает режим размытия для элемента дока. Вы можете использовать стандартный эффект или реалистичный SVG-фильтр.</p>
+        </div>
+        <p class="about-system-footer-note" style="margin-bottom: 5px;">Стандартный режим использует системное CSS-размытие. Реалистичный режим подключает SVG-движок фильтрации.</p>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>Размытие</h1></div>
+</div>
+</template>
+
+<!-- Шаблон выбора режима размытия -->
+<template id="viewBlurStyles">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer rubber-band-scroll">
+    <div class="rubber-band-inner">
+        <div class="settings-group-title" style="margin-top: 11px;">Выберите стиль</div>
+        <div class="button settings-button selection-list-container">
+            <div class="selection-row" data-blur-style="standard" onclick="window.BlurEngine.selectStyle('standard', this)">
+                <span class="selection-row-label">Стандартная</span>
+                <span class="selection-checkmark">✔</span>
+            </div>
+            <div class="selection-divider"></div>
+            <div class="selection-row" data-blur-style="realistic" onclick="window.BlurEngine.selectStyle('realistic', this)">
+                <span class="selection-row-label">Реалистичная</span>
+                <span class="selection-checkmark">✔</span>
+            </div>
+        </div>
+        <div class="settings-group-title">Описание</div>
+        <div class="button settings-button description-block">
+            <p id="blurStyleDescriptionText">Стандартное размытие использует базовые системные параметры фильтрации.</p>
+        </div>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>Стили размытия</h1></div>
+</div>
+</template>
+
+<script>
+(function() {
+    window.BlurEngine = {
+        init: function() {
+            this.applyCurrentState();
+            this.updateUI();
+        },
+
+        getCurrentStyle: function() {
+            return localStorage.getItem('blurStyleValue') || 'standard';
+        },
+
+        applyCurrentState: function() {
+            const dock = document.getElementById('unified-dock');
+            if (!dock) return;
+
+            const style = this.getCurrentStyle();
+
+            if (style === 'realistic') {
+                dock.classList.add('realistic-blur-active');
+            } else {
+                dock.classList.remove('realistic-blur-active');
+            }
+        },
+
+        selectStyle: function(styleValue, element) {
+            localStorage.setItem('blurStyleValue', styleValue);
+            
+            if (element) {
+                const container = element.closest('.selection-list-container');
+                if (container) {
+                    container.querySelectorAll('.selection-row').forEach(row => row.classList.remove('active'));
+                }
+                element.classList.add('active');
+            }
+
+            this.applyCurrentState();
+            this.updateUI();
+        },
+
+        updateUI: function() {
+            const currentStyle = this.getCurrentStyle();
+
+            // Обновление ярлыка текущего стиля на главной странице размытия
+            const currentLabel = document.getElementById('currentBlurStyleLabel');
+            if (currentLabel) {
+                currentLabel.textContent = currentStyle === 'realistic' ? 'Реалистичная' : 'Стандартная';
+            }
+
+            // Обновление активного галочки в списке выбора
+            const rows = document.querySelectorAll('[data-blur-style]');
+            rows.forEach(row => {
+                if (row.getAttribute('data-blur-style') === currentStyle) {
+                    row.classList.add('active');
+                } else {
+                    row.classList.remove('active');
+                }
+            });
+
+            // Обновление текста описания
+            const desc = document.getElementById('blurStyleDescriptionText');
+            if (desc) {
+                if (currentStyle === 'realistic') {
+                    desc.textContent = 'Реалистичное размытие обрабатывает элемент дока с помощью динамического SVG-фильтра.';
+                } else {
+                    desc.textContent = 'Стандартное размытие использует базовые системные параметры фильтрации.';
+                }
+            }
+        }
+    };
+
+    // Автоматическая инициализация движка размытия
+    window.BlurEngine.init();
+})();
+</script>
