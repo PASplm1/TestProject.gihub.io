@@ -1,5 +1,99 @@
 <style>
   /* ==========================================================
+     Базовые переменные и стили оформления (Borders Assets)
+     ========================================================== */
+  :root {
+    --style-text-left-offset: 0px;
+    --style-chevron-right-offset: 0px;
+  }
+
+  /* Анимация покачивания (Shake) */
+  @keyframes devShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+
+  .shake {
+    animation: devShake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+  }
+
+  .style-chevron {
+    font-size: 1.2em;
+    color: #8e8e93;
+    font-weight: bold;
+    margin-right: var(--style-chevron-right-offset);
+  }
+
+  /* Список выбора (Selection rows & Checkmarks) */
+  .selection-list-container {
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important;
+    overflow: hidden;
+  }
+
+  .selection-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.2s ease;
+  }
+
+  .selection-row:active {
+    background-color: rgba(255, 255, 255, 0.08);
+  }
+
+  .selection-row-label {
+    font-weight: 500;
+    color: #ffffff;
+    font-size: 0.95em;
+  }
+
+  .selection-checkmark {
+    color: #0aaaf7;
+    font-weight: bold;
+    font-size: 1.1em;
+    opacity: 0 !important;
+    transition: opacity 0.3s ease !important;
+  }
+
+  .selection-row.active .selection-checkmark {
+    opacity: 1 !important;
+  }
+
+  .selection-divider {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.12);
+    margin-left: 18px;
+  }
+
+  /* Блоки описаний и сносок */
+  .description-block {
+    padding: 12px 18px !important;
+    line-height: 1.4;
+    color: #e0e0e0;
+    font-size: 0.88em;
+  }
+
+  .description-block p {
+    margin: 0;
+  }
+
+  .about-system-footer-note {
+    color: #8e8e93;
+    font-size: 0.8em;
+    margin-top: 6px;
+    margin-left: 18px;
+    margin-right: 18px;
+    line-height: 1.35;
+    user-select: none;
+  }
+
+  /* ==========================================================
      Стили для анимации Face ID и компонентов Dev Mode
      ========================================================== */
   .dev-face-id-wrapper {
@@ -23,10 +117,20 @@
   .dev-face-id-wrapper .face-id-default {
     opacity: 1;
     transform: scale(1);
-    transition: opacity 0.6s ease, transform 0.6s ease;
+    transition: opacity 0.4s ease, transform 0.4s ease;
   }
 
-  /* Состояние 1 -> Состояние 2: Уход дефолтной иконки */
+  .dev-face-id-wrapper .face-id-default path,
+  .dev-face-id-wrapper .face-id-default g {
+    stroke: #ffffff;
+    transition: stroke 0.4s ease;
+  }
+
+  .dev-face-id-wrapper.blue .face-id-default path,
+  .dev-face-id-wrapper.blue .face-id-default g {
+    stroke: #0aaaf7;
+  }
+
   .dev-face-id-wrapper.active .face-id-default {
     opacity: 0;
     transform: scale(1.15);
@@ -43,10 +147,9 @@
     top: 0;
     left: 0;
     opacity: 0;
-    transition: opacity 0.5s ease, transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: opacity 0.4s ease, transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Состояние 2: Вращение 3 синих колец */
   .dev-face-id-wrapper.active .circle {
     opacity: 1;
   }
@@ -63,7 +166,6 @@
     transform: rotateY(360deg) rotateX(360deg);
   }
 
-  /* Состояние 3: Завершение и галочка */
   .dev-face-id-wrapper .path-tick {
     opacity: 0;
     stroke: #0aaaf7;
@@ -95,31 +197,12 @@
     user-select: none;
     font-weight: 400;
   }
-
-  /* Анимация покачивания поля ввода при ошибке */
-  .shake {
-    animation: devShake 0.4s ease-in-out;
-  }
-
-  @keyframes devShake {
-    0%, 100% { transform: translateX(0); }
-    20%, 60% { transform: translateX(-6px); }
-    40%, 80% { transform: translateX(6px); }
-  }
 </style>
 
+<!-- Страница 5 (Главная страница Dev-mode) -->
 <template id="view5">
 <div class="dz-page-wrapper">
-  <div class="dz-content-layer"></div>
-  <div class="dz-top-mask"></div>
-  <div class="dz-bottom-mask"></div>
-  <div class="dz-title-layer"><h1>Dev-mode</h1></div>
-</div>
-</template>
-
-<template id="view6">
-<div class="dz-page-wrapper">
-  <div class="dz-content-layer rubber-band-scroll">
+  <div class="dz-content-layer rubber-band-scroll" style="opacity: 0; pointer-events: none; transition: opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1);">
     <div class="rubber-band-inner">
         <div class="settings-group-title">Инструменты</div>
         <div class="button settings-button" onclick="clearUsername()">
@@ -130,11 +213,13 @@
           <div class="settings-icon">2</div>
           <span>Очистить обновление</span>
         </div>
-        <div class="settings-group-title">Другое</div>
-        <div class="button settings-button" onclick="animateAndGoForward('viewReset')">
+
+        <div class="settings-group-title">Доступ</div>
+        <div class="button settings-button" onclick="animateAndGoForward('viewAccessSettings')">
           <div class="settings-icon">3</div>
-          <span>Сброс всех настроек</span>
+          <span>Настройки доступа</span>
         </div>
+
         <div class="settings-group-title">Кастомизация</div>
         <div class="button settings-button" onclick="animateAndGoForward('view8')">
           <div class="settings-icon">4</div>
@@ -164,44 +249,255 @@
 </div>
 </template>
 
-<template id="viewReset">
+<!-- Страница 6 (Вторичная разметка Dev-mode) -->
+<template id="view6">
 <div class="dz-page-wrapper">
-  <div class="dz-content-layer">
-    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;">
-        <div style="position: relative; width: calc(87% + 3px); max-width: 400px; pointer-events: auto;">
-            <input type="text" id="resetConfirmField" placeholder="Введите yes" 
-                   style="background-color: #444; color: white; border-radius: 14px; border: 2px solid #888; padding: 13.5px 50px 13.5px 15px; width: 100%; box-sizing: border-box; font-size: 1.3em; text-align: left; margin: 0; outline: none; transition: border-color 0.3s;">
-            <div id="submitArrow" onclick="checkResetConfirm()" 
-                 style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; background: #cccccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            </div>
+  <div class="dz-content-layer rubber-band-scroll">
+    <div class="rubber-band-inner">
+        <div class="settings-group-title">Инструменты</div>
+        <div class="button settings-button" onclick="clearUsername()">
+          <div class="settings-icon">1</div>
+          <span>Очистить имя</span>
+        </div>
+        <div class="button settings-button" onclick="clearUpdate()">
+          <div class="settings-icon">2</div>
+          <span>Очистить обновление</span>
+        </div>
+
+        <div class="settings-group-title">Доступ</div>
+        <div class="button settings-button" onclick="animateAndGoForward('viewAccessSettings')">
+          <div class="settings-icon">3</div>
+          <span>Настройки доступа</span>
+        </div>
+
+        <div class="settings-group-title">Кастомизация</div>
+        <div class="button settings-button" onclick="animateAndGoForward('view8')">
+          <div class="settings-icon">4</div>
+          <span>Personal Greeting</span>
+        </div>
+        <div class="button settings-button" onclick="animateAndGoForward('view8b')">
+          <div class="settings-icon">5</div>
+          <span>Button Shadows</span>
+        </div>
+        <div class="button settings-button" onclick="shakeButton(this)">
+          <div class="settings-icon">6</div>
+          <span>Анимации</span>
+        </div>
+        <div class="button settings-button" onclick="shakeButton(this)">
+          <div class="settings-icon">7</div>
+          <span>Скорость анимаций</span>
+        </div>
+        <div class="button settings-button" onclick="animateAndGoForward('view8c')">
+          <div class="settings-icon">8</div>
+          <span>Обводка</span>
         </div>
     </div>
   </div>
   <div class="dz-top-mask"></div>
   <div class="dz-bottom-mask"></div>
-  <div class="dz-title-layer"><h1>Сброс настроек</h1></div>
+  <div class="dz-title-layer"><h1>Dev-mode</h1></div>
 </div>
 </template>
 
-<template id="viewResetProcessing">
+<!-- Новая страница: Настройки доступа -->
+<template id="viewAccessSettings">
 <div class="dz-page-wrapper">
-  <div class="dz-content-layer" style="display: flex; justify-content: center; align-items: center;">
-    <h1 style="text-align: center;">Сброс локального хранилища</h1>
+  <div class="dz-content-layer rubber-band-scroll">
+    <div class="rubber-band-inner">
+        <div class="settings-group-title" style="margin-top: 11px;">Ключ доступа</div>
+        <div class="button settings-button" onclick="window.handlePasskeyAction(this)" style="cursor: pointer; display: flex; align-items: center; padding: 10px 18px; box-sizing: border-box;">
+            <span style="font-weight: bold; color: #ffffff; margin-right: auto;" id="passkeyActionLabel">Создать ключ доступа</span>
+            <span class="style-chevron">›</span>
+        </div>
+
+        <div class="settings-group-title">Описание</div>
+        <div class="button settings-button description-block">
+            <p>На этой странице вы можете создать ключ доступа для аутентификации.</p>
+        </div>
+        <p class="about-system-footer-note" style="margin-bottom: 5px;">Вы можете создать ключ доступа. Если он создан, вы можете его удалить.</p>
+    </div>
   </div>
   <div class="dz-top-mask"></div>
   <div class="dz-bottom-mask"></div>
-  <div class="dz-title-layer"><h1></h1></div>
+  <div class="dz-title-layer"><h1>Настройки доступа</h1></div>
+</div>
+</template>
+
+<!-- Новая страница: Ключ доступа -->
+<template id="viewPasskeyConfig">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer rubber-band-scroll">
+    <div class="rubber-band-inner">
+        <div class="settings-group-title" style="margin-top: 11px;">Способ применения ключа</div>
+        <div class="button settings-button selection-list-container" id="passkeyMethodBlock">
+            <div class="selection-row" onclick="window.selectPasskeyMethod('faceid', this)">
+                <span class="selection-row-label">Face ID</span>
+                <span class="selection-checkmark">✔</span>
+            </div>
+            <div class="selection-divider"></div>
+            <div class="selection-row" onclick="window.selectPasskeyMethod('touchid', this)">
+                <span class="selection-row-label">Touch ID</span>
+                <span class="selection-checkmark">✔</span>
+            </div>
+        </div>
+
+        <div class="settings-group-title">Действие</div>
+        <div class="button settings-button" onclick="window.executeCreatePasskey()" style="cursor: pointer; display: flex; align-items: center; padding: 10px 18px; box-sizing: border-box;">
+            <span style="font-weight: bold; color: #ffffff; margin-right: auto;">Создать ключ доступа</span>
+            <span class="style-chevron">›</span>
+        </div>
+
+        <div class="settings-group-title">Описание</div>
+        <div class="button settings-button description-block">
+            <p>Выберите способ применения ключа. Пункт Face ID предназначен для устройств с аутентификацией по лицу, а Touch ID — для подтверждения входа по отпечатку пальца.</p>
+        </div>
+        <p class="about-system-footer-note" style="margin-bottom: 5px;">Созданный ключ доступа сохраняется в связке ключей операционной системы для безопасного входа.</p>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>Ключ доступа</h1></div>
 </div>
 </template>
 
 <script>
   (function() {
+    /* ----------------------------------------------------------
+       Управление состоянием ключа доступа и UI
+       ---------------------------------------------------------- */
+    window.selectedPasskeyMethodTemp = null;
+    let isUpdatingPasskey = false;
+
+    window.updatePasskeyLabels = function() {
+      if (isUpdatingPasskey) return;
+      isUpdatingPasskey = true;
+
+      const hasPasskey = localStorage.getItem('devPasskeyCreated') === 'true';
+      const targetText = hasPasskey ? 'Удалить ключ доступа' : 'Создать ключ доступа';
+
+      document.querySelectorAll('#passkeyActionLabel').forEach(lbl => {
+        if (lbl.textContent !== targetText) {
+          lbl.textContent = targetText;
+        }
+      });
+
+      isUpdatingPasskey = false;
+    };
+
+    window.handlePasskeyAction = function(element) {
+      const hasPasskey = localStorage.getItem('devPasskeyCreated') === 'true';
+      if (hasPasskey) {
+        localStorage.removeItem('devPasskeyCreated');
+        localStorage.removeItem('devPasskeyMethod');
+        window.updatePasskeyLabels();
+        alert("Ключ доступа удален");
+      } else {
+        if (typeof window.animateAndGoForward === 'function') {
+          window.animateAndGoForward('viewPasskeyConfig');
+        } else if (typeof window.goForward === 'function') {
+          window.goForward('viewPasskeyConfig');
+        }
+      }
+    };
+
+    window.selectPasskeyMethod = function(method, element) {
+      window.selectedPasskeyMethodTemp = method;
+      const container = element.closest('.selection-list-container');
+      if (container) {
+        container.querySelectorAll('.selection-row').forEach(row => {
+          row.classList.remove('active');
+        });
+      }
+      element.classList.add('active');
+    };
+
+    window.executeCreatePasskey = async function() {
+      if (!window.selectedPasskeyMethodTemp) {
+        const block = document.getElementById('passkeyMethodBlock');
+        if (block) {
+          block.classList.remove('shake');
+          void block.offsetWidth;
+          block.classList.add('shake');
+          setTimeout(() => block.classList.remove('shake'), 500);
+        }
+        return;
+      }
+
+      let isSuccess = false;
+      
+      if (window.PublicKeyCredential && navigator.credentials && window.location.protocol === 'https:') {
+        try {
+          const challenge = new Uint8Array(32);
+          window.crypto.getRandomValues(challenge);
+          const userId = new Uint8Array(16);
+          window.crypto.getRandomValues(userId);
+          
+          const cred = await navigator.credentials.create({
+            publicKey: {
+              challenge: challenge,
+              rp: { name: "DevMode App", id: window.location.hostname },
+              user: { id: userId, name: "devuser", displayName: "Dev User" },
+              pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
+              timeout: 60000
+            }
+          });
+          if (cred) isSuccess = true;
+        } catch (e) {
+          isSuccess = false;
+        }
+      } else {
+        isSuccess = window.confirm("Подтвердите создание ключа доступа в связке ключей iOS / Android");
+      }
+
+      if (isSuccess) {
+        localStorage.setItem('devPasskeyCreated', 'true');
+        localStorage.setItem('devPasskeyMethod', window.selectedPasskeyMethodTemp);
+        alert("Ключ доступа создан");
+        
+        if (typeof window.animateAndGoForward === 'function') {
+          window.animateAndGoForward('view5');
+        } else if (typeof window.changeContent === 'function') {
+          window.changeContent('view5');
+        }
+      }
+    };
+
+    // Перехват функций навигации
+    ['animateAndGoForward', 'animateAndGoBack', 'animateAndChangeContent', 'goForward', 'goBack', 'changeContent'].forEach(fnName => {
+      if (typeof window[fnName] === 'function') {
+        const orig = window[fnName];
+        window[fnName] = function() {
+          const res = orig.apply(this, arguments);
+          setTimeout(() => window.updatePasskeyLabels(), 50);
+          return res;
+        };
+      }
+    });
+
+    // Безопасный MutationObserver с защитным флагом
+    const passkeyObserver = new MutationObserver((mutations) => {
+      let shouldUpdate = false;
+      for (let i = 0; i < mutations.length; i++) {
+        if (mutations[i].addedNodes.length > 0) {
+          shouldUpdate = true;
+          break;
+        }
+      }
+      if (shouldUpdate) window.updatePasskeyLabels();
+    });
+
+    if (document.body) {
+      passkeyObserver.observe(document.body, { childList: true, subtree: true });
+    }
+
+    /* ----------------------------------------------------------
+       Наблюдатель за доком DevMode
+       ---------------------------------------------------------- */
     if (!window._devDockObserverAttached) {
       window._devDockObserverAttached = true;
       const targetDock = document.getElementById('unified-dock');
       if (targetDock) {
-        const observer = new MutationObserver(() => {
+        const obs = new MutationObserver(() => {
           if (targetDock.dataset.isDevClosing === "true") return;
 
           const authBlock = document.getElementById('dev-dock-auth-block');
@@ -216,61 +512,110 @@
             }
           }
         });
-        observer.observe(targetDock, { attributes: true, attributeFilter: ['style'] });
+        obs.observe(targetDock, { attributes: true, attributeFilter: ['style'] });
       }
     }
   })();
 
-  /* ==========================================================
-     Управление триггерами и зацикливанием трех состояний Face ID
-     Состояние 1: Дефолтная рамка лица (.face-id-default)
-     Состояние 2: Вращение трех колец (.active)
-     Состояние 3: Успешная галочка (.completed)
-     ========================================================== */
-  window.startDevFaceIdLoop = function() {
-    window.stopDevFaceIdLoop();
-    const wrapper = document.getElementById('devFaceIdWrapper');
-    if (!wrapper) return;
-
-    let currentState = 1;
-    wrapper.classList.remove('active', 'completed');
-
-    window._devFaceIdTimer = setInterval(() => {
-      const el = document.getElementById('devFaceIdWrapper');
-      if (!el) {
-        window.stopDevFaceIdLoop();
-        return;
-      }
-
-      if (currentState === 1) {
-        /* Переход в Состояние 2 */
-        el.classList.add('active');
-        el.classList.remove('completed');
-        currentState = 2;
-      } else if (currentState === 2) {
-        /* Переход в Состояние 3 */
-        el.classList.add('completed');
-        currentState = 3;
-      } else {
-        /* Сброс обратно в Состояние 1 */
-        el.classList.remove('active', 'completed');
-        currentState = 1;
-      }
-    }, 1300);
-  };
-
+  /* ----------------------------------------------------------
+     Управление анимацией Face ID и проверкой ключа доступа
+     ---------------------------------------------------------- */
   window.stopDevFaceIdLoop = function() {
-    if (window._devFaceIdTimer) {
-      clearInterval(window._devFaceIdTimer);
-      window._devFaceIdTimer = null;
+    if (window._devFaceIdTimers) {
+      window._devFaceIdTimers.forEach(id => clearTimeout(id));
+      window._devFaceIdTimers = [];
+    }
+    window._isDevFaceIdAnimating = false;
+    const wrapper = document.getElementById('devFaceIdWrapper');
+    if (wrapper) {
+      wrapper.classList.remove('active', 'completed', 'blue', 'shake');
     }
   };
 
+  window.startDevFaceIdLoop = function() {
+    window.stopDevFaceIdLoop();
+  };
+
+  window.triggerDevFaceIdAnimation = async function() {
+    if (window._isDevFaceIdAnimating) return;
+    const wrapper = document.getElementById('devFaceIdWrapper');
+    if (!wrapper) return;
+
+    window.stopDevFaceIdLoop();
+    window._isDevFaceIdAnimating = true;
+
+    wrapper.classList.add('blue');
+    await new Promise(r => setTimeout(r, 300));
+    wrapper.classList.add('active');
+
+    let verified = false;
+    if (window.PublicKeyCredential && navigator.credentials && window.location.protocol === 'https:') {
+      try {
+        const challenge = new Uint8Array(32);
+        window.crypto.getRandomValues(challenge);
+        const assertion = await navigator.credentials.get({
+          publicKey: { challenge: challenge, timeout: 60000 }
+        });
+        if (assertion) verified = true;
+      } catch (err) {
+        verified = false;
+      }
+    } else {
+      await new Promise(r => setTimeout(r, 600));
+      verified = window.confirm("Подтвердите вход по ключу доступа");
+    }
+
+    if (verified) {
+      wrapper.classList.add('completed');
+      setTimeout(() => {
+        window.devUnlockSuccess();
+        window._isDevFaceIdAnimating = false;
+      }, 700);
+    } else {
+      wrapper.classList.add('shake');
+
+      setTimeout(() => {
+        wrapper.classList.remove('shake');
+        wrapper.classList.remove('active');
+
+        setTimeout(() => {
+          wrapper.classList.remove('blue');
+          window._isDevFaceIdAnimating = false;
+        }, 600);
+      }, 450);
+    }
+  };
+
+  window.devUnlockSuccess = function() {
+    window.originalBgColor = window.getComputedStyle(document.body).backgroundColor;
+    document.body.style.transition = 'background-color 0.8s ease';
+    document.body.style.backgroundColor = window.devModeBgColor || '#0a2e1c';
+    window.isDevMode = true;
+
+    const contentList = document.querySelector('.dz-page-wrapper .dz-content-layer');
+    if (contentList) {
+      contentList.style.transition = 'opacity 1.2s cubic-bezier(0.25, 1, 0.5, 1)';
+      contentList.style.opacity = '1';
+      contentList.style.pointerEvents = 'auto';
+    }
+
+    window.devCloseAuthBlock(null, true);
+  };
+
+  /* ----------------------------------------------------------
+     Отрисовка и анимация растяжения Дока при входе
+     ---------------------------------------------------------- */
   window.runDevModeDockAnimation = function() {
     const dock = document.getElementById('unified-dock');
     const container = document.getElementById('container');
     const scrollContainer = document.getElementById('unified-dock-scroll-container');
     if (!dock || !container) return;
+
+    const contentList = document.querySelector('.dz-page-wrapper .dz-content-layer');
+    if (contentList && !window.isDevMode) {
+      contentList.style.opacity = '0';
+      contentList.style.pointerEvents = 'none';
+    }
 
     delete dock.dataset.isDevClosing;
 
@@ -284,6 +629,7 @@
     dock.style.width = curRect.width + 'px';
     dock.style.height = curRect.height + 'px';
     dock.style.bottom = curBottom + 'px';
+    dock.style.overflow = 'hidden';
     void dock.offsetWidth;
 
     const targetWidth = Math.max(180, cRect.width - 70);
@@ -305,13 +651,14 @@
       }
     }, 15);
 
-    /* Удаление старых блоков при повторном вызове */
     let authBlock = document.getElementById('dev-dock-auth-block');
     if (authBlock) authBlock.remove();
     let contentBlock = document.getElementById('dev-dock-content-block');
     if (contentBlock) contentBlock.remove();
 
-    /* 1. Создание верхнего интерактивного контентного блока (Face ID / Поле пароля) */
+    const hasPasskey = localStorage.getItem('devPasskeyCreated') === 'true';
+
+    /* 1. Создание контентного блока */
     contentBlock = document.createElement('div');
     contentBlock.id = 'dev-dock-content-block';
     contentBlock.style.position = 'absolute';
@@ -324,47 +671,65 @@
     contentBlock.style.alignItems = 'center';
     contentBlock.style.justifyContent = 'center';
     contentBlock.style.opacity = '0';
-    contentBlock.style.transition = 'opacity 0.5s ease';
+    contentBlock.style.transition = 'opacity 0.4s ease';
     contentBlock.style.zIndex = '10';
 
-    contentBlock.innerHTML = `
-      <div id="dev-faceid-section" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; transition: opacity 0.4s ease;">
-        <div class="dev-face-id-wrapper" id="devFaceIdWrapper">
-          <svg class="face-id-default" viewBox="0 0 30 30">
-            <path d="M12.062 20c.688.5 1.688 1 2.938 1s2.25-.5 2.938-1M20 12v2M10 12v2M15 12v4a1 1 0 0 1-1 1" fill="none" stroke="#0aaaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <g fill="none" stroke="#0aaaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M26 9V6a2 2 0 0 0-2-2h-3M9 4H6a2 2 0 0 0-2 2v3M21 26h3a2 2 0 0 0 2-2v-3M4 21v3a2 2 0 0 0 2 2h3"/>
-            </g>
-          </svg>
-          <div class="circle c1"></div>
-          <div class="circle c2"></div>
-          <div class="circle c3"></div>
-          <svg viewBox="0 0 80 80">
-            <path class="path-tick" stroke="#0aaaf7" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" d="M 25,45 35,55 60,30"/>
-          </svg>
-        </div>
-        <div class="dev-dock-text-comment" id="devFaceIdText">
-          Чтобы использовать FaceID, нажмите на значок выше
-        </div>
-      </div>
-
-      <div id="dev-password-section" style="display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; opacity: 0; transition: opacity 0.4s ease;">
-        <div style="position: relative; width: 100%; max-width: 320px;">
-          <input type="password" id="devPasswordField" maxlength="10" placeholder="Введите пароль" 
-                 style="background-color: rgba(68, 68, 68, 0.8); color: white; border-radius: 14px; border: 2px solid #888; padding: 12px 48px 12px 14px; width: 100%; box-sizing: border-box; font-size: 1.1em; text-align: left; margin: 0; outline: none; transition: border-color 0.3s;">
-          <div id="submitArrow" onclick="checkDevPassword()" 
-               style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: #cccccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+    if (hasPasskey) {
+      contentBlock.innerHTML = `
+        <div id="dev-faceid-section" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; transition: opacity 0.4s ease;">
+          <div class="dev-face-id-wrapper" id="devFaceIdWrapper" onclick="triggerDevFaceIdAnimation()">
+            <svg class="face-id-default" viewBox="0 0 30 30">
+              <path d="M12.062 20c.688.5 1.688 1 2.938 1s2.25-.5 2.938-1M20 12v2M10 12v2M15 12v4a1 1 0 0 1-1 1" fill="none" stroke="#0aaaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <g fill="none" stroke="#0aaaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M26 9V6a2 2 0 0 0-2-2h-3M9 4H6a2 2 0 0 0-2 2v3M21 26h3a2 2 0 0 0 2-2v-3M4 21v3a2 2 0 0 0 2 2h3"/>
+              </g>
+            </svg>
+            <div class="circle c1"></div>
+            <div class="circle c2"></div>
+            <div class="circle c3"></div>
+            <svg viewBox="0 0 80 80">
+              <path class="path-tick" stroke="#0aaaf7" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" d="M 25,45 35,55 60,30"/>
+            </svg>
+          </div>
+          <div class="dev-dock-text-comment" id="devFaceIdText">
+            Чтобы использовать FaceID, нажмите на значок выше
           </div>
         </div>
-        <div class="dev-dock-text-comment" style="margin-top: 14px;">
-          Чтобы продолжить, используйте пароль
+
+        <div id="dev-password-section" style="display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; opacity: 0; transition: opacity 0.4s ease;">
+          <div style="position: relative; width: calc(100% - 20px); max-width: 300px;">
+            <input type="password" id="devPasswordField" maxlength="10" placeholder="Введите пароль" onkeydown="if(event.key==='Enter') checkDevPassword()" 
+                   style="background-color: rgba(68, 68, 68, 0.8); color: white; border-radius: 14px; border: 2px solid #888; padding: 12px 48px 12px 14px; width: 100%; box-sizing: border-box; font-size: 1.1em; text-align: left; margin: 0; outline: none; transition: border-color 0.3s;">
+            <div id="submitArrow" onclick="checkDevPassword()" 
+                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: #cccccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </div>
+          </div>
+          <div class="dev-dock-text-comment" style="margin-top: 14px;">
+            Чтобы продолжить, используйте пароль
+          </div>
         </div>
-      </div>
-    `;
+      `;
+    } else {
+      contentBlock.innerHTML = `
+        <div id="dev-password-section" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; opacity: 1; transition: opacity 0.4s ease;">
+          <div style="position: relative; width: calc(100% - 20px); max-width: 300px;">
+            <input type="password" id="devPasswordField" maxlength="10" placeholder="Введите пароль" onkeydown="if(event.key==='Enter') checkDevPassword()" 
+                   style="background-color: rgba(68, 68, 68, 0.8); color: white; border-radius: 14px; border: 2px solid #888; padding: 12px 48px 12px 14px; width: 100%; box-sizing: border-box; font-size: 1.1em; text-align: left; margin: 0; outline: none; transition: border-color 0.3s;">
+            <div id="submitArrow" onclick="checkDevPassword()" 
+                 style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: #cccccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+            </div>
+          </div>
+          <div class="dev-dock-text-comment" style="margin-top: 14px;">
+            Чтобы продолжить, используйте пароль
+          </div>
+        </div>
+      `;
+    }
     dock.appendChild(contentBlock);
 
-    /* 2. Создание нижнего блока кнопок управления */
+    /* 2. Создание нижнего блока кнопок */
     authBlock = document.createElement('div');
     authBlock.id = 'dev-dock-auth-block';
     authBlock.style.position = 'absolute';
@@ -376,7 +741,7 @@
     authBlock.style.webkitBackdropFilter = 'blur(10px)';
     authBlock.style.border = '1px solid rgba(255, 255, 255, 0.4)';
     authBlock.style.borderRadius = '16px';
-    authBlock.style.padding = '4px 10px';
+    authBlock.style.padding = hasPasskey ? '4px 10px' : '2px 10px';
     authBlock.style.display = 'flex';
     authBlock.style.flexDirection = 'column';
     authBlock.style.gap = '0px';
@@ -386,14 +751,19 @@
     authBlock.style.boxSizing = 'border-box';
     authBlock.style.pointerEvents = 'auto';
 
-    authBlock.innerHTML = `
-      <div id="dev-btn-toggle" onclick="devToggleAuthMode()" style="padding: 10px 0; text-align: center; color: #ffffff; font-weight: 500; font-size: 0.9em; cursor: pointer; user-select: none; opacity: 0; transition: opacity 0.3s ease;">Использовать Пароль</div>
-      <div id="dev-line-sep" style="height: 1px; background: rgba(255, 255, 255, 0.2); margin: 0 4px; opacity: 0; transition: opacity 0.3s ease;"></div>
-      <div id="dev-btn-back" onclick="devCloseAuthBlock()" style="padding: 10px 0; text-align: center; color: #ffffff; font-weight: 500; font-size: 0.9em; cursor: pointer; user-select: none; transform: translateY(10px); opacity: 0; transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.5s ease;">Назад</div>
-    `;
+    if (hasPasskey) {
+      authBlock.innerHTML = `
+        <div id="dev-btn-toggle" onclick="devToggleAuthMode()" style="padding: 10px 0; text-align: center; color: #ffffff; font-weight: 500; font-size: 0.9em; cursor: pointer; user-select: none; opacity: 0; transition: opacity 0.3s ease;">Использовать Пароль</div>
+        <div id="dev-line-sep" style="height: 1px; background: rgba(255, 255, 255, 0.2); margin: 0 4px; opacity: 0; transition: opacity 0.3s ease;"></div>
+        <div id="dev-btn-back" onclick="devCloseAuthBlock()" style="padding: 10px 0; text-align: center; color: #ffffff; font-weight: 500; font-size: 0.9em; cursor: pointer; user-select: none; transform: translateY(10px); opacity: 0; transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.5s ease;">Назад</div>
+      `;
+    } else {
+      authBlock.innerHTML = `
+        <div id="dev-btn-back" onclick="devCloseAuthBlock()" style="padding: 10px 0; text-align: center; color: #ffffff; font-weight: 500; font-size: 0.9em; cursor: pointer; user-select: none; transform: translateY(0px); opacity: 0; transition: opacity 0.5s ease;">Назад</div>
+      `;
+    }
     dock.appendChild(authBlock);
 
-    /* Синхронное плавное проявление блоков */
     setTimeout(() => {
       const btnBack = document.getElementById('dev-btn-back');
       if (authBlock) authBlock.style.opacity = '1';
@@ -403,19 +773,22 @@
         btnBack.style.transform = 'translateY(0px)';
         btnBack.style.opacity = '1';
       }
-      /* Запуск цикла анимации Face ID */
-      window.startDevFaceIdLoop();
+      if (hasPasskey) {
+        window.startDevFaceIdLoop();
+      }
     }, 60);
 
-    setTimeout(() => {
-      const btnToggle = document.getElementById('dev-btn-toggle');
-      const lineSep = document.getElementById('dev-line-sep');
-      if (btnToggle) btnToggle.style.opacity = '1';
-      if (lineSep) lineSep.style.opacity = '1';
-    }, 450);
+    if (hasPasskey) {
+      setTimeout(() => {
+        const btnToggle = document.getElementById('dev-btn-toggle');
+        const lineSep = document.getElementById('dev-line-sep');
+        if (btnToggle) btnToggle.style.opacity = '1';
+        if (lineSep) lineSep.style.opacity = '1';
+      }, 450);
+    }
   };
 
-  /* Переключение между режимами Face ID и Полем Пароля */
+  /* Переключение режимов аутентификации */
   window.devToggleAuthMode = function() {
     const faceSection = document.getElementById('dev-faceid-section');
     const passSection = document.getElementById('dev-password-section');
@@ -425,7 +798,6 @@
     const isFaceIdMode = (passSection.style.display === 'none' || passSection.style.display === '');
 
     if (isFaceIdMode) {
-      /* Переход к Полю Ввода Пароля */
       faceSection.style.opacity = '0';
       setTimeout(() => {
         faceSection.style.display = 'none';
@@ -438,7 +810,6 @@
         toggleBtn.textContent = 'Использовать FaceID';
       }, 350);
     } else {
-      /* Переход к Face ID */
       passSection.style.opacity = '0';
       setTimeout(() => {
         passSection.style.display = 'none';
@@ -453,7 +824,7 @@
     }
   };
 
-  /* Проверка пароля из старой версии Dev Mode */
+  /* Проверка пароля */
   window.checkDevPassword = function() {
     const passField = document.getElementById('devPasswordField');
     const arrow = document.getElementById('submitArrow');
@@ -470,14 +841,8 @@
     if (passField.value === "1233") {
       passField.style.borderColor = "#28a745";
       setTimeout(() => {
-        devCloseAuthBlock(() => {
-          window.originalBgColor = window.getComputedStyle(document.body).backgroundColor;
-          document.body.style.backgroundColor = window.devModeBgColor;
-          window.isDevMode = true;
-          window.navPath.push('view6');
-          goForward('view6');
-        });
-      }, 600);
+        window.devUnlockSuccess();
+      }, 500);
     } else {
       passField.style.borderColor = "#dc3545";
       passField.classList.add("shake");
@@ -492,7 +857,8 @@
     }
   };
 
-  window.devCloseAuthBlock = function(onComplete) {
+  /* Закрытие блока аутентификации в Доке */
+  window.devCloseAuthBlock = function(onComplete, isSuccess) {
     window.stopDevFaceIdLoop();
 
     const authBlock = document.getElementById('dev-dock-auth-block');
@@ -500,36 +866,22 @@
     const dock = document.getElementById('unified-dock');
     const container = document.getElementById('container');
     const scrollContainer = document.getElementById('unified-dock-scroll-container');
-    
-    if (dock) dock.dataset.isDevClosing = "true";
+
+    if (dock) {
+      dock.dataset.isDevClosing = "true";
+      dock.style.overflow = 'hidden';
+    }
     if (authBlock) authBlock.dataset.closing = "true";
 
-    const btnToggle = document.getElementById('dev-btn-toggle');
-    const btnBack = document.getElementById('dev-btn-back');
-    const lineSep = document.getElementById('dev-line-sep');
-
-    if (btnToggle) {
-      btnToggle.style.transition = 'opacity 0.2s ease';
-      btnToggle.style.opacity = '0';
-    }
-    if (lineSep) {
-      lineSep.style.transition = 'opacity 0.2s ease';
-      lineSep.style.opacity = '0';
-    }
-    if (btnBack) {
-      btnBack.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
-      btnBack.style.transform = 'translateY(10px)';
-      btnBack.style.opacity = '0';
-    }
-
-    /* Плавное угасание всего контента */
-    if (authBlock) {
-      authBlock.style.transition = 'opacity 0.4s ease';
-      authBlock.style.opacity = '0';
-    }
     if (contentBlock) {
-      contentBlock.style.transition = 'opacity 0.4s ease';
+      contentBlock.style.transition = 'opacity 0.22s ease-out';
       contentBlock.style.opacity = '0';
+      contentBlock.style.pointerEvents = 'none';
+    }
+    if (authBlock) {
+      authBlock.style.transition = 'opacity 0.22s ease-out';
+      authBlock.style.opacity = '0';
+      authBlock.style.pointerEvents = 'none';
     }
 
     if (dock && container) {
@@ -565,21 +917,31 @@
       if (authBlock) authBlock.remove();
       if (contentBlock) contentBlock.remove();
 
-      setTimeout(() => {
+      if (isSuccess) {
         if (dock) {
-          dock.style.transition = 'bottom 0.6s cubic-bezier(0.25, 1, 0.5, 1), transform 0.6s cubic-bezier(0.4, -0.6, 0.5, 1), opacity 0.4s ease-out';
-          dock.style.bottom = '-80px';
-          dock.style.transform = 'translateX(-50%) scale(0.2)';
-          dock.style.opacity = '0';
+          delete dock.dataset.isDevClosing;
+          dock.style.overflow = '';
         }
-        setTimeout(() => {
+        if (typeof onComplete === 'function') {
+          onComplete();
+        }
+      } else {
+        if (typeof hideUnifiedDock === 'function') {
+          hideUnifiedDock(() => {
+            if (typeof onComplete === 'function') {
+              onComplete();
+            } else {
+              exitDevMode();
+            }
+          });
+        } else {
           if (typeof onComplete === 'function') {
             onComplete();
           } else {
             exitDevMode();
           }
-        }, 600);
-      }, 300);
+        }
+      }
     }, 600);
   };
 
@@ -599,6 +961,7 @@
       dock.style.opacity = '';
       dock.style.width = '';
       dock.style.bottom = '';
+      dock.style.overflow = '';
       delete dock.dataset.standardWidth;
       delete dock.dataset.isDevClosing;
     }
@@ -613,7 +976,9 @@
       window.isDevMode = false;
     }
     window.navPath = ['main'];
-    changeContent('main');
+    if (typeof changeContent === 'function') {
+      changeContent('main');
+    }
   };
 
   window.clearUsername = function() {
@@ -627,51 +992,12 @@
     alert("Флаг обновления очищен");
   };
 
-  window.checkResetConfirm = function() {
-    const container = document.getElementById('container');
-    const field = container.querySelector('#resetConfirmField');
-    const arrow = container.querySelector('#submitArrow');
-    if (!field) return;
-
-    if(arrow) {
-        arrow.style.transition = 'transform 0.15s ease-out';
-        arrow.style.transform = 'translateY(-50%) scale(0.8)';
-    }
-    
-    setTimeout(() => {
-        if(arrow) arrow.style.transform = 'translateY(-50%) scale(1)';
-    }, 150);
-
-    if (field.value === "yes") {
-      field.style.borderColor = "green";
-      setTimeout(() => {
-        localStorage.clear();
-        window.navPath.push('viewResetProcessing');
-        goForward('viewResetProcessing');
-        setTimeout(() => {
-          window.navPath.pop();
-          goBack('view6');
-        }, 3000);
-      }, 1000);
-    } else {
-      field.style.borderColor = "red";
-      field.classList.add("shake");
-      const origPlaceholder = field.getAttribute("placeholder");
-      field.setAttribute("placeholder", "неправильно");
-      field.value = "";
-      setTimeout(() => {
-        field.style.borderColor = "#888";
-        field.classList.remove("shake");
-        field.setAttribute("placeholder", origPlaceholder);
-      }, 2500);
-    }
-  };
-
+  /* Интеграция с циклом вызова showUnifiedDock */
   if (typeof window._origShowUnifiedDock === 'undefined') {
     window._origShowUnifiedDock = window.showUnifiedDock;
     window.showUnifiedDock = function() {
       if (window._origShowUnifiedDock) window._origShowUnifiedDock.apply(this, arguments);
-      const currentPage = window.navPath[window.navPath.length - 1];
+      const currentPage = window.navPath ? window.navPath[window.navPath.length - 1] : null;
       if (currentPage === 'view5') {
         setTimeout(() => {
           window.runDevModeDockAnimation();
