@@ -1,26 +1,119 @@
+<style>
+  /* ==========================================================
+     Стили для анимации Face ID и компонентов Dev Mode
+     ========================================================== */
+  .dev-face-id-wrapper {
+    width: 60px;
+    height: 60px;
+    margin: 0 auto 12px auto;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .dev-face-id-wrapper svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    fill: none;
+    stroke: #0aaaf7;
+  }
+
+  .dev-face-id-wrapper .face-id-default {
+    opacity: 1;
+    transform: scale(1);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+
+  /* Состояние 1 -> Состояние 2: Уход дефолтной иконки */
+  .dev-face-id-wrapper.active .face-id-default {
+    opacity: 0;
+    transform: scale(1.15);
+  }
+
+  .dev-face-id-wrapper .circle {
+    border-radius: 50%;
+    border: 3px solid #0aaaf7;
+    width: 60px;
+    height: 60px;
+    background: transparent;
+    box-sizing: border-box;
+    position: absolute;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: opacity 0.5s ease, transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Состояние 2: Вращение 3 синих колец */
+  .dev-face-id-wrapper.active .circle {
+    opacity: 1;
+  }
+
+  .dev-face-id-wrapper.active .circle.c1 {
+    transform: rotateX(360deg);
+  }
+
+  .dev-face-id-wrapper.active .circle.c2 {
+    transform: rotateY(360deg);
+  }
+
+  .dev-face-id-wrapper.active .circle.c3 {
+    transform: rotateY(360deg) rotateX(360deg);
+  }
+
+  /* Состояние 3: Завершение и галочка */
+  .dev-face-id-wrapper .path-tick {
+    opacity: 0;
+    stroke: #0aaaf7;
+    stroke-dasharray: 50;
+    stroke-dashoffset: 50;
+    transition: opacity 0.2s ease;
+  }
+
+  .dev-face-id-wrapper.completed .path-tick {
+    opacity: 1;
+    animation: devDashTick 0.5s linear forwards;
+  }
+
+  @keyframes devDashTick {
+    0% {
+      stroke-dashoffset: 50;
+    }
+    100% {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  .dev-dock-text-comment {
+    color: #e0e0e0;
+    font-size: 0.85em;
+    text-align: center;
+    line-height: 1.35;
+    margin-top: 6px;
+    user-select: none;
+    font-weight: 400;
+  }
+
+  /* Анимация покачивания поля ввода при ошибке */
+  .shake {
+    animation: devShake 0.4s ease-in-out;
+  }
+
+  @keyframes devShake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+  }
+</style>
+
 <template id="view5">
 <div class="dz-page-wrapper">
-  <div class="dz-content-layer" style="z-index: 10;">
-    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; pointer-events: none;">
-        <div style="position: relative; width: calc(87% - 7px); max-width: 400px; pointer-events: auto;">
-            <input type="password" id="devPasswordField" maxlength="10" placeholder="Введите пароль" 
-                   style="background-color: #444; color: white; border-radius: 14px; border: 2px solid #888; padding: 13.5px 50px 13.5px 15px; width: 100%; box-sizing: border-box; font-size: 1.3em; text-align: left; margin: 0; outline: none; transition: border-color 0.3s;">
-            <div id="submitArrow" onclick="checkDevPassword()" 
-                 style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; background: #999999; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); transition: transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
-            </div>
-        </div>
-    </div>
-    <div style="position: absolute; top: calc(50% - 35px); left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; justify-content: center; padding: 0 25px; pointer-events: none;">
-       <div class="settings-group-title" style="margin-top: 0; padding-left: 0; margin-bottom: 8px; text-align: center;">Описание</div>
-       <div class="button settings-button description-block" style="cursor: default; margin-bottom: 0; pointer-events: auto;">
-           <p>Далее открывается меню разработчика. Спойлер: пароль ты всё равно не угадаешь. Мы старались. Очень.</p>
-       </div>
-    </div>
-  </div>
+  <div class="dz-content-layer"></div>
   <div class="dz-top-mask"></div>
   <div class="dz-bottom-mask"></div>
-  <div class="dz-title-layer"><h1>Вход в режим разработчика</h1></div>
+  <div class="dz-title-layer"><h1>Dev-mode</h1></div>
 </div>
 </template>
 
@@ -103,34 +196,290 @@
 </template>
 
 <script>
-  window.checkDevPassword = function() {
+  (function() {
+    if (!window._devDockObserverAttached) {
+      window._devDockObserverAttached = true;
+      const targetDock = document.getElementById('unified-dock');
+      if (targetDock) {
+        const observer = new MutationObserver(() => {
+          if (targetDock.dataset.isDevClosing === "true") return;
+
+          const authBlock = document.getElementById('dev-dock-auth-block');
+          if (authBlock && !authBlock.dataset.closing && targetDock) {
+            const container = document.getElementById('container');
+            if (container) {
+              const cRect = container.getBoundingClientRect();
+              const expectedWidth = Math.max(180, cRect.width - 70) + 'px';
+              if (targetDock.style.width !== expectedWidth) {
+                targetDock.style.width = expectedWidth;
+              }
+            }
+          }
+        });
+        observer.observe(targetDock, { attributes: true, attributeFilter: ['style'] });
+      }
+    }
+  })();
+
+  /* ==========================================================
+     Управление триггерами и зацикливанием трех состояний Face ID
+     Состояние 1: Дефолтная рамка лица (.face-id-default)
+     Состояние 2: Вращение трех колец (.active)
+     Состояние 3: Успешная галочка (.completed)
+     ========================================================== */
+  window.startDevFaceIdLoop = function() {
+    window.stopDevFaceIdLoop();
+    const wrapper = document.getElementById('devFaceIdWrapper');
+    if (!wrapper) return;
+
+    let currentState = 1;
+    wrapper.classList.remove('active', 'completed');
+
+    window._devFaceIdTimer = setInterval(() => {
+      const el = document.getElementById('devFaceIdWrapper');
+      if (!el) {
+        window.stopDevFaceIdLoop();
+        return;
+      }
+
+      if (currentState === 1) {
+        /* Переход в Состояние 2 */
+        el.classList.add('active');
+        el.classList.remove('completed');
+        currentState = 2;
+      } else if (currentState === 2) {
+        /* Переход в Состояние 3 */
+        el.classList.add('completed');
+        currentState = 3;
+      } else {
+        /* Сброс обратно в Состояние 1 */
+        el.classList.remove('active', 'completed');
+        currentState = 1;
+      }
+    }, 1300);
+  };
+
+  window.stopDevFaceIdLoop = function() {
+    if (window._devFaceIdTimer) {
+      clearInterval(window._devFaceIdTimer);
+      window._devFaceIdTimer = null;
+    }
+  };
+
+  window.runDevModeDockAnimation = function() {
+    const dock = document.getElementById('unified-dock');
     const container = document.getElementById('container');
-    const passField = container.querySelector('#devPasswordField');
-    const arrow = container.querySelector('#submitArrow');
+    const scrollContainer = document.getElementById('unified-dock-scroll-container');
+    if (!dock || !container) return;
+
+    delete dock.dataset.isDevClosing;
+
+    const curRect = dock.getBoundingClientRect();
+    const curBottom = window.innerHeight - curRect.bottom;
+
+    const cRect = container.getBoundingClientRect();
+    dock.dataset.standardWidth = (cRect.width - 40) + 'px';
+
+    dock.style.transition = 'none';
+    dock.style.width = curRect.width + 'px';
+    dock.style.height = curRect.height + 'px';
+    dock.style.bottom = curBottom + 'px';
+    void dock.offsetWidth;
+
+    const targetWidth = Math.max(180, cRect.width - 70);
+    const targetHeight = 305;
+    const containerCenterY = cRect.top + cRect.height / 2;
+    const targetBottom = window.innerHeight - containerCenterY - (targetHeight / 2);
+
+    dock.style.transition = 'bottom 0.65s cubic-bezier(0.34, 1.5, 0.64, 1), height 0.65s cubic-bezier(0.34, 1.5, 0.64, 1), width 0.65s cubic-bezier(0.25, 1, 0.5, 1), border-radius 0.65s ease';
+    dock.style.width = targetWidth + 'px';
+    dock.style.height = targetHeight + 'px';
+    dock.style.bottom = targetBottom + 'px';
+    dock.style.borderRadius = '24px';
+
+    setTimeout(() => {
+      if (scrollContainer) {
+        scrollContainer.style.transition = 'opacity 0.12s ease';
+        scrollContainer.style.opacity = '0';
+        scrollContainer.style.pointerEvents = 'none';
+      }
+    }, 15);
+
+    /* Удаление старых блоков при повторном вызове */
+    let authBlock = document.getElementById('dev-dock-auth-block');
+    if (authBlock) authBlock.remove();
+    let contentBlock = document.getElementById('dev-dock-content-block');
+    if (contentBlock) contentBlock.remove();
+
+    /* 1. Создание верхнего интерактивного контентного блока (Face ID / Поле пароля) */
+    contentBlock = document.createElement('div');
+    contentBlock.id = 'dev-dock-content-block';
+    contentBlock.style.position = 'absolute';
+    contentBlock.style.top = '20px';
+    contentBlock.style.left = '16px';
+    contentBlock.style.right = '16px';
+    contentBlock.style.bottom = '100px';
+    contentBlock.style.display = 'flex';
+    contentBlock.style.flexDirection = 'column';
+    contentBlock.style.alignItems = 'center';
+    contentBlock.style.justifyContent = 'center';
+    contentBlock.style.opacity = '0';
+    contentBlock.style.transition = 'opacity 0.5s ease';
+    contentBlock.style.zIndex = '10';
+
+    contentBlock.innerHTML = `
+      <div id="dev-faceid-section" style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; transition: opacity 0.4s ease;">
+        <div class="dev-face-id-wrapper" id="devFaceIdWrapper">
+          <svg class="face-id-default" viewBox="0 0 30 30">
+            <path d="M12.062 20c.688.5 1.688 1 2.938 1s2.25-.5 2.938-1M20 12v2M10 12v2M15 12v4a1 1 0 0 1-1 1" fill="none" stroke="#0aaaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <g fill="none" stroke="#0aaaf7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M26 9V6a2 2 0 0 0-2-2h-3M9 4H6a2 2 0 0 0-2 2v3M21 26h3a2 2 0 0 0 2-2v-3M4 21v3a2 2 0 0 0 2 2h3"/>
+            </g>
+          </svg>
+          <div class="circle c1"></div>
+          <div class="circle c2"></div>
+          <div class="circle c3"></div>
+          <svg viewBox="0 0 80 80">
+            <path class="path-tick" stroke="#0aaaf7" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round" d="M 25,45 35,55 60,30"/>
+          </svg>
+        </div>
+        <div class="dev-dock-text-comment" id="devFaceIdText">
+          Чтобы использовать FaceID, нажмите на значок выше
+        </div>
+      </div>
+
+      <div id="dev-password-section" style="display: none; flex-direction: column; align-items: center; justify-content: center; width: 100%; opacity: 0; transition: opacity 0.4s ease;">
+        <div style="position: relative; width: 100%; max-width: 320px;">
+          <input type="password" id="devPasswordField" maxlength="10" placeholder="Введите пароль" 
+                 style="background-color: rgba(68, 68, 68, 0.8); color: white; border-radius: 14px; border: 2px solid #888; padding: 12px 48px 12px 14px; width: 100%; box-sizing: border-box; font-size: 1.1em; text-align: left; margin: 0; outline: none; transition: border-color 0.3s;">
+          <div id="submitArrow" onclick="checkDevPassword()" 
+               style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: #cccccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+        </div>
+        <div class="dev-dock-text-comment" style="margin-top: 14px;">
+          Чтобы продолжить, используйте пароль
+        </div>
+      </div>
+    `;
+    dock.appendChild(contentBlock);
+
+    /* 2. Создание нижнего блока кнопок управления */
+    authBlock = document.createElement('div');
+    authBlock.id = 'dev-dock-auth-block';
+    authBlock.style.position = 'absolute';
+    authBlock.style.bottom = '12px';
+    authBlock.style.left = '12px';
+    authBlock.style.right = '12px';
+    authBlock.style.background = 'rgba(255, 255, 255, 0.25)';
+    authBlock.style.backdropFilter = 'blur(10px)';
+    authBlock.style.webkitBackdropFilter = 'blur(10px)';
+    authBlock.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+    authBlock.style.borderRadius = '16px';
+    authBlock.style.padding = '4px 10px';
+    authBlock.style.display = 'flex';
+    authBlock.style.flexDirection = 'column';
+    authBlock.style.gap = '0px';
+    authBlock.style.opacity = '0';
+    authBlock.style.transition = 'opacity 0.5s ease';
+    authBlock.style.zIndex = '10';
+    authBlock.style.boxSizing = 'border-box';
+    authBlock.style.pointerEvents = 'auto';
+
+    authBlock.innerHTML = `
+      <div id="dev-btn-toggle" onclick="devToggleAuthMode()" style="padding: 10px 0; text-align: center; color: #ffffff; font-weight: 500; font-size: 0.9em; cursor: pointer; user-select: none; opacity: 0; transition: opacity 0.3s ease;">Использовать Пароль</div>
+      <div id="dev-line-sep" style="height: 1px; background: rgba(255, 255, 255, 0.2); margin: 0 4px; opacity: 0; transition: opacity 0.3s ease;"></div>
+      <div id="dev-btn-back" onclick="devCloseAuthBlock()" style="padding: 10px 0; text-align: center; color: #ffffff; font-weight: 500; font-size: 0.9em; cursor: pointer; user-select: none; transform: translateY(10px); opacity: 0; transition: transform 0.5s cubic-bezier(0.34, 1.2, 0.64, 1), opacity 0.5s ease;">Назад</div>
+    `;
+    dock.appendChild(authBlock);
+
+    /* Синхронное плавное проявление блоков */
+    setTimeout(() => {
+      const btnBack = document.getElementById('dev-btn-back');
+      if (authBlock) authBlock.style.opacity = '1';
+      if (contentBlock) contentBlock.style.opacity = '1';
+
+      if (btnBack) {
+        btnBack.style.transform = 'translateY(0px)';
+        btnBack.style.opacity = '1';
+      }
+      /* Запуск цикла анимации Face ID */
+      window.startDevFaceIdLoop();
+    }, 60);
+
+    setTimeout(() => {
+      const btnToggle = document.getElementById('dev-btn-toggle');
+      const lineSep = document.getElementById('dev-line-sep');
+      if (btnToggle) btnToggle.style.opacity = '1';
+      if (lineSep) lineSep.style.opacity = '1';
+    }, 450);
+  };
+
+  /* Переключение между режимами Face ID и Полем Пароля */
+  window.devToggleAuthMode = function() {
+    const faceSection = document.getElementById('dev-faceid-section');
+    const passSection = document.getElementById('dev-password-section');
+    const toggleBtn = document.getElementById('dev-btn-toggle');
+    if (!faceSection || !passSection || !toggleBtn) return;
+
+    const isFaceIdMode = (passSection.style.display === 'none' || passSection.style.display === '');
+
+    if (isFaceIdMode) {
+      /* Переход к Полю Ввода Пароля */
+      faceSection.style.opacity = '0';
+      setTimeout(() => {
+        faceSection.style.display = 'none';
+        window.stopDevFaceIdLoop();
+
+        passSection.style.display = 'flex';
+        void passSection.offsetWidth;
+        passSection.style.opacity = '1';
+
+        toggleBtn.textContent = 'Использовать FaceID';
+      }, 350);
+    } else {
+      /* Переход к Face ID */
+      passSection.style.opacity = '0';
+      setTimeout(() => {
+        passSection.style.display = 'none';
+
+        faceSection.style.display = 'flex';
+        void faceSection.offsetWidth;
+        faceSection.style.opacity = '1';
+
+        window.startDevFaceIdLoop();
+        toggleBtn.textContent = 'Использовать Пароль';
+      }, 350);
+    }
+  };
+
+  /* Проверка пароля из старой версии Dev Mode */
+  window.checkDevPassword = function() {
+    const passField = document.getElementById('devPasswordField');
+    const arrow = document.getElementById('submitArrow');
     if (!passField) return;
 
-    if(arrow) {
-        arrow.style.transition = 'transform 0.15s ease-out';
-        arrow.style.transform = 'translateY(-50%) scale(0.8)';
+    if (arrow) {
+      arrow.style.transition = 'transform 0.15s ease-out';
+      arrow.style.transform = 'translateY(-50%) scale(0.8)';
+      setTimeout(() => {
+        arrow.style.transform = 'translateY(-50%) scale(1)';
+      }, 150);
     }
-    
-    setTimeout(() => {
-        if(arrow) arrow.style.transform = 'translateY(-50%) scale(1)';
-    }, 150);
 
     if (passField.value === "1233") {
-      passField.style.borderColor = "green";
+      passField.style.borderColor = "#28a745";
       setTimeout(() => {
-        hideUnifiedDock(() => {
+        devCloseAuthBlock(() => {
           window.originalBgColor = window.getComputedStyle(document.body).backgroundColor;
           document.body.style.backgroundColor = window.devModeBgColor;
           window.isDevMode = true;
           window.navPath.push('view6');
           goForward('view6');
         });
-      }, 1000);
+      }, 600);
     } else {
-      passField.style.borderColor = "red";
+      passField.style.borderColor = "#dc3545";
       passField.classList.add("shake");
       const origPlaceholder = passField.getAttribute("placeholder");
       passField.setAttribute("placeholder", "неправильно");
@@ -139,11 +488,125 @@
         passField.style.borderColor = "#888";
         passField.classList.remove("shake");
         passField.setAttribute("placeholder", origPlaceholder);
-      }, 2500);
+      }, 2000);
     }
   };
 
+  window.devCloseAuthBlock = function(onComplete) {
+    window.stopDevFaceIdLoop();
+
+    const authBlock = document.getElementById('dev-dock-auth-block');
+    const contentBlock = document.getElementById('dev-dock-content-block');
+    const dock = document.getElementById('unified-dock');
+    const container = document.getElementById('container');
+    const scrollContainer = document.getElementById('unified-dock-scroll-container');
+    
+    if (dock) dock.dataset.isDevClosing = "true";
+    if (authBlock) authBlock.dataset.closing = "true";
+
+    const btnToggle = document.getElementById('dev-btn-toggle');
+    const btnBack = document.getElementById('dev-btn-back');
+    const lineSep = document.getElementById('dev-line-sep');
+
+    if (btnToggle) {
+      btnToggle.style.transition = 'opacity 0.2s ease';
+      btnToggle.style.opacity = '0';
+    }
+    if (lineSep) {
+      lineSep.style.transition = 'opacity 0.2s ease';
+      lineSep.style.opacity = '0';
+    }
+    if (btnBack) {
+      btnBack.style.transition = 'transform 0.4s ease, opacity 0.4s ease';
+      btnBack.style.transform = 'translateY(10px)';
+      btnBack.style.opacity = '0';
+    }
+
+    /* Плавное угасание всего контента */
+    if (authBlock) {
+      authBlock.style.transition = 'opacity 0.4s ease';
+      authBlock.style.opacity = '0';
+    }
+    if (contentBlock) {
+      contentBlock.style.transition = 'opacity 0.4s ease';
+      contentBlock.style.opacity = '0';
+    }
+
+    if (dock && container) {
+      const curRect = dock.getBoundingClientRect();
+      const curBottom = window.innerHeight - curRect.bottom;
+
+      dock.style.transition = 'none';
+      dock.style.width = curRect.width + 'px';
+      dock.style.height = curRect.height + 'px';
+      dock.style.bottom = curBottom + 'px';
+      void dock.offsetWidth;
+
+      const cRect = container.getBoundingClientRect();
+      const finalBottom = (window.innerHeight - cRect.bottom) + 23;
+      const targetWidth = (cRect.width - 40) + 'px';
+
+      dock.style.transition = 'bottom 0.6s cubic-bezier(0.34, 1.45, 0.64, 1), height 0.6s cubic-bezier(0.34, 1.3, 0.64, 1), width 0.6s cubic-bezier(0.25, 1, 0.5, 1), border-radius 0.6s ease';
+      dock.style.width = targetWidth;
+      dock.style.height = '21px';
+      dock.style.bottom = finalBottom + 'px';
+      dock.style.borderRadius = '17px';
+    }
+
+    setTimeout(() => {
+      if (scrollContainer) {
+        scrollContainer.style.transition = 'opacity 0.25s ease';
+        scrollContainer.style.opacity = '1';
+        scrollContainer.style.pointerEvents = 'auto';
+      }
+    }, 350);
+
+    setTimeout(() => {
+      if (authBlock) authBlock.remove();
+      if (contentBlock) contentBlock.remove();
+
+      setTimeout(() => {
+        if (dock) {
+          dock.style.transition = 'bottom 0.6s cubic-bezier(0.25, 1, 0.5, 1), transform 0.6s cubic-bezier(0.4, -0.6, 0.5, 1), opacity 0.4s ease-out';
+          dock.style.bottom = '-80px';
+          dock.style.transform = 'translateX(-50%) scale(0.2)';
+          dock.style.opacity = '0';
+        }
+        setTimeout(() => {
+          if (typeof onComplete === 'function') {
+            onComplete();
+          } else {
+            exitDevMode();
+          }
+        }, 600);
+      }, 300);
+    }, 600);
+  };
+
   window.exitDevMode = function() {
+    window.stopDevFaceIdLoop();
+
+    const authBlock = document.getElementById('dev-dock-auth-block');
+    if (authBlock) authBlock.remove();
+    const contentBlock = document.getElementById('dev-dock-content-block');
+    if (contentBlock) contentBlock.remove();
+
+    const dock = document.getElementById('unified-dock');
+    if (dock) {
+      dock.style.height = '';
+      dock.style.borderRadius = '17px';
+      dock.style.transform = '';
+      dock.style.opacity = '';
+      dock.style.width = '';
+      dock.style.bottom = '';
+      delete dock.dataset.standardWidth;
+      delete dock.dataset.isDevClosing;
+    }
+    const scrollContainer = document.getElementById('unified-dock-scroll-container');
+    if (scrollContainer) {
+      scrollContainer.style.opacity = '1';
+      scrollContainer.style.pointerEvents = 'auto';
+    }
     window.previousPageForDock = 'view7';
     if (window.isDevMode && window.originalBgColor) {
       document.body.style.backgroundColor = window.originalBgColor;
@@ -203,4 +666,23 @@
       }, 2500);
     }
   };
+
+  if (typeof window._origShowUnifiedDock === 'undefined') {
+    window._origShowUnifiedDock = window.showUnifiedDock;
+    window.showUnifiedDock = function() {
+      if (window._origShowUnifiedDock) window._origShowUnifiedDock.apply(this, arguments);
+      const currentPage = window.navPath[window.navPath.length - 1];
+      if (currentPage === 'view5') {
+        setTimeout(() => {
+          window.runDevModeDockAnimation();
+        }, 1400);
+      }
+    };
+  }
+
+  if (window.navPath && window.navPath[window.navPath.length - 1] === 'view5') {
+    setTimeout(() => {
+      window.runDevModeDockAnimation();
+    }, 1400);
+  }
 </script>
