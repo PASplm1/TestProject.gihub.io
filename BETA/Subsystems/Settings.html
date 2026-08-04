@@ -1,0 +1,613 @@
+<style>
+.toggle-switch {
+  width: 51px;
+  height: 31px;
+  background-color: rgba(120, 120, 128, 0.32);
+  border-radius: 15.5px;
+  position: relative;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+.toggle-switch-background {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: #34C759;
+  border-radius: 15.5px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.toggle-switch-handle {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 27px;
+  height: 27px;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 1px 1px rgba(0,0,0,0.16), 0 3px 1px rgba(0,0,0,0.1);
+  transition: transform 0.3s cubic-bezier(0.2, 0.85, 0.32, 1.2), filter 0.2s ease;
+  z-index: 1;
+}
+.toggle-switch.active .toggle-switch-background {
+  opacity: 1;
+}
+.toggle-switch.active .toggle-switch-handle {
+  transform: translateX(20px);
+}
+.settings-toggle-base {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+.settings-toggle-label {
+  flex-grow: 1;
+  text-align: left;
+}
+</style>
+
+<template id="view7">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer rubber-band-scroll">
+    <div class="rubber-band-inner">
+        <div class="settings-group-title">Система</div>
+        <div class="button settings-button" onclick="animateAndGoForward('viewAboutSiteSystem')">
+          <div class="settings-icon">1</div>
+          <span>О системе сайта</span>
+        </div>
+        <div class="settings-group-title">Кастомизация</div>
+        <div class="button settings-button" onclick="animateAndGoForward('view8')">
+          <div class="settings-icon">2</div>
+          <span>Personal Greeting</span>
+        </div>
+        <div class="button settings-button" onclick="animateAndGoForward('view8b')">
+          <div class="settings-icon">3</div>
+          <span>Button Shadows</span>
+        </div>
+        <div class="button settings-button" onclick="window.loadSubsystem('Subsystems/Settings-Animations.html').then(loaded => { if(loaded) { animateAndGoForward('viewAnimations'); } })">
+          <div class="settings-icon">4</div>
+          <span>Анимации</span>
+        </div>
+        <div class="button settings-button" onclick="window.loadSubsystem('Subsystems/Settings.Borders.html').then(loaded => { if(loaded) { animateAndGoForward('viewBorders'); } })">
+          <div class="settings-icon">6</div>
+          <span>Обводка</span>
+        </div>
+        <div class="settings-group-title">Другое</div>
+        <div class="button settings-button" onclick="animateAndGoForward('view9')">
+          <div class="settings-icon">7</div>
+          <span>Отчёт и предложения</span>
+        </div>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>Настройки</h1></div>
+</div>
+</template>
+
+<template id="view8">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer rubber-band-scroll">
+    <div class="rubber-band-inner">
+        <div class="settings-group-title" style="margin-top: 11px;">Режим</div>
+        <div class="button settings-button settings-toggle-base" onclick="toggleSetting('customGreeting')">
+          <span class="settings-toggle-label"></span>
+          <div class="toggle-switch" data-setting="customGreeting">
+            <div class="toggle-switch-background"></div>
+            <div class="toggle-switch-handle"></div>
+          </div>
+        </div>
+        <div class="settings-group-title">Описание</div>
+        <div class="button settings-button description-block">
+            <p>Эта функция изменяет приветствие в главном меню в зависимости от времени суток.</p>
+        </div>
+        <p class="about-system-footer-note" style="margin-bottom: 5px;">Данный параметр включен по умолчанию. Его можно выключить, в таком случае интерфейс сайта тоже изменится.</p>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>Personal Greeting</h1></div>
+</div>
+</template>
+
+<template id="view8a">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer rubber-band-scroll">
+    <div class="rubber-band-inner">
+      <p style="padding: 0 10px; color: #555;">Этот раздел предоставляет инструменты для настройки некоторых элементов, как ты хочешь</p>
+      <div class="buttons-container">
+        <button class="button" onclick="animateAndGoForward('view8')">Personal Greeting</button>
+        <button class="button" onclick="animateAndGoForward('view8b')">Button Shadows</button>
+        <button class="button" onclick="window.loadSubsystem('Subsystems/Settings.Borders.html').then(loaded => { if(loaded) { animateAndGoForward('viewBorders'); } })">Обводка</button>
+      </div>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>Кастомизация</h1></div>
+</div>
+</template>
+
+<template id="view8b">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer rubber-band-scroll">
+    <div class="rubber-band-inner">
+        <div class="settings-group-title" style="margin-top: 11px;">Режим</div>
+        <div class="button settings-button settings-toggle-base" onclick="toggleSetting('shadows')">
+          <span class="settings-toggle-label"></span>
+          <div class="toggle-switch" data-setting="shadows">
+            <div class="toggle-switch-background"></div>
+            <div class="toggle-switch-handle"></div>
+          </div>
+        </div>
+        <div class="settings-group-title">Описание</div>
+        <div class="button settings-button description-block">
+            <p>Эта функция настраивает тени, которые отбрасывают все кнопки на сайте.</p>
+        </div>
+        <p class="about-system-footer-note" style="margin-bottom: 5px;">Данный параметр включен по умолчанию. Его можно выключить, в таком случае интерфейс сайта тоже изменится.</p>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>Button Shadows</h1></div>
+</div>
+</template>
+
+<template id="view9">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer show-scrollbar" style="display: flex; flex-direction: column; justify-content: flex-end; padding-top: 100px;">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: flex-end; gap: 15px;">
+      <div>
+        <div class="settings-group-title" style="text-align: center; padding-left: 0; margin-top: 20px; margin-bottom: 8px;">Описание</div>
+        <div class="button settings-button description-block">
+            <p>Здесь вы можете предложить свои идеи или рассказать об ошибках.</p>
+        </div>
+      </div>
+      <div class="button settings-button selection-list-container">
+          <div class="selection-row" onclick="animateAndGoForward('view9b')" style="justify-content: center;">
+              <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">Продолжить</span>
+          </div>
+          <div class="selection-divider"></div>
+          <div class="selection-row" onclick="animateAndGoBack('view7')" style="justify-content: center;">
+              <span class="selection-row-label" style="font-weight: normal; margin-left: 0;">Назад</span>
+          </div>
+      </div>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>Отчёт</h1></div>
+</div>
+</template>
+
+<template id="view9b">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer show-scrollbar" style="display: flex; flex-direction: column; justify-content: flex-end; padding-top: 130px;">
+    <div style="flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; width: 100%;">
+      <div style="position: relative; width: calc(87% + 3px); max-width: 400px; margin-top: 35px;">
+          <input type="text" id="reportField" maxlength="3000" placeholder="Текст" 
+                 style="background-color: #444; color: white; border-radius: 14px; border: 2px solid #888; padding: 13.5px 50px 13.5px 15px; width: 100%; box-sizing: border-box; font-size: 1.3em; text-align: left; margin: 0; outline: none; transition: border-color 0.3s;">
+          <div id="submitArrow" onclick="submitReport(this)" 
+               style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; background: #cccccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+          </div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 40px; margin-bottom: 20px;">
+      <div class="settings-back-button-container" style="padding: 0;">
+         <button class="button settings-back-button" onclick="animateAndGoBack('view4')">Назад</button>
+      </div>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>Отчёт</h1></div>
+</div>
+</template>
+
+<template id="view10">
+<main style="display:flex; justify-content:center; align-items:center; height:85vh;">
+  <h1 style="text-align:center;">Спасибо за отчет</h1>
+</main>
+</template>
+
+<template id="viewAboutSiteSystem">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer show-scrollbar" style="overflow-y: auto;">
+    <div style="min-height: calc(100% + 1px); padding-top: 10px; padding-bottom: 20px;">
+        <div class="settings-group-title" style="margin-top: 11px;">Обновление</div>
+        <div class="button settings-button" onclick="animateAndGoForward('viewBetaUpdates')">
+          <span>Бета-обновления</span>
+          <span class="settings-button-value" id="beta-status-value">Выкл.</span>
+        </div>
+        <div class="settings-group-title">Система</div>
+        <div class="button settings-button about-system-foundation">
+            <div class="about-system-top-section">
+                <div class="settings-icon about-system-icon">3</div>
+                <div class="about-system-version-info">
+                    <h3 style="font-size: 1.1em; font-weight: bold; margin: 0;">pasSITE</h3>
+                    <span id="system-version" style="font-size: 0.9em; font-weight: bold; color: #333; line-height: 1.2;"></span>
+                    <span id="system-type" style="font-size: 0.9em; color: gray; line-height: 1.2;"></span>
+                </div>
+            </div>
+            <div class="about-system-details-container" id="aboutSystemDetailsContainer"></div>
+            <button class="button about-system-whats-new-button" onclick="animateAndGoForward('viewDetails')">ЧТО НОВОГО?</button>
+        </div>
+        <p class="about-system-footer-note" style="margin-bottom: 5px;">Вы можете включить бета-обновление и в таком случае будете получать доступ к тестированию новых функций.</p>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>О системе сайта</h1></div>
+</div>
+</template>
+
+<template id="viewDetails">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer show-scrollbar" style="overflow-y: auto;">
+    <div style="min-height: calc(100% + 1px); padding-top: 10px; padding-bottom: 20px;">
+        <div id="detailsContentArea" style="padding: 0 10px;"></div>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>Что нового?</h1></div>
+</div>
+</template>
+
+<template id="viewBetaUpdates">
+<div class="dz-page-wrapper">
+  <div class="dz-content-layer rubber-band-scroll">
+    <div class="rubber-band-inner">
+        <div class="settings-group-title" style="margin-top: 11px;">Обновление</div>
+        <div class="button settings-button selection-list-container">
+            <div class="selection-row" onclick="selectBetaOption('disabled', this)">
+                <span class="selection-row-label">Выкл.</span>
+                <span class="selection-checkmark">✔</span>
+            </div>
+            <div class="selection-divider"></div>
+            <div class="selection-row" onclick="selectBetaOption('enabled', this)">
+                <span class="selection-row-label" id="beta-version-label">Загрузка...</span>
+                <span class="selection-checkmark">✔</span>
+            </div>
+        </div>
+        <div class="settings-group-title" style="visibility: hidden;">Placeholder</div>
+        <div class="button settings-button" style="background: transparent !important; box-shadow: none; border: none !important; cursor: default !important;"></div>
+        <p class="about-system-footer-note" style="margin-bottom: 5px;">Бета-версии ПО предоставляют ранний доступ к новым функций, но могут содержать ошибки и работать нестабильно.</p>
+        <button id="beta-back-button" onclick="handleBetaBackOrRestart()" style="display: none;"></button>
+    </div>
+  </div>
+  <div class="dz-top-mask"></div>
+  <div class="dz-bottom-mask"></div>
+  <div class="dz-title-layer"><h1>Бета-обновления</h1></div>
+</div>
+</template>
+
+<script>
+  window.wasToggleDragged = false;
+  
+  const toggleDragState = {
+      isDragging: false,
+      startX: 0,
+      currentX: 0,
+      toggleEl: null,
+      handleEl: null,
+      bgEl: null,
+      maxTravel: 20,
+      initialState: false,
+      settingKey: '',
+      moved: false
+  };
+
+  document.addEventListener('pointerdown', function(e) {
+      const toggleBase = e.target.closest('.settings-toggle-base');
+      if (!toggleBase) return;
+      const toggleEl = toggleBase.querySelector('.toggle-switch');
+      if (!toggleEl) return;
+
+      toggleDragState.isDragging = true;
+      toggleDragState.moved = false;
+      toggleDragState.startX = e.clientX;
+      toggleDragState.toggleEl = toggleEl;
+      toggleDragState.handleEl = toggleEl.querySelector('.toggle-switch-handle');
+      toggleDragState.bgEl = toggleEl.querySelector('.toggle-switch-background');
+      toggleDragState.settingKey = toggleEl.getAttribute('data-setting');
+      
+      if (toggleDragState.handleEl) {
+          toggleDragState.handleEl.style.transition = 'none';
+          toggleDragState.handleEl.style.filter = 'blur(1px)';
+      }
+      if (toggleDragState.bgEl) {
+          toggleDragState.bgEl.style.transition = 'none';
+      }
+
+      const currentState = localStorage.getItem(toggleDragState.settingKey);
+      if (toggleDragState.settingKey === 'border') {
+          toggleDragState.initialState = currentState === 'enabled';
+      } else {
+          toggleDragState.initialState = currentState !== 'disabled';
+      }
+
+      const switchWidth = toggleEl.offsetWidth || 51;
+      const handleWidth = toggleDragState.handleEl ? toggleDragState.handleEl.offsetWidth : 27;
+      toggleDragState.maxTravel = switchWidth - handleWidth - 4; 
+      if(toggleDragState.maxTravel <= 0) toggleDragState.maxTravel = 20;
+
+      toggleDragState.currentX = toggleDragState.initialState ? toggleDragState.maxTravel : 0;
+  });
+
+  document.addEventListener('pointermove', function(e) {
+      if (!toggleDragState.isDragging) return;
+      
+      const deltaX = e.clientX - toggleDragState.startX;
+      if (Math.abs(deltaX) > 2) {
+          toggleDragState.moved = true;
+          window.wasToggleDragged = true;
+      }
+
+      let newX = toggleDragState.currentX + deltaX;
+      newX = Math.max(0, Math.min(newX, toggleDragState.maxTravel));
+      const progress = newX / toggleDragState.maxTravel;
+
+      if (toggleDragState.handleEl) {
+          toggleDragState.handleEl.style.transform = `translateX(${newX}px)`;
+      }
+      if (toggleDragState.bgEl) {
+          toggleDragState.bgEl.style.opacity = progress;
+      }
+  });
+
+  document.addEventListener('pointerup', function(e) {
+      if (!toggleDragState.isDragging) return;
+      
+      if (toggleDragState.handleEl) {
+          toggleDragState.handleEl.style.transition = '';
+          toggleDragState.handleEl.style.filter = '';
+      }
+      if (toggleDragState.bgEl) {
+          toggleDragState.bgEl.style.transition = '';
+      }
+
+      if (toggleDragState.moved) {
+          const deltaX = e.clientX - toggleDragState.startX;
+          let newX = toggleDragState.currentX + deltaX;
+          newX = Math.max(0, Math.min(newX, toggleDragState.maxTravel));
+          
+          const progress = newX / toggleDragState.maxTravel;
+          const newState = progress > 0.5;
+
+          if (toggleDragState.handleEl) toggleDragState.handleEl.style.transform = '';
+          if (toggleDragState.bgEl) toggleDragState.bgEl.style.opacity = '';
+
+          if (newState !== toggleDragState.initialState) {
+              let valToSet = newState ? 'enabled' : 'disabled';
+              localStorage.setItem(toggleDragState.settingKey, valToSet);
+              
+              if (toggleDragState.settingKey === 'customGreeting') {
+                  if(window.updateMainContent) window.updateMainContent();
+              } else if (toggleDragState.settingKey === 'shadows') {
+                  if(window.updateShadows) window.updateShadows();
+              } else if (toggleDragState.settingKey === 'border') {
+                  if(window.updateBorder) window.updateBorder();
+              }
+          }
+          if(window.updateToggleUI) window.updateToggleUI(toggleDragState.settingKey);
+          
+          setTimeout(() => { window.wasToggleDragged = false; }, 50);
+      } else {
+          if (toggleDragState.handleEl) toggleDragState.handleEl.style.transform = '';
+          if (toggleDragState.bgEl) toggleDragState.bgEl.style.opacity = '';
+          window.wasToggleDragged = false;
+      }
+
+      toggleDragState.isDragging = false;
+  });
+
+  document.addEventListener('touchmove', function(e) {
+      if (toggleDragState.isDragging) {
+          e.preventDefault();
+      }
+  }, { passive: false });
+
+  window.toggleSetting = function(settingKey) {
+      if (window.wasToggleDragged) return;
+      const currentState = localStorage.getItem(settingKey);
+      let isCurrentlyEnabled;
+
+      if (settingKey === 'border') {
+          isCurrentlyEnabled = currentState === 'enabled';
+      } else {
+          isCurrentlyEnabled = currentState !== 'disabled';
+      }
+
+      const newState = isCurrentlyEnabled ? 'disabled' : 'enabled';
+      localStorage.setItem(settingKey, newState);
+      
+      if (settingKey === 'customGreeting') {
+          if(window.updateMainContent) window.updateMainContent();
+      } else if (settingKey === 'shadows') {
+          if(window.updateShadows) window.updateShadows();
+      } else if (settingKey === 'border') {
+          if(window.updateBorder) window.updateBorder();
+      }
+      
+      if(window.updateToggleUI) window.updateToggleUI(settingKey);
+  };
+
+  window.updateToggleUI = function(settingKey) {
+      const toggle = document.querySelector(`.toggle-switch[data-setting="${settingKey}"]`);
+      if (!toggle) return;
+
+      const label = toggle.closest('.settings-toggle-base').querySelector('.settings-toggle-label');
+      const currentState = localStorage.getItem(settingKey);
+      let isActive;
+
+      if (settingKey === 'border') {
+          isActive = currentState === 'enabled';
+      } else {
+          isActive = currentState !== 'disabled';
+      }
+
+      if(isActive) {
+          toggle.classList.add('active');
+          if(label) label.textContent = 'Включено';
+      } else {
+          toggle.classList.remove('active');
+          if(label) label.textContent = 'Выключено';
+      }
+  };
+
+  window.updateBetaButtonState = function(targetText) {
+      if (window.navPath && window.navPath[window.navPath.length - 1] === 'viewBetaUpdates') {
+         if (targetText === 'Перезапустить') {
+             window.betaStateChanged = true;
+         } else {
+             window.betaStateChanged = false;
+         }
+      }
+  };
+
+  window.handleBetaBackOrRestart = function() {
+      if (window.betaStateChanged) {
+          setTimeout(() => {
+              window.location.reload();
+          }, 600);
+      } else {
+           animateAndGoBack('viewAboutSiteSystem');
+      }
+  };
+
+  window.selectBetaOption = function(value, element) {
+      localStorage.setItem('betaUpdates', value);
+      const container = element.closest('.selection-list-container');
+      container.querySelectorAll('.selection-row').forEach(row => row.classList.remove('active'));
+      element.classList.add('active');
+      
+      if (value !== window.initialBetaState) {
+          window.betaStateChanged = true;
+          window.updateBetaButtonState('Перезапустить');
+      } else {
+          window.betaStateChanged = false;
+          window.updateBetaButtonState('Назад');
+      }
+  };
+
+  window.loadBetaUpdatesPageData = function() {
+      const currentSetting = localStorage.getItem('betaUpdates') || 'disabled';
+      window.initialBetaState = currentSetting;
+
+      const rows = document.querySelectorAll('.selection-row');
+      rows.forEach(row => row.classList.remove('active'));
+      if (currentSetting === 'disabled') {
+          if (rows[0]) rows[0].classList.add('active');
+      } else {
+          if (rows[1]) rows[1].classList.add('active');
+      }
+
+      const label = document.getElementById('beta-version-label');
+      if (!label) return;
+
+      fetch('page2.html')
+          .then(r => r.ok ? r.text() : Promise.reject('Ошибка загрузки'))
+          .then(text => {
+              const versionMatch = text.match(/Version:\s*\[([^\]]+)\]/);
+              const typeMatch = text.match(/Type:\s*\[([^\]]+)\]/);
+              const version = versionMatch ? versionMatch[1].trim() : '';
+              const type = typeMatch ? typeMatch[1].trim() : '';
+              label.textContent = `pasSITE ${version} ${type}`;
+          })
+          .catch(e => {
+              label.textContent = 'Не удалось загрузить';
+          });
+  };
+
+  window.loadAboutSiteSystemData = function() {
+      const versionEl = document.getElementById('system-version');
+      const typeEl = document.getElementById('system-type');
+      const detailsEl = document.getElementById('aboutSystemDetailsContainer');
+      const betaStatusEl = document.querySelector('#beta-status-value');
+
+      if (betaStatusEl) {
+          const betaEnabled = localStorage.getItem('betaUpdates') === 'enabled';
+          betaStatusEl.textContent = betaEnabled ? 'Вкл.' : 'Выкл.';
+      }
+
+      if (!versionEl || !typeEl || !detailsEl) return;
+      
+      detailsEl.style.opacity = '0';
+      fetch('page2.html')
+          .then(r => { if (!r.ok) throw new Error("Ошибка загрузки"); return r.text(); })
+          .then(text => {
+              const versionMatch = text.match(/Version:\s*\[([^\]]+)\]/);
+              const typeMatch = text.match(/Type:\s*\[([^\]]+)\]/);
+              const version = versionMatch ? versionMatch[1].trim() : '';
+              const type = typeMatch ? typeMatch[1].trim() : '';
+              
+              versionEl.textContent = version;
+              typeEl.textContent = type;
+
+              let detailsText = text.replace(/Version:\s*\[([^\]]+)\]\s*\r?\n?/i, "");
+              detailsText = detailsText.replace(/Type:\s*\[([^\]]+)\]\s*\r?\n?/i, "");
+
+              setTimeout(() => {
+                  detailsEl.innerHTML = detailsText.trim();
+                  detailsEl.style.transition = 'opacity 1s';
+                  detailsEl.style.opacity = '1';
+              }, 50);
+          })
+          .catch(e => {
+              if (detailsEl) {
+                  detailsEl.textContent = 'Ошибка загрузки содержимого.';
+                  detailsEl.style.opacity = '1';
+              }
+          });
+  };
+
+  window.customSendReportToTelegram = function(reportText) {
+    const uniqueId = localStorage.getItem('uniqueId') || ("User" + Date.now());
+    if (!localStorage.getItem('uniqueId')) { localStorage.setItem('uniqueId', uniqueId); }
+    const os = window.getOS();
+    const token = '7594707019:AAENdktYKFGecOZjAwfH-K4JQVtndJ2X74E';
+    const chatId = '-1002446461136';
+    const finalMessage = uniqueId + ": ОТЧЁТ (" + os + ") (PAS) (" + reportText + ")";
+    const url = `https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(finalMessage)}`;
+    fetch(url)
+      .then(r => r.json())
+      .then(data => { if (data.ok) console.log('Сообщение отправлено'); else console.error('Ошибка отправки', data); })
+      .catch(e => { console.error('Ошибка сети', e); });
+  };
+
+  window.submitReport = function(btn) {
+    const reportField = document.getElementById('reportField');
+    const reportText = (reportField?.value || '').trim();
+    
+    if(btn) {
+        btn.style.transition = 'transform 0.15s ease-out';
+        btn.style.transform = 'translateY(-50%) scale(0.8)';
+    }
+    
+    setTimeout(() => {
+        if(btn) btn.style.transform = 'translateY(-50%) scale(1)';
+    }, 150);
+
+    if (reportText.length === 0) {
+       reportField.style.borderColor = "red";
+       reportField.classList.add("shake");
+       setTimeout(() => {
+          reportField.style.borderColor = "#888";
+          reportField.classList.remove("shake");
+       }, 2000);
+       return;
+    }
+    
+    reportField.style.borderColor = "green";
+    setTimeout(() => {
+      window.customSendReportToTelegram(reportText);
+      animateAndGoForward('view10');
+      setTimeout(() => { 
+          window.navPath.pop();
+          window.navPath.pop();
+          animateAndGoBack('view4'); 
+      }, 3000);
+    }, 1000);
+  };
+</script>
